@@ -140,7 +140,7 @@ win32:QMAKE_LFLAGS += -static
 
 QMAKE_LFLAGS_WINDOWS += --enable-stdcall-fixup
 
-LIBS += -LC:\Qt\5.14.0\mingw73_32_static\lib -lmbe -lflite_cmu_us_slt -lflite_cmu_us_kal16 -lflite_cmu_us_awb -lflite_cmu_us_rms -lflite_usenglish -lflite_cmulex -lflite -lasound
+LIBS += -LC:\Qt\5.14.0\mingw73_32_static\lib -lmbe #-lflite_cmu_us_slt -lflite_cmu_us_kal16 -lflite_cmu_us_awb -lflite_cmu_us_rms -lflite_usenglish -lflite_cmulex -lflite -lasound
 
 RC_ICONS = images/dstar.ico
 
