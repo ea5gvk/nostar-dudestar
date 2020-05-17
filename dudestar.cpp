@@ -1039,8 +1039,8 @@ void DudeStar::connect_to_serial()
 				//out << "Baud rate == " << serial->baudRate() << endl;
 				if (serial->open(QIODevice::ReadWrite)) {
 					connect(serial, &QSerialPort::readyRead, this, &DudeStar::process_serial);
-					serial->setFlowControl(QSerialPort::HardwareControl);
-					serial->setRequestToSend(true);
+					//serial->setFlowControl(QSerialPort::HardwareControl);
+					//serial->setRequestToSend(true);
 					QByteArray a;
 					a.clear();
 					a.append(reinterpret_cast<const char*>(AMBE3000_PARITY_DISABLE), sizeof(AMBE3000_PARITY_DISABLE));
