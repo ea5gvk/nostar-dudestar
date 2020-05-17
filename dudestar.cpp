@@ -1027,7 +1027,7 @@ void DudeStar::connect_to_serial()
 			description = serialPortInfo.description();
 			manufacturer = serialPortInfo.manufacturer();
 			serialNumber = serialPortInfo.serialNumber();
-			//out << "Port: " << serialPortInfo.portName() << endl << "Location: " << serialPortInfo.systemLocation() << endl << "Description: " << (!description.isEmpty() ? description : blankString) << endl << "Manufacturer: " << (!manufacturer.isEmpty() ? manufacturer : blankString) << endl << "Serial number: " << (!serialNumber.isEmpty() ? serialNumber : blankString) << endl << "Vendor Identifier: " << (serialPortInfo.hasVendorIdentifier() ? QByteArray::number(serialPortInfo.vendorIdentifier(), 16) : blankString) << endl << "Product Identifier: " << (serialPortInfo.hasProductIdentifier() ? QByteArray::number(serialPortInfo.productIdentifier(), 16) : blankString) << endl << "Busy: " << (serialPortInfo.isBusy() ? "Yes" : "No") << endl;
+			out << "Port: " << serialPortInfo.portName() << endl << "Location: " << serialPortInfo.systemLocation() << endl << "Description: " << (!description.isEmpty() ? description : blankString) << endl << "Manufacturer: " << (!manufacturer.isEmpty() ? manufacturer : blankString) << endl << "Serial number: " << (!serialNumber.isEmpty() ? serialNumber : blankString) << endl << "Vendor Identifier: " << (serialPortInfo.hasVendorIdentifier() ? QByteArray::number(serialPortInfo.vendorIdentifier(), 16) : blankString) << endl << "Product Identifier: " << (serialPortInfo.hasProductIdentifier() ? QByteArray::number(serialPortInfo.productIdentifier(), 16) : blankString) << endl << "Busy: " << (serialPortInfo.isBusy() ? "Yes" : "No") << endl;
 			//if((serialPortInfo.vendorIdentifier() == 0x0483) && (serialPortInfo.productIdentifier() == 0x5740)){
 			if((protocol != "P25") && (serialPortInfo.vendorIdentifier() == 0x0403) && (serialPortInfo.productIdentifier() >= 0x6001)){
 				serial = new QSerialPort;
@@ -2747,7 +2747,7 @@ void DudeStar::tx_timer()
 void DudeStar::process_serial()
 {
 	QByteArray data = serial->readAll();
-/*
+
 	fprintf(stderr, "AMBEHW %d:%d:", data.size(), ambeq.size());
 	for(int i = 0; i < data.size(); ++i){
 		//if((data.data()[i] == 0x61) && (data.data()[i+1] == 0x01) && (data.data()[i+2] == 0x42) && (data.data()[i+3] == 0x02)){
@@ -2757,7 +2757,7 @@ void DudeStar::process_serial()
 	}
 	fprintf(stderr, "\n");
 	fflush(stderr);
-*/
+
 	if( (data.data()[0] == 0x61) && (data.data()[3] == 0x00) ){
 		qDebug() << "Dropping control packet response";
 		return;
