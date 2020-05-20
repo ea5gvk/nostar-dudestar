@@ -1027,7 +1027,7 @@ void DudeStar::connect_to_serial()
 			description = serialPortInfo.description();
 			manufacturer = serialPortInfo.manufacturer();
 			serialNumber = serialPortInfo.serialNumber();
-			out << "Port: " << serialPortInfo.portName() << endl << "Location: " << serialPortInfo.systemLocation() << endl << "Description: " << (!description.isEmpty() ? description : blankString) << endl << "Manufacturer: " << (!manufacturer.isEmpty() ? manufacturer : blankString) << endl << "Serial number: " << (!serialNumber.isEmpty() ? serialNumber : blankString) << endl << "Vendor Identifier: " << (serialPortInfo.hasVendorIdentifier() ? QByteArray::number(serialPortInfo.vendorIdentifier(), 16) : blankString) << endl << "Product Identifier: " << (serialPortInfo.hasProductIdentifier() ? QByteArray::number(serialPortInfo.productIdentifier(), 16) : blankString) << endl << "Busy: " << (serialPortInfo.isBusy() ? "Yes" : "No") << endl;
+			//out << "Port: " << serialPortInfo.portName() << endl << "Location: " << serialPortInfo.systemLocation() << endl << "Description: " << (!description.isEmpty() ? description : blankString) << endl << "Manufacturer: " << (!manufacturer.isEmpty() ? manufacturer : blankString) << endl << "Serial number: " << (!serialNumber.isEmpty() ? serialNumber : blankString) << endl << "Vendor Identifier: " << (serialPortInfo.hasVendorIdentifier() ? QByteArray::number(serialPortInfo.vendorIdentifier(), 16) : blankString) << endl << "Product Identifier: " << (serialPortInfo.hasProductIdentifier() ? QByteArray::number(serialPortInfo.productIdentifier(), 16) : blankString) << endl << "Busy: " << (serialPortInfo.isBusy() ? "Yes" : "No") << endl;
 			//if((serialPortInfo.vendorIdentifier() == 0x0483) && (serialPortInfo.productIdentifier() == 0x5740)){
 			if((protocol != "P25") && (serialPortInfo.vendorIdentifier() == 0x0403) && (serialPortInfo.productIdentifier() >= 0x6001)){
 				serial = new QSerialPort;
@@ -1039,8 +1039,8 @@ void DudeStar::connect_to_serial()
 				//out << "Baud rate == " << serial->baudRate() << endl;
 				if (serial->open(QIODevice::ReadWrite)) {
 					connect(serial, &QSerialPort::readyRead, this, &DudeStar::process_serial);
-					//serial->setFlowControl(QSerialPort::HardwareControl);
-					//serial->setRequestToSend(true);
+					serial->setFlowControl(QSerialPort::HardwareControl);
+					serial->setRequestToSend(true);
 					QByteArray a;
 					a.clear();
 					a.append(reinterpret_cast<const char*>(AMBE3000_PARITY_DISABLE), sizeof(AMBE3000_PARITY_DISABLE));
