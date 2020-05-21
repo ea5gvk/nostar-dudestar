@@ -144,7 +144,7 @@ unsigned char* CSHA256::buffer(const unsigned char* buffer, unsigned int len, un
 {
 	assert(buffer != NULL);
 	assert(resblock != NULL);
-	fprintf(stderr, "CSHA256::buffer len == %d\n", len);
+	//fprintf(stderr, "CSHA256::buffer len == %d\n", len);
 	/* Initialize the computation context.  */
 	init();
 

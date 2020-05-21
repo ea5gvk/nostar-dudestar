@@ -9,7 +9,7 @@
 
 #include "imbe_vocoder.h"
 
-static bool already_printed = false;
+static bool already_printed = true;
 
 imbe_vocoder::imbe_vocoder (void) :
 	prev_pitch(0),

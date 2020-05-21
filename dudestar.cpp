@@ -30,7 +30,7 @@
 #define HIBYTE(w)			((uint8_t)((((uint16_t)(w)) >> 8) & 0xFF))
 #define LOWORD(dw)			((uint16_t)(uint32_t)(dw & 0x0000FFFF))
 #define HIWORD(dw)			((uint16_t)((((uint32_t)(dw)) >> 16) & 0xFFFF))
-#define DEBUG
+//#define DEBUG
 //#define DEBUG_YSF
 #define CHANNEL_FRAME_TX    0x1001
 #define CODEC_FRAME_TX      0x1002
@@ -104,12 +104,13 @@ DudeStar::DudeStar(QWidget *parent) :
 	format.setByteOrder(QAudioFormat::LittleEndian);
     format.setSampleType(QAudioFormat::SignedInt);
 	QList<QAudioDeviceInfo> devices = QAudioDeviceInfo::availableDevices(QAudio::AudioOutput);
-	qDebug() << "Version == " << VERSION_NUMBER;
+	//qDebug() << "Version == " << VERSION_NUMBER;
 	if(devices.size() == 0){
 		qDebug() << "No audio hardware found";
 	}
 	else{
 		QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
+#ifdef DEBUG
 		QList<int> srs = info.supportedSampleRates();
 		for(int i = 0; i < srs.size(); ++i){
 			qDebug() << "Sample rate " << srs[i] << " supported";
@@ -134,6 +135,7 @@ DudeStar::DudeStar(QWidget *parent) :
 		for(int i = 0; i < cc.size(); ++i){
 			qDebug() << "Sample channel count " << cc[i] << " supported";
 		}
+#endif
 		if (!info.isFormatSupported(format)) {
 			qWarning() << "Raw audio format not supported by backend, trying nearest format.";
 			format = info.nearestFormat(format);
@@ -1065,7 +1067,7 @@ void DudeStar::connect_to_serial()
 				   ui->checkBoxSWRX->setDisabled(false);
 				   ui->checkBoxSWTX->setChecked(false);
 				   ui->checkBoxSWRX->setChecked(false);
-				   std::cerr << "Connected to DV Dongle r == " << r << std::endl;
+				   //std::cerr << "Connected to DV Dongle r == " << r << std::endl;
 				}
 				else{
 					hw_ambe_present = false;
@@ -1452,7 +1454,7 @@ void DudeStar::process_audio()
 			audiodev->write(audio);
 		}
 		else{
-			qDebug() << "WTF!";
+			//qDebug() << "WTF!";
 			do{
 				if(hw_ambe_audio.size()){
 					hw_ambe_audio.dequeue();
@@ -2540,7 +2542,7 @@ void DudeStar::press_tx()
 	}
 #endif
 	if(!txtimer->isActive()){
-		fprintf(stderr, "press_tx()\n");
+		//fprintf(stderr, "press_tx()\n");
 		//audio_buffer.open(QBuffer::ReadWrite|QBuffer::Truncate);
 		//audiofile.setFileName("audio.pcm");
 		//audiofile.open(QIODevice::WriteOnly | QIODevice::Truncate);
@@ -2747,7 +2749,7 @@ void DudeStar::tx_timer()
 void DudeStar::process_serial()
 {
 	QByteArray data = serial->readAll();
-
+#ifdef DEBUG
 	fprintf(stderr, "AMBEHW %d:%d:", data.size(), ambeq.size());
 	for(int i = 0; i < data.size(); ++i){
 		//if((data.data()[i] == 0x61) && (data.data()[i+1] == 0x01) && (data.data()[i+2] == 0x42) && (data.data()[i+3] == 0x02)){
@@ -2757,9 +2759,9 @@ void DudeStar::process_serial()
 	}
 	fprintf(stderr, "\n");
 	fflush(stderr);
-
+#endif
 	if( (data.data()[0] == 0x61) && (data.data()[3] == 0x00) ){
-		qDebug() << "Dropping control packet response";
+		//qDebug() << "Dropping control packet response";
 		return;
 	}
 
@@ -3142,17 +3144,17 @@ void DudeStar::transmitDMR()
 				return;
 			}
 			else{
-				std::cerr << "ERROR: AMBEQ < 45" << std::endl;
+				//std::cerr << "ERROR: AMBEQ < 45" << std::endl;
 				return;
 			}
 		}
 		while(ambeq.size() && (ambeq[0] != 0x61) && (ambeq[2] != 0x0b) && (ambeq[3] != 0x01)){
-			std::cerr << "ERROR: Not an AMBE frame" << std::endl;
+			//std::cerr << "ERROR: Not an AMBE frame" << std::endl;
 			ambeq.dequeue();
 		}
 		for(int i = 0; i < 3; ++i){
 			if(ambeq.size() < 15){
-				std::cerr << "ERROR:  AMBE Q empty" << std::endl;
+				//std::cerr << "ERROR:  AMBE Q empty" << std::endl;
 				return;
 			}
 			else{
@@ -3176,7 +3178,7 @@ void DudeStar::transmitDMR()
 		udp->writeDatagram(txdata, address, port);
 	}
 	else{
-		fprintf(stderr, "DMR TX stopped\n");
+		//fprintf(stderr, "DMR TX stopped\n");
 		txtimer->stop();
 		audioindev->disconnect();
 		audioin->stop();
@@ -3184,12 +3186,14 @@ void DudeStar::transmitDMR()
 		txdata.append((char *)temp_dmr, 55);
 		udp->writeDatagram(txdata, address, port);
 	}
+#ifdef DEBUG
 	fprintf(stderr, "SEND:%d: ", ambeq.size());
 	for(int i = 0; i < txdata.size(); ++i){
 		fprintf(stderr, "%02x ", (unsigned char)txdata.data()[i]);
 	}
 	fprintf(stderr, "\n");
 	fflush(stderr);
+#endif
 }
 
 void DudeStar::transmitDCS()
@@ -3369,13 +3373,14 @@ void DudeStar::transmitDCS()
 		audioindev->disconnect();
 		audioin->stop();
 	}
-
+#ifdef DEBUG
 	fprintf(stderr, "SEND:%d: ", ambeq.size());
 	for(int i = 0; i < txdata.size(); ++i){
 		fprintf(stderr, "%02x ", (unsigned char)txdata.data()[i]);
 	}
 	fprintf(stderr, "\n");
 	fflush(stderr);
+#endif
 }
 
 void DudeStar::transmitXRF()
@@ -3469,11 +3474,11 @@ void DudeStar::transmitXRF()
 	}
 	else if(tx || ambeq.size()){
 		while(ambeq.size() && (ambeq[0] != 0x61)){
-			std::cerr << "ERROR: Lost sync" << std::endl;
+			//std::cerr << "ERROR: Lost sync" << std::endl;
 			ambeq.dequeue();
 		}
 		if(ambeq.size() < 15){
-			std::cerr << "ERROR:  AMBE Q empty" << std::endl;
+			//std::cerr << "ERROR:  AMBE Q empty" << std::endl;
 			return;
 		}
 		else{
@@ -3577,13 +3582,14 @@ void DudeStar::transmitXRF()
 			audioin->stop();
 		}
 	}
-
+#ifdef DEBUG
 	fprintf(stderr, "SEND:%d: ", ambeq.size());
 	for(int i = 0; i < txdata.size(); ++i){
 		fprintf(stderr, "%02x ", (unsigned char)txdata.data()[i]);
 	}
 	fprintf(stderr, "\n");
 	fflush(stderr);
+#endif
 }
 
 void DudeStar::transmitREF()
@@ -3679,11 +3685,11 @@ void DudeStar::transmitREF()
     }
 	else if(tx || ambeq.size()){
 		while(ambeq.size() && (ambeq[0] != 0x61)){
-			std::cerr << "ERROR: Lost sync" << std::endl;
+			//std::cerr << "ERROR: Lost sync" << std::endl;
 			ambeq.dequeue();
 		}
 		if(ambeq.size() < 15){
-			std::cerr << "ERROR:  AMBE Q empty" << std::endl;
+			//std::cerr << "ERROR:  AMBE Q empty" << std::endl;
 			return;
 		}
 		else{
@@ -3801,14 +3807,14 @@ void DudeStar::transmitREF()
 			audioin->stop();
 		}
     }
-
+#ifdef DEBUG
 	fprintf(stderr, "SEND:%d: ", ambeq.size());
     for(int i = 0; i < txdata.size(); ++i){
         fprintf(stderr, "%02x ", (unsigned char)txdata.data()[i]);
     }
     fprintf(stderr, "\n");
     fflush(stderr);
-
+#endif
 }
 
 void DudeStar::calcPFCS(char *d)
