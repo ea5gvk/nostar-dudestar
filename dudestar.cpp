@@ -464,7 +464,7 @@ void DudeStar::process_mode_change(const QString &m)
 	else if(m == "P25"){
 		process_p25_hosts();
 		ui->comboMod->setEnabled(false);
-		ui->dmrtgEdit->setEnabled(false);
+		ui->dmrtgEdit->setEnabled(true);
 		ui->dmrccEdit->setEnabled(false);
 		ui->dmrslotEdit->setEnabled(false);
 		ui->checkBoxDMRPC->setEnabled(false);
@@ -1209,7 +1209,8 @@ void DudeStar::process_connect()
 		}
 		if(protocol == "P25"){
 			dmrid = dmrids.key(callsign);
-			dmr_destid = ui->hostCombo->currentText().toUInt();
+			//dmr_destid = ui->hostCombo->currentText().toUInt();
+			dmr_destid = ui->dmrtgEdit->text().toUInt();
 		}
 		if(protocol == "NXDN"){
 			dmrid = nxdnids.key(callsign);
@@ -3008,6 +3009,7 @@ void DudeStar::transmitP25()
 			++p25step;
 			break;
 		case 0x03U:
+			dmr_destid = ui->dmrtgEdit->text().toUInt();
 			::memcpy(buffer, REC65, 17U);
 			::memcpy(buffer + 5U, m_p25Frame, 11U);
 			buffer[1U] = (dmr_destid >> 16) & 0xFFU;

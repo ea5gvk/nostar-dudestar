@@ -49,6 +49,6 @@ sudo apt-get install pulseaudio
 ```
 
 # Builds
-There is currently a 32-bit Windows executable available in the builds directory.  QT and mbelib are statically linked, no dependencies are required.
+There are no longer any builds available.  The ability to build this software on the platform you choose will assure that you are capable of testing this very early, very beta software.
 There is also an Android build called DROID-Star at the Play Store as a beta release.
 
