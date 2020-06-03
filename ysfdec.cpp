@@ -17,7 +17,7 @@
 #include "ysfdec.h"
 #include "mbefec.h"
 
-#define DEBUG
+//#define DEBUG
 
 const int DSDYSF::m_fichInterleave[100] = {
         0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95,

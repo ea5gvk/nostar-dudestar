@@ -30,7 +30,8 @@
 #define HIBYTE(w)			((uint8_t)((((uint16_t)(w)) >> 8) & 0xFF))
 #define LOWORD(dw)			((uint16_t)(uint32_t)(dw & 0x0000FFFF))
 #define HIWORD(dw)			((uint16_t)((((uint32_t)(dw)) >> 16) & 0xFFFF))
-//#define DEBUG
+#define DEBUG
+//#define DEBUGHW
 //#define DEBUG_YSF
 #define CHANNEL_FRAME_TX    0x1001
 #define CODEC_FRAME_TX      0x1002
@@ -58,10 +59,10 @@ const unsigned char REC73[] = {0x73U, 0x00U, 0x00U, 0x02U, 0x00U, 0x00U, 0x00U, 
 const unsigned char REC80[] = {0x80U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U};
 
 const uint8_t AMBEP251_4400_2800[17] = {0x61, 0x00, 0x0d, 0x00, 0x0a, 0x05U, 0x58U, 0x08U, 0x6BU, 0x10U, 0x30U, 0x00U, 0x00U, 0x00U, 0x00U, 0x01U, 0x90U};//DVSI P25 USB Dongle FEC
-const uint8_t AMBEP251_4400_0000[17] = {0x61, 0x00, 0x0d, 0x00, 0x0a, 0x05U, 0x58U, 0x08U, 0x6BU, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x01U, 0x58U};//DVSI P25 USB Dongle No-FEC
-const uint8_t AMBE1000_4400_2800[17] = {0x61, 0x00, 0x0d, 0x00, 0x0a, 0x00U, 0x58U, 0x08U, 0x87U, 0x30U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x44U, 0x90U};
-const uint8_t AMBE2000_4400_2800[17] = {0x61, 0x00, 0x0d, 0x00, 0x0a, 0x02U, 0x58U, 0x07U, 0x65U, 0x00U, 0x09U, 0x1eU, 0x0cU, 0x41U, 0x27U, 0x73U, 0x90U};
-const uint8_t AMBE3000_4400_2800[17] = {0x61, 0x00, 0x0d, 0x00, 0x0a, 0x04U, 0x58U, 0x09U, 0x86U, 0x80U, 0x20U, 0x00U, 0x00U, 0x00U, 0x00U, 0x73U, 0x90U};
+//const uint8_t AMBEP251_4400_0000[17] = {0x61, 0x00, 0x0d, 0x00, 0x0a, 0x05U, 0x58U, 0x08U, 0x6BU, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x01U, 0x58U};//DVSI P25 USB Dongle No-FEC
+//const uint8_t AMBE1000_4400_2800[17] = {0x61, 0x00, 0x0d, 0x00, 0x0a, 0x00U, 0x58U, 0x08U, 0x87U, 0x30U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x44U, 0x90U};
+//const uint8_t AMBE2000_4400_2800[17] = {0x61, 0x00, 0x0d, 0x00, 0x0a, 0x02U, 0x58U, 0x07U, 0x65U, 0x00U, 0x09U, 0x1eU, 0x0cU, 0x41U, 0x27U, 0x73U, 0x90U};
+//const uint8_t AMBE3000_4400_2800[17] = {0x61, 0x00, 0x0d, 0x00, 0x0a, 0x04U, 0x58U, 0x09U, 0x86U, 0x80U, 0x20U, 0x00U, 0x00U, 0x00U, 0x00U, 0x73U, 0x90U};
 const uint8_t AMBE2000_2400_1200[17] = {0x61, 0x00, 0x0d, 0x00, 0x0a, 0x01U, 0x30U, 0x07U, 0x63U, 0x40U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x48U};
 const uint8_t AMBE3000_2450_1150[17] = {0x61, 0x00, 0x0d, 0x00, 0x0a, 0x04U, 0x31U, 0x07U, 0x54U, 0x24U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x6fU, 0x48U};
 const uint8_t AMBE3000_2450_0000[17] = {0x61, 0x00, 0x0d, 0x00, 0x0a, 0x04U, 0x31U, 0x07U, 0x54U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x70U, 0x31U};
@@ -179,24 +180,26 @@ DudeStar::~DudeStar()
 	QFile f(config_path + "/settings.conf");
 	f.open(QIODevice::WriteOnly);
 	QTextStream stream(&f);
-	stream << "MODE:" << ui->modeCombo->currentText() << endl;
-	stream << "REFHOST:" << saved_refhost << endl;
-	stream << "DCSHOST:" << saved_dcshost << endl;
-	stream << "XRFHOST:" << saved_xrfhost << endl;
-	stream << "YSFHOST:" << saved_ysfhost << endl;
-	stream << "DMRHOST:" << saved_dmrhost << endl;
-	stream << "P25HOST:" << saved_p25host << endl;
-	stream << "NXDNHOST:" << saved_nxdnhost << endl;
-	stream << "MODULE:" << ui->comboMod->currentText() << endl;
-	stream << "CALLSIGN:" << ui->callsignEdit->text() << endl;
-	stream << "DMRTGID:" << ui->dmrtgEdit->text() << endl;
+	stream << "MODE:" << ui->modeCombo->currentText() << Qt::endl;
+	stream << "REFHOST:" << saved_refhost << Qt::endl;
+	stream << "DCSHOST:" << saved_dcshost << Qt::endl;
+	stream << "XRFHOST:" << saved_xrfhost << Qt::endl;
+	stream << "YSFHOST:" << saved_ysfhost << Qt::endl;
+	stream << "DMRHOST:" << saved_dmrhost << Qt::endl;
+	stream << "P25HOST:" << saved_p25host << Qt::endl;
+	stream << "NXDNHOST:" << saved_nxdnhost << Qt::endl;
+	stream << "MODULE:" << ui->comboMod->currentText() << Qt::endl;
+	stream << "CALLSIGN:" << ui->callsignEdit->text() << Qt::endl;
+	stream << "DMRID:" << ui->dmridEdit->text() << Qt::endl;
+	stream << "DMRPASSWORD:" << ui->dmrpwEdit->text() << Qt::endl;
+	stream << "DMRTGID:" << ui->dmrtgEdit->text() << Qt::endl;
 	//stream << "DMRCC:" << ui->dmrccEdit->text() << endl;
 	//stream << "DMRSLOT:" << ui->dmrslotEdit->text() << endl;
-	stream << "MYCALL:" << ui->mycallEdit->text().simplified() << endl;
-	stream << "URCALL:" << ui->urcallEdit->text().simplified() << endl;
-	stream << "RPTR1:" << ui->rptr1Edit->text().simplified() << endl;
-	stream << "RPTR2:" << ui->rptr2Edit->text().simplified() << endl;
-	stream << "USRTXT:" << ui->usertxtEdit->text() << endl;
+	stream << "MYCALL:" << ui->mycallEdit->text().simplified() << Qt::endl;
+	stream << "URCALL:" << ui->urcallEdit->text().simplified() << Qt::endl;
+	stream << "RPTR1:" << ui->rptr1Edit->text().simplified() << Qt::endl;
+	stream << "RPTR2:" << ui->rptr2Edit->text().simplified() << Qt::endl;
+	stream << "USRTXT:" << ui->usertxtEdit->text() << Qt::endl;
 	f.close();
 	delete ui;
 }
@@ -369,6 +372,8 @@ void DudeStar::process_mode_change(const QString &m)
 	if(m == "REF"){
 		process_ref_hosts();
 		ui->comboMod->setEnabled(true);
+		ui->dmridEdit->setEnabled(false);
+		ui->dmrpwEdit->setEnabled(false);
 		ui->dmrtgEdit->setEnabled(false);
 		ui->dmrccEdit->setEnabled(false);
 		ui->dmrslotEdit->setEnabled(false);
@@ -388,6 +393,8 @@ void DudeStar::process_mode_change(const QString &m)
 	if(m == "DCS"){
 		process_dcs_hosts();
 		ui->comboMod->setEnabled(true);
+		ui->dmridEdit->setEnabled(false);
+		ui->dmrpwEdit->setEnabled(false);
 		ui->dmrtgEdit->setEnabled(false);
 		ui->dmrccEdit->setEnabled(false);
 		ui->dmrslotEdit->setEnabled(false);
@@ -407,6 +414,8 @@ void DudeStar::process_mode_change(const QString &m)
 	if(m == "XRF"){
 		process_xrf_hosts();
 		ui->comboMod->setEnabled(true);
+		ui->dmridEdit->setEnabled(false);
+		ui->dmrpwEdit->setEnabled(false);
 		ui->dmrtgEdit->setEnabled(false);
 		ui->dmrccEdit->setEnabled(false);
 		ui->dmrslotEdit->setEnabled(false);
@@ -426,6 +435,8 @@ void DudeStar::process_mode_change(const QString &m)
 	else if(m == "YSF"){
 		process_ysf_hosts();
 		ui->comboMod->setEnabled(false);
+		ui->dmridEdit->setEnabled(false);
+		ui->dmrpwEdit->setEnabled(false);
 		ui->dmrtgEdit->setEnabled(false);
 		ui->dmrccEdit->setEnabled(false);
 		ui->dmrslotEdit->setEnabled(false);
@@ -445,6 +456,8 @@ void DudeStar::process_mode_change(const QString &m)
 	else if(m == "DMR"){
 		process_dmr_hosts();
 		ui->comboMod->setEnabled(false);
+		ui->dmridEdit->setEnabled(true);
+		ui->dmrpwEdit->setEnabled(true);
 		ui->dmrtgEdit->setEnabled(true);
 		ui->dmrccEdit->setEnabled(true);
 		ui->dmrslotEdit->setEnabled(true);
@@ -464,6 +477,8 @@ void DudeStar::process_mode_change(const QString &m)
 	else if(m == "P25"){
 		process_p25_hosts();
 		ui->comboMod->setEnabled(false);
+		ui->dmridEdit->setEnabled(true);
+		ui->dmrpwEdit->setEnabled(false);
 		ui->dmrtgEdit->setEnabled(true);
 		ui->dmrccEdit->setEnabled(false);
 		ui->dmrslotEdit->setEnabled(false);
@@ -976,6 +991,12 @@ void DudeStar::process_settings()
 				if(sl.at(0) == "CALLSIGN"){
 					ui->callsignEdit->setText(sl.at(1).simplified());
 				}
+				if(sl.at(0) == "DMRID"){
+					ui->dmridEdit->setText(sl.at(1).simplified());
+				}
+				if(sl.at(0) == "DMRPASSWORD"){
+					ui->dmrpwEdit->setText(sl.at(1).simplified());
+				}
 				if(sl.at(0) == "DMRTGID"){
 					ui->dmrtgEdit->setText(sl.at(1).simplified());
 				}
@@ -1061,13 +1082,12 @@ void DudeStar::connect_to_serial()
 					else{ //D-Star
 						a.append(reinterpret_cast<const char*>(AMBE2000_2400_1200), sizeof(AMBE2000_2400_1200));
 				   }
-				   int r = serial->write(a);
+                   serial->write(a);
 				   hw_ambe_present = true;
 				   ui->checkBoxSWTX->setDisabled(false);
 				   ui->checkBoxSWRX->setDisabled(false);
 				   ui->checkBoxSWTX->setChecked(false);
 				   ui->checkBoxSWRX->setChecked(false);
-				   //std::cerr << "Connected to DV Dongle r == " << r << std::endl;
 				}
 				else{
 					hw_ambe_present = false;
@@ -1131,11 +1151,14 @@ void DudeStar::disconnect_from_host()
 		d.append((dmrid >> 8) & 0xff);
 		d.append((dmrid >> 0) & 0xff);
 		ui->dmrtgEdit->setEnabled(true);
+		ui->dmridEdit->setEnabled(true);
+		ui->dmrpwEdit->setEnabled(true);
 		dmr_header_timer->stop();
 	}
 	else if(protocol == "P25"){
 		d.append(0xf1);
 		d.append(callsign);
+		ui->dmridEdit->setEnabled(true);
 	}
 	else if(protocol == "NXDN"){
 		d.append('N');
@@ -1203,8 +1226,10 @@ void DudeStar::process_connect()
 		protocol = ui->modeCombo->currentText();
 
 		if(protocol == "DMR"){
-			dmrid = dmrids.key(callsign);
-			dmr_password = sl.at(2).simplified();
+			//dmrid = dmrids.key(callsign);
+			//dmr_password = sl.at(2).simplified();
+			dmrid = ui->dmridEdit->text().toUInt();
+			dmr_password = (ui->dmrpwEdit->text().isEmpty()) ? sl.at(2).simplified() : ui->dmrpwEdit->text();
 			dmr_destid = ui->dmrtgEdit->text().toUInt();
 		}
 		if(protocol == "P25"){
@@ -1856,6 +1881,7 @@ void DudeStar::readyReadP25()
 			ui->modeCombo->setEnabled(false);
 			ui->hostCombo->setEnabled(false);
 			ui->callsignEdit->setEnabled(false);
+			ui->dmridEdit->setEnabled(false);
 			ui->comboMod->setEnabled(false);
 			connect_status = CONNECTED_RW;
 			audiotimer->start(19);
@@ -1943,6 +1969,22 @@ void DudeStar::readyReadDMR()
 	fprintf(stderr, "\n");
 	fflush(stderr);
 #endif
+	if((connect_status != CONNECTED_RW) && (::memcmp(buf.data(), "MSTNAK", 6U) == 0)){
+		if(hw_ambe_present){
+			serial->close();
+		}
+		udp->disconnect();
+		udp->close();
+		delete udp;
+		connect_status = DISCONNECTED;
+		ui->connectButton->setText("Connect");
+		ui->modeCombo->setEnabled(true);
+		ui->hostCombo->setEnabled(true);
+		ui->callsignEdit->setEnabled(true);
+		ui->dmridEdit->setEnabled(true);
+		ui->dmrpwEdit->setEnabled(true);
+		status_txt->setText("Connection refused");
+	}
 	if((connect_status != CONNECTED_RW) && (::memcmp(buf.data(), "RPTACK", 6U) == 0)){
 		switch(connect_status){
 		case CONNECTING:
@@ -2004,6 +2046,8 @@ void DudeStar::readyReadDMR()
 			ui->modeCombo->setEnabled(false);
 			ui->hostCombo->setEnabled(false);
 			ui->callsignEdit->setEnabled(false);
+			ui->dmridEdit->setEnabled(false);
+			ui->dmrpwEdit->setEnabled(false);
 			//ui->dmrtgEdit->setEnabled(false);
 			audiotimer->start(19);
 			ping_timer->start(5000);
@@ -2750,7 +2794,7 @@ void DudeStar::tx_timer()
 void DudeStar::process_serial()
 {
 	QByteArray data = serial->readAll();
-#ifdef DEBUG
+#ifdef DEBUGHW
 	fprintf(stderr, "AMBEHW %d:%d:", data.size(), ambeq.size());
 	for(int i = 0; i < data.size(); ++i){
 		//if((data.data()[i] == 0x61) && (data.data()[i+1] == 0x01) && (data.data()[i+2] == 0x42) && (data.data()[i+3] == 0x02)){
