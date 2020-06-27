@@ -79,7 +79,8 @@ extern cst_voice * register_cmu_us_rms(const char *);
 
 DudeStar::DudeStar(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::DudeStar)
+	ui(new Ui::DudeStar),
+	enable_swtx(false)
 {
 	dmrslot = 2;
 	dmrcc = 1;
@@ -90,12 +91,16 @@ DudeStar::DudeStar(QWidget *parent) :
 	hwtx = false;
 	hwrx = true;
 	muted = false;
-	enable_swtx = false;
+#ifdef USE_SWTX
+	enable_swtx = true;
+#endif
     ui->setupUi(this);
     init_gui();
     udp = new QUdpSocket(this);
     config_path = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation);
+#ifndef Q_OS_WIN
 	config_path += "/dudestar";
+#endif
 	connect(&qnam, SIGNAL(finished(QNetworkReply*)), this, SLOT(http_finished(QNetworkReply*)));
     QAudioFormat format;
     format.setSampleRate(8000);
@@ -193,8 +198,6 @@ DudeStar::~DudeStar()
 	stream << "DMRID:" << ui->dmridEdit->text() << Qt::endl;
 	stream << "DMRPASSWORD:" << ui->dmrpwEdit->text() << Qt::endl;
 	stream << "DMRTGID:" << ui->dmrtgEdit->text() << Qt::endl;
-	//stream << "DMRCC:" << ui->dmrccEdit->text() << endl;
-	//stream << "DMRSLOT:" << ui->dmrslotEdit->text() << endl;
 	stream << "MYCALL:" << ui->mycallEdit->text().simplified() << Qt::endl;
 	stream << "URCALL:" << ui->urcallEdit->text().simplified() << Qt::endl;
 	stream << "RPTR1:" << ui->rptr1Edit->text().simplified() << Qt::endl;
@@ -2862,7 +2865,6 @@ void DudeStar::transmitNXDN()
 	QByteArray ambe;
 	QByteArray txdata;
 	unsigned char *temp_nxdn;
-	static uint16_t txcnt = 0;
 	if(tx || ambeq.size()){
 
 		ambe.clear();
@@ -2913,7 +2915,6 @@ void DudeStar::transmitNXDN()
 		txtimer->stop();
 		audioindev->disconnect();
 		audioin->stop();
-		txcnt = 0;
 		temp_nxdn = nxdn->get_eot();
 		txdata.append((char *)temp_nxdn, 43);
 		udp->writeDatagram(txdata, address, port);
@@ -2926,7 +2927,6 @@ void DudeStar::transmitYSF()
 	QByteArray ambe;
 	QByteArray txdata;
 	unsigned char *temp_ysf;
-	static uint16_t txcnt = 0;
 	if(tx || ambeq.size()){
 
 		ambe.clear();
@@ -2977,7 +2977,6 @@ void DudeStar::transmitYSF()
 		txtimer->stop();
 		audioindev->disconnect();
 		audioin->stop();
-		txcnt = 0;
 		temp_ysf = ysf->get_eot();
 		txdata.append((char *)temp_ysf, 155);
 		udp->writeDatagram(txdata, address, port);
