@@ -25,6 +25,7 @@
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QSerialPortInfo>
+#include <time.h>
 
 #define LOBYTE(w)			((uint8_t)(uint16_t)(w & 0x00FF))
 #define HIBYTE(w)			((uint8_t)((((uint16_t)(w)) >> 8) & 0xFF))
@@ -178,6 +179,7 @@ DudeStar::DudeStar(QWidget *parent) :
 	process_dmr_ids();
 	process_nxdn_ids();
 	//process_settings();
+	srand(time(0));
 }
 
 DudeStar::~DudeStar()
@@ -1972,7 +1974,7 @@ void DudeStar::readyReadDMR()
 	fprintf(stderr, "\n");
 	fflush(stderr);
 #endif
-	if((connect_status != CONNECTED_RW) && (::memcmp(buf.data(), "MSTNAK", 6U) == 0)){
+	if((connect_status != CONNECTED_RW) && (::memcmp(buf.data() + 3, "NAK", 3U) == 0)){
 		if(hw_ambe_present){
 			serial->close();
 		}
@@ -2374,7 +2376,7 @@ void DudeStar::readyReadREF()
 #endif
 
     if ((buf.size() == 5) && (buf.data()[0] == 5)){
-		int x = QRandomGenerator::global()->bounded(7245, 999999);
+		int x = (::rand() % (999999 - 7245 + 1)) + 7245;
 		QString serial = "HS" + QString("%1").arg(x, 6, 10, QChar('0'));
 		out.append(0x1c);
 		out.append(0xc0);
@@ -2408,7 +2410,8 @@ void DudeStar::readyReadREF()
 	}
 #endif
     if((connect_status == CONNECTING) && (buf.size() == 0x08)){
-		if((buf.data()[4] == 0x4f) && (buf.data()[5] == 0x4b) && (buf.data()[6] == 0x52)){ // OKRW/OKRO response
+		if((memcmp(&buf.data()[4], "OKRW", 4) == 0) || (memcmp(&buf.data()[4], "OKRO", 4) == 0) || (memcmp(&buf.data()[4], "BUSY", 4) == 0)){
+		//if((buf.data()[4] == 0x4f) && (buf.data()[5] == 0x4b) && (buf.data()[6] == 0x52)){ // OKRW/OKRO response
 			mbe = new MBEDecoder();
 			mbe->setAutoGain(true);
 			mbeenc = new MBEEncoder();
