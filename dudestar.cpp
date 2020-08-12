@@ -701,7 +701,12 @@ void DudeStar::process_dmr_hosts()
 				QStringList ll = l.simplified().split(' ');
 				if(ll.size() > 4){
 					//qDebug() << ll.at(0).simplified() << " " <<  ll.at(2) + ":" + ll.at(4);
-					ui->hostCombo->addItem(ll.at(0).simplified(), ll.at(2) + ":" + ll.at(4) + ":" + ll.at(3));
+					if( (ll.at(0).simplified() != "DMRGateway")
+					 && (ll.at(0).simplified() != "DMR2YSF")
+					 && (ll.at(0).simplified() != "DMR2NXDN"))
+					{
+						ui->hostCombo->addItem(ll.at(0).simplified(), ll.at(2) + ":" + ll.at(4) + ":" + ll.at(3));
+					}
 				}
 			}
 		}
