@@ -27,6 +27,12 @@
 #include <QSerialPortInfo>
 #include <time.h>
 
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
+#define ENDLINE	endl
+#else
+#define ENDLINE Qt::endl
+#endif
+
 #define LOBYTE(w)			((uint8_t)(uint16_t)(w & 0x00FF))
 #define HIBYTE(w)			((uint8_t)((((uint16_t)(w)) >> 8) & 0xFF))
 #define LOWORD(dw)			((uint16_t)(uint32_t)(dw & 0x0000FFFF))
@@ -187,24 +193,24 @@ DudeStar::~DudeStar()
 	QFile f(config_path + "/settings.conf");
 	f.open(QIODevice::WriteOnly);
 	QTextStream stream(&f);
-	stream << "MODE:" << ui->modeCombo->currentText() << Qt::endl;
-	stream << "REFHOST:" << saved_refhost << Qt::endl;
-	stream << "DCSHOST:" << saved_dcshost << Qt::endl;
-	stream << "XRFHOST:" << saved_xrfhost << Qt::endl;
-	stream << "YSFHOST:" << saved_ysfhost << Qt::endl;
-	stream << "DMRHOST:" << saved_dmrhost << Qt::endl;
-	stream << "P25HOST:" << saved_p25host << Qt::endl;
-	stream << "NXDNHOST:" << saved_nxdnhost << Qt::endl;
-	stream << "MODULE:" << ui->comboMod->currentText() << Qt::endl;
-	stream << "CALLSIGN:" << ui->callsignEdit->text() << Qt::endl;
-	stream << "DMRID:" << ui->dmridEdit->text() << Qt::endl;
-	stream << "DMRPASSWORD:" << ui->dmrpwEdit->text() << Qt::endl;
-	stream << "DMRTGID:" << ui->dmrtgEdit->text() << Qt::endl;
-	stream << "MYCALL:" << ui->mycallEdit->text().simplified() << Qt::endl;
-	stream << "URCALL:" << ui->urcallEdit->text().simplified() << Qt::endl;
-	stream << "RPTR1:" << ui->rptr1Edit->text().simplified() << Qt::endl;
-	stream << "RPTR2:" << ui->rptr2Edit->text().simplified() << Qt::endl;
-	stream << "USRTXT:" << ui->usertxtEdit->text() << Qt::endl;
+	stream << "MODE:" << ui->modeCombo->currentText() << ENDLINE;
+	stream << "REFHOST:" << saved_refhost << ENDLINE;
+	stream << "DCSHOST:" << saved_dcshost << ENDLINE;
+	stream << "XRFHOST:" << saved_xrfhost << ENDLINE;
+	stream << "YSFHOST:" << saved_ysfhost << ENDLINE;
+	stream << "DMRHOST:" << saved_dmrhost << ENDLINE;
+	stream << "P25HOST:" << saved_p25host << ENDLINE;
+	stream << "NXDNHOST:" << saved_nxdnhost << ENDLINE;
+	stream << "MODULE:" << ui->comboMod->currentText() << ENDLINE;
+	stream << "CALLSIGN:" << ui->callsignEdit->text() << ENDLINE;
+	stream << "DMRID:" << ui->dmridEdit->text() << ENDLINE;
+	stream << "DMRPASSWORD:" << ui->dmrpwEdit->text() << ENDLINE;
+	stream << "DMRTGID:" << ui->dmrtgEdit->text() << ENDLINE;
+	stream << "MYCALL:" << ui->mycallEdit->text().simplified() << ENDLINE;
+	stream << "URCALL:" << ui->urcallEdit->text().simplified() << ENDLINE;
+	stream << "RPTR1:" << ui->rptr1Edit->text().simplified() << ENDLINE;
+	stream << "RPTR2:" << ui->rptr2Edit->text().simplified() << ENDLINE;
+	stream << "USRTXT:" << ui->usertxtEdit->text() << ENDLINE;
 	f.close();
 	delete ui;
 }
