@@ -2086,7 +2086,7 @@ void DudeStar::readyReadDMR()
 	}
 	if((buf.size() == 55) && (::memcmp(buf.data(), "DMRD", 4U) == 0) && !((uint8_t)buf.data()[15] & 0x20)){
 		uint8_t dmrframe[33];
-		uint8_t dmr3ambe[28];
+		uint8_t dmr3ambe[27];
 		uint8_t dmrsync[7];
 		// get the 33 bytes ambe
 		memcpy(dmrframe, &(buf.data()[20]), 33);
@@ -2094,7 +2094,7 @@ void DudeStar::readyReadDMR()
 		memcpy(dmr3ambe, dmrframe, 14);
 		dmr3ambe[13] &= 0xF0;
 		dmr3ambe[13] |= (dmrframe[19] & 0x0F);
-		memcpy(&dmr3ambe[14], &dmrframe[20], 14);
+		memcpy(&dmr3ambe[14], &dmrframe[20], 13);
 		// extract sync
 		dmrsync[0] = dmrframe[13] & 0x0F;
 		::memcpy(&dmrsync[1], &dmrframe[14], 5);
