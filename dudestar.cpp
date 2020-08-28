@@ -2037,10 +2037,10 @@ void DudeStar::readyReadDMR()
 
 			connect_status = DMR_CONF;
 			char latitude[20U];
-			::sprintf(latitude, "%08f", 50.0f);
+			::sprintf(latitude, "50.00000");
 
 			char longitude[20U];
-			::sprintf(longitude, "%09f", 3.0f);
+			::sprintf(longitude, "03.000000");
 			::sprintf(buffer + 8U, "%-8.8s%09u%09u%02u%02u%8.8s%9.9s%03d%-20.20s%-19.19s%c%-124.124s%-40.40s%-40.40s", callsign.toStdString().c_str(),
 					438800000, 438800000, 1, 1, latitude, longitude, 0, "Detroit","USA", '2', "www.dudetronics.com", "20190131", "MMDVM");
 			out.append(buffer, 302);
@@ -2086,7 +2086,7 @@ void DudeStar::readyReadDMR()
 	}
 	if((buf.size() == 55) && (::memcmp(buf.data(), "DMRD", 4U) == 0) && !((uint8_t)buf.data()[15] & 0x20)){
 		uint8_t dmrframe[33];
-		uint8_t dmr3ambe[27];
+		uint8_t dmr3ambe[28];
 		uint8_t dmrsync[7];
 		// get the 33 bytes ambe
 		memcpy(dmrframe, &(buf.data()[20]), 33);
