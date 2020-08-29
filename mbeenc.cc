@@ -186,12 +186,6 @@ static inline uint32_t golay_23_encode(uint32_t code_word_in)
 	return golay_24_encode(code_word_in) >> 1;
 }
 
-static void load_i(const uint8_t src[], int& dest, int count) {
-	dest = 0;
-	for (int i=0; i<count; i++)
-		dest = (dest << 1) + src[count-1-i];
-}
-
 static void dump_i(uint8_t dest[], int src, int count) {
 	for (int i=0; i<count; i++) {
 		dest[i] = src & 1;
@@ -882,7 +876,7 @@ void MBEEncoder::interleave_vcw(uint8_t _vf[], int _c0, int _c1, int _c2, int _c
 	vf[70] = c2[4];
 	vf[71] = c3[0];
 
-	for (int i=0; i<sizeof(vf)/2; i++) {
+	for (unsigned int i=0; i < sizeof(vf)/2; i++) {
 		_vf[i] = (vf[i*2] << 1) | vf[i*2+1];
 	}
 }

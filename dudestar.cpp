@@ -3888,7 +3888,7 @@ void DudeStar::calcPFCS(char *d)
    for (j = 17; j < 41; ++j){
       b = d[j];
       for (i = 0; i < 8; ++i) {
-		 bit = ((b >> 7) - i & 0x1) == 1;
+		 bit = (((b >> 7) - i) & 0x1) == 1;
          c15 = (crc >> 15 & 0x1) == 1;
          crc <<= 1;
          if (c15 & bit)

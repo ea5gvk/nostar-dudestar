@@ -235,6 +235,7 @@ uint8_t NXDNEncoder::get_lich()
 	case 0x80U:
 	case 0xB0U:
 		parity = true;
+		break;
 	default:
 		parity = false;
 	}

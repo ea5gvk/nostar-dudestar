@@ -47,7 +47,7 @@ static int
 mbe_dequantizeAmbeParms (mbe_parms * cur_mp, mbe_parms * prev_mp, const int *b, int dstar)
 {
 
-  int ji, i, j, k, l, L, L9, m, am, ak;
+  int ji, i, j, k, l, L, m, am, ak;
   int intkl[57];
   int b0, b1, b2, b3, b4, b5, b6, b7, b8;
   float f0, Cik[5][18], flokl[57], deltal[57];
@@ -137,7 +137,6 @@ mbe_dequantizeAmbeParms (mbe_parms * cur_mp, mbe_parms * prev_mp, const int *b, 
       //L=(int)((float)0.4627 / f0);
       cur_mp->L = L;
     }
-  L9 = L - 9;
 
   // decode V/UV parameters
   for (l = 1; l <= L; l++)

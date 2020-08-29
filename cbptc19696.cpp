@@ -197,33 +197,34 @@ void CBPTC19696::decodeExtractData(unsigned char* data)
 {
     bool bData[96U];
     unsigned int pos = 0U;
-    for (unsigned int a = 4U; a <= 11U; a++, pos++)
+	for (unsigned int a = 4U; a <= 11U; a++, pos++){
         bData[pos] = m_deInterData[a];
-    
-    for (unsigned int a = 16U; a <= 26U; a++, pos++)
+	}
+	for (unsigned int a = 16U; a <= 26U; a++, pos++){
         bData[pos] = m_deInterData[a];
-    
-    for (unsigned int a = 31U; a <= 41U; a++, pos++)
+	}
+	for (unsigned int a = 31U; a <= 41U; a++, pos++){
         bData[pos] = m_deInterData[a];
-    
-    for (unsigned int a = 46U; a <= 56U; a++, pos++)
+	}
+	for (unsigned int a = 46U; a <= 56U; a++, pos++){
         bData[pos] = m_deInterData[a];
-    
-    for (unsigned int a = 61U; a <= 71U; a++, pos++)
+	}
+	for (unsigned int a = 61U; a <= 71U; a++, pos++){
         bData[pos] = m_deInterData[a];
-    
-    for (unsigned int a = 76U; a <= 86U; a++, pos++)
+	}
+	for (unsigned int a = 76U; a <= 86U; a++, pos++){
         bData[pos] = m_deInterData[a];
-    
-    for (unsigned int a = 91U; a <= 101U; a++, pos++)
+	}
+	for (unsigned int a = 91U; a <= 101U; a++, pos++){
         bData[pos] = m_deInterData[a];
-    
-    for (unsigned int a = 106U; a <= 116U; a++, pos++)
+	}
+	for (unsigned int a = 106U; a <= 116U; a++, pos++){
         bData[pos] = m_deInterData[a];
-    
-    for (unsigned int a = 121U; a <= 131U; a++, pos++)
+	}
+	for(unsigned int a = 121U; a <= 131U; a++, pos++){
         bData[pos] = m_deInterData[a];
-    
+	}
+
 	bitsToByteBE(bData + 0U,  data[0U]);
 	bitsToByteBE(bData + 8U,  data[1U]);
 	bitsToByteBE(bData + 16U, data[2U]);
