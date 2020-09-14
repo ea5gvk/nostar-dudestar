@@ -1125,14 +1125,14 @@ void DudeStar::disconnect_from_host()
 		d.append('\x00');
 	}
 	if(protocol == "XRF"){
-		d.append(callsign);
+		d.append(callsign.toUtf8());
 		d.append(8 - callsign.size(), ' ');
 		d.append(module);
 		d.append(' ');
 		d.append('\x00');
 	}
 	if(protocol == "DCS"){
-		d.append(callsign);
+		d.append(callsign.toUtf8());
 		d.append(8 - callsign.size(), ' ');
 		d.append(module);
 		d.append(' ');
@@ -1153,7 +1153,7 @@ void DudeStar::disconnect_from_host()
 		d.append('S');
 		d.append('F');
 		d.append('U');
-		d.append(callsign);
+		d.append(callsign.toUtf8());
 		d.append(5, ' ');
 	}
 	else if(protocol == "DMR"){
@@ -1173,7 +1173,7 @@ void DudeStar::disconnect_from_host()
 	}
 	else if(protocol == "P25"){
 		d.append(0xf1);
-		d.append(callsign);
+		d.append(callsign.toUtf8());
 		ui->dmridEdit->setEnabled(true);
 	}
 	else if(protocol == "NXDN"){
@@ -1182,7 +1182,7 @@ void DudeStar::disconnect_from_host()
 		d.append('D');
 		d.append('N');
 		d.append('U');
-		d.append(callsign);
+		d.append(callsign.toUtf8());
 		d.append(10 - callsign.size(), ' ');
 		d.append((dmr_destid >> 8) & 0xff);
 		d.append((dmr_destid >> 0) & 0xff);
@@ -1274,14 +1274,14 @@ void DudeStar::hostname_lookup(QHostInfo i)
 		d.append(0x01);
 	}
 	if(protocol == "XRF"){
-		d.append(callsign);
+		d.append(callsign.toUtf8());
 		d.append(8 - callsign.size(), ' ');
 		d.append(module);
 		d.append(module);
 		d.append(11);
 	}
 	if(protocol == "DCS"){
-		d.append(callsign);
+		d.append(callsign.toUtf8());
 		d.append(8 - callsign.size(), ' ');
 		d.append(module);
 		d.append(module);
@@ -1293,7 +1293,7 @@ void DudeStar::hostname_lookup(QHostInfo i)
 		d.append('S');
 		d.append('F');
 		d.append('P');
-		d.append(callsign);
+		d.append(callsign.toUtf8());
 		d.append(5, ' ');
 	}
 	else if(protocol == "DMR"){
@@ -1308,7 +1308,7 @@ void DudeStar::hostname_lookup(QHostInfo i)
 	}
 	else if(protocol == "P25"){
 		d.append(0xf0);
-		d.append(callsign);
+		d.append(callsign.toUtf8());
 		d.append(10 - callsign.size(), ' ');
 	}
 	else if(protocol == "NXDN"){
@@ -1317,7 +1317,7 @@ void DudeStar::hostname_lookup(QHostInfo i)
 		d.append('D');
 		d.append('N');
 		d.append('P');
-		d.append(callsign);
+		d.append(callsign.toUtf8());
 		d.append(10 - callsign.size(), ' ');
 		d.append((dmr_destid >> 8) & 0xff);
 		d.append((dmr_destid >> 0) & 0xff);
@@ -1678,16 +1678,16 @@ void DudeStar::process_ping()
 		out.append('\x00');
 	}
 	else if(protocol == "XRF"){
-		out.append(callsign);
+		out.append(callsign.toUtf8());
 		out.append(8 - callsign.size(), ' ');
 		out.append('\x00');
 	}
 	else if(protocol == "DCS"){
-		out.append(callsign);
+		out.append(callsign.toUtf8());
 		out.append(7 - callsign.size(), ' ');
 		out.append(module);
 		out.append('\x00');
-		out.append(hostname);
+		out.append(hostname.toUtf8());
 		out.append('\x00');
 		out.append(module);
 		out.append(module);
@@ -1701,7 +1701,7 @@ void DudeStar::process_ping()
 		out.append('S');
 		out.append('F');
 		out.append('P');
-		out.append(callsign);
+		out.append(callsign.toUtf8());
 		out.append(5, ' ');
 	}
 	else if(protocol == "DMR"){
@@ -1714,7 +1714,7 @@ void DudeStar::process_ping()
 	}
 	else if(protocol == "P25"){
 		out.append(0xf0);
-		out.append(callsign);
+		out.append(callsign.toUtf8());
 		out.append(10 - callsign.size(), ' ');
 	}
 	else if(protocol == "NXDN"){
@@ -1723,7 +1723,7 @@ void DudeStar::process_ping()
 		out.append('D');
 		out.append('N');
 		out.append('P');
-		out.append(callsign);
+		out.append(callsign.toUtf8());
 		out.append(10 - callsign.size(), ' ');
 		out.append((dmr_destid >> 8) & 0xff);
 		out.append((dmr_destid >> 0) & 0xff);
@@ -2009,7 +2009,7 @@ void DudeStar::readyReadDMR()
 			in.append(buf[7]);
 			in.append(buf[8]);
 			in.append(buf[9]);
-			in.append(dmr_password);
+			in.append(dmr_password.toUtf8());
 
 			out.clear();
 			out.resize(40);
@@ -2395,7 +2395,7 @@ void DudeStar::readyReadREF()
 		out.append('\x00');
         out.append(callsign.toUpper().toLocal8Bit().data(), 6);
 		out.append(10,'\x00');
-		out.append(serial);
+		out.append(serial.toUtf8());
 		//out.append("DV072475", 8);
 		qDebug() << "serial == " << serial;
         udp->writeDatagram(out, address, 20001);

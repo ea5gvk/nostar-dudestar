@@ -115,7 +115,7 @@ private:
     QAudioOutput *audio;
 	QAudioInput *audioin;
 	QBuffer audio_buffer;
-	uint32_t audiotx_cnt;
+	int audiotx_cnt;
 	QFile audiofile;
     QIODevice *audiodev;
 	QIODevice *audioindev;
