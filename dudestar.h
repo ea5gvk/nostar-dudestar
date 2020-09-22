@@ -159,7 +159,10 @@ private slots:
 	void process_host_change(const QString &);
 	void swrx_state_changed(int);
 	void swtx_state_changed(int);
-	void connect_to_serial();
+	void discover_audio_devices();
+	void setup_audio();
+	void discover_vocoders();
+	void connect_to_serial(QString);
     void readyRead();
 	void readyReadREF();
 	void readyReadXRF();

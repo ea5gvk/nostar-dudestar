@@ -103,58 +103,14 @@ DudeStar::DudeStar(QWidget *parent) :
 #endif
     ui->setupUi(this);
     init_gui();
+	discover_vocoders();
+	discover_audio_devices();
     udp = new QUdpSocket(this);
     config_path = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation);
 #ifndef Q_OS_WIN
 	config_path += "/dudestar";
 #endif
 	connect(&qnam, SIGNAL(finished(QNetworkReply*)), this, SLOT(http_finished(QNetworkReply*)));
-    QAudioFormat format;
-    format.setSampleRate(8000);
-    format.setChannelCount(1);
-    format.setSampleSize(16);
-    format.setCodec("audio/pcm");
-	format.setByteOrder(QAudioFormat::LittleEndian);
-    format.setSampleType(QAudioFormat::SignedInt);
-	QList<QAudioDeviceInfo> devices = QAudioDeviceInfo::availableDevices(QAudio::AudioOutput);
-	//qDebug() << "Version == " << VERSION_NUMBER;
-	if(devices.size() == 0){
-		qDebug() << "No audio hardware found";
-	}
-	else{
-		QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
-#ifdef DEBUG
-		QList<int> srs = info.supportedSampleRates();
-		for(int i = 0; i < srs.size(); ++i){
-			qDebug() << "Sample rate " << srs[i] << " supported";
-		}
-		QList<int> ss = info.supportedSampleSizes();
-		for(int i = 0; i < ss.size(); ++i){
-			qDebug() << "Sample size " << ss[i] << " supported";
-		}
-		QList<QAudioFormat::SampleType> st = info.supportedSampleTypes();
-		for(int i = 0; i < st.size(); ++i){
-			qDebug() << "Sample type " << st[i] << " supported";
-		}
-		QStringList sc = info.supportedCodecs();
-		for(int i = 0; i < sc.size(); ++i){
-			qDebug() << "Sample codec " << sc[i] << " supported";
-		}
-		 QList<QAudioFormat::Endian> bo = info.supportedByteOrders();
-		for(int i = 0; i < bo.size(); ++i){
-			qDebug() << "Sample byte order " << bo[i] << " supported";
-		}
-		QList<int> cc = info.supportedChannelCounts();
-		for(int i = 0; i < cc.size(); ++i){
-			qDebug() << "Sample channel count " << cc[i] << " supported";
-		}
-#endif
-		if (!info.isFormatSupported(format)) {
-			qWarning() << "Raw audio format not supported by backend, trying nearest format.";
-			format = info.nearestFormat(format);
-			qWarning() << "Format now set to " << format.sampleRate() << ":" << format.sampleSize();
-		}
-	}
 #ifdef USE_FLITE
 	flite_init();
 	voice_slt = register_cmu_us_slt(nullptr);
@@ -162,14 +118,10 @@ DudeStar::DudeStar(QWidget *parent) :
 	voice_awb = register_cmu_us_awb(nullptr);
 	voice_rms = register_cmu_us_rms(nullptr);
 #endif
-    audio = new QAudioOutput(format, this);
-	audio->setBufferSize(8192);
-	//format.setByteOrder(QAudioFormat::BigEndian);
-	audioin = new QAudioInput(format, this);
     audiotimer = new QTimer();
 	ping_timer = new QTimer();
 	ysftimer = new QTimer();
-    connect(audio, SIGNAL(stateChanged(QAudio::State)), this, SLOT(handleStateChanged(QAudio::State)));
+
     connect_status = DISCONNECTED;
 	tx = false;
 	txtimer = new QTimer();
@@ -193,6 +145,8 @@ DudeStar::~DudeStar()
 	QFile f(config_path + "/settings.conf");
 	f.open(QIODevice::WriteOnly);
 	QTextStream stream(&f);
+	stream << "PLAYBACK:" << ui->AudioOutCombo->currentText() << ENDLINE;
+	stream << "CAPTURE:" << ui->AudioInCombo->currentText() << ENDLINE;
 	stream << "MODE:" << ui->modeCombo->currentText() << ENDLINE;
 	stream << "REFHOST:" << saved_refhost << ENDLINE;
 	stream << "DCSHOST:" << saved_dcshost << ENDLINE;
@@ -922,6 +876,12 @@ void DudeStar::process_settings()
 			while(!f.atEnd()){
 				QString s = f.readLine();
 				QStringList sl = s.split(':');
+				if(sl.at(0) == "PLAYBACK"){
+					ui->AudioOutCombo->setCurrentText(sl.at(1).simplified());
+				}
+				if(sl.at(0) == "CAPTURE"){
+					ui->AudioInCombo->setCurrentText(sl.at(1).simplified());
+				}
 				if(sl.at(0) == "MODE"){
 					ui->modeCombo->blockSignals(true);
 					int i = ui->modeCombo->findText(sl.at(1).simplified());
@@ -1047,69 +1007,159 @@ void DudeStar::process_settings()
 	}
 }
 
-void DudeStar::connect_to_serial()
+void DudeStar::discover_audio_devices()
 {
-	QString description;
-	QString manufacturer;
-	QString serialNumber;
+	ui->AudioOutCombo->addItem("OS Default");
+	ui->AudioInCombo->addItem("OS Default");
+	QList<QAudioDeviceInfo> devices = QAudioDeviceInfo::availableDevices(QAudio::AudioOutput);
+
+	for (QList<QAudioDeviceInfo>::ConstIterator it = devices.constBegin(); it != devices.constEnd(); ++it ) {
+		//qDebug() << "Playback device name = " << (*it).deviceName();
+		ui->AudioOutCombo->addItem((*it).deviceName());
+	}
+	devices = QAudioDeviceInfo::availableDevices(QAudio::AudioInput);
+
+	for (QList<QAudioDeviceInfo>::ConstIterator it = devices.constBegin(); it != devices.constEnd(); ++it ) {
+		//qDebug() << "Recording device name = " << (*it).deviceName();
+		ui->AudioInCombo->addItem((*it).deviceName());
+	}
+}
+
+void DudeStar::setup_audio()
+{
+	QAudioFormat format;
+	QAudioFormat tempformat;
+	format.setSampleRate(8000);
+	format.setChannelCount(1);
+	format.setSampleSize(16);
+	format.setCodec("audio/pcm");
+	format.setByteOrder(QAudioFormat::LittleEndian);
+	format.setSampleType(QAudioFormat::SignedInt);
+
+	QList<QAudioDeviceInfo> devices = QAudioDeviceInfo::availableDevices(QAudio::AudioOutput);
+
+	if(devices.size() == 0){
+		qDebug() << "No audio playback hardware found";
+	}
+	else{
+		QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
+		for (QList<QAudioDeviceInfo>::ConstIterator it = devices.constBegin(); it != devices.constEnd(); ++it ) {
+			//qDebug() << "Device name = " << (*it).deviceName();
+			if((*it).deviceName() == ui->AudioOutCombo->currentText()){
+				info = *it;
+			}
+		}
+		if (!info.isFormatSupported(format)) {
+			qWarning() << "Raw audio format not supported by backend, trying nearest format.";
+			tempformat = info.nearestFormat(format);
+			qWarning() << "Format now set to " << format.sampleRate() << ":" << format.sampleSize();
+		}
+		else{
+			tempformat = format;
+		}
+		qDebug() << "Using playback device " << info.deviceName();
+		audio = new QAudioOutput(info, tempformat, this);
+		audio->setBufferSize(8192);
+		//connect(audio, SIGNAL(stateChanged(QAudio::State)), this, SLOT(handleStateChanged(QAudio::State)));
+	}
+
+	devices = QAudioDeviceInfo::availableDevices(QAudio::AudioInput);
+
+	if(devices.size() == 0){
+		qDebug() << "No audio recording hardware found";
+	}
+	else{
+		QAudioDeviceInfo info(QAudioDeviceInfo::defaultInputDevice());
+		for (QList<QAudioDeviceInfo>::ConstIterator it = devices.constBegin(); it != devices.constEnd(); ++it ) {
+			//qDebug() << "Device name = " << (*it).deviceName();
+			if((*it).deviceName() == ui->AudioInCombo->currentText()){
+				info = *it;
+			}
+		}
+		if (!info.isFormatSupported(format)) {
+			qWarning() << "Raw audio format not supported by backend, trying nearest format.";
+			tempformat = info.nearestFormat(format);
+			qWarning() << "Format now set to " << format.sampleRate() << ":" << format.sampleSize();
+		}
+		else{
+			tempformat = format;
+		}
+		qDebug() << "Using recording device " << info.deviceName();
+		audioin = new QAudioInput(info, format, this);
+	}
+}
+
+void DudeStar::discover_vocoders()
+{
 	const QString blankString = "N/A";
 	QTextStream out(stdout);
+	const auto serialPortInfos = QSerialPortInfo::availablePorts();
+
+	if(serialPortInfos.count()){
+		for(const QSerialPortInfo &serialPortInfo : serialPortInfos) {
+			out << "Port: " << serialPortInfo.portName() << ENDLINE
+				<< "Location: " << serialPortInfo.systemLocation() << ENDLINE
+				<< "Description: " << (!serialPortInfo.description().isEmpty() ? serialPortInfo.description() : blankString) << ENDLINE
+				<< "Manufacturer: " << (!serialPortInfo.manufacturer().isEmpty() ? serialPortInfo.manufacturer() : blankString) << ENDLINE
+				<< "Serial number: " << (!serialPortInfo.serialNumber().isEmpty() ? serialPortInfo.serialNumber() : blankString) << ENDLINE
+				<< "Vendor Identifier: " << (serialPortInfo.hasVendorIdentifier() ? QByteArray::number(serialPortInfo.vendorIdentifier(), 16) : blankString) << ENDLINE
+				<< "Product Identifier: " << (serialPortInfo.hasProductIdentifier() ? QByteArray::number(serialPortInfo.productIdentifier(), 16) : blankString) << ENDLINE
+				<< "Busy: " << (serialPortInfo.isBusy() ? "Yes" : "No") << ENDLINE;
+			if((!serialPortInfo.description().isEmpty()) && (!serialPortInfo.isBusy())){
+				ui->AmbeCombo->addItem(serialPortInfo.portName() + " - " + serialPortInfo.manufacturer() + " " + serialPortInfo.description() + " - " + serialPortInfo.serialNumber(), serialPortInfo.systemLocation());
+			}
+		}
+	}
+}
+
+void DudeStar::connect_to_serial(QString p)
+{
 	hw_ambe_present = false;
 	ui->checkBoxSWTX->setDisabled(true);
 	ui->checkBoxSWRX->setDisabled(true);
 	ui->checkBoxSWTX->setChecked(true);
 	ui->checkBoxSWRX->setChecked(true);
 
-	const auto serialPortInfos = QSerialPortInfo::availablePorts();
-	if(serialPortInfos.count()){
-		for(const QSerialPortInfo &serialPortInfo : serialPortInfos) {
-			description = serialPortInfo.description();
-			manufacturer = serialPortInfo.manufacturer();
-			serialNumber = serialPortInfo.serialNumber();
-			//out << "Port: " << serialPortInfo.portName() << endl << "Location: " << serialPortInfo.systemLocation() << endl << "Description: " << (!description.isEmpty() ? description : blankString) << endl << "Manufacturer: " << (!manufacturer.isEmpty() ? manufacturer : blankString) << endl << "Serial number: " << (!serialNumber.isEmpty() ? serialNumber : blankString) << endl << "Vendor Identifier: " << (serialPortInfo.hasVendorIdentifier() ? QByteArray::number(serialPortInfo.vendorIdentifier(), 16) : blankString) << endl << "Product Identifier: " << (serialPortInfo.hasProductIdentifier() ? QByteArray::number(serialPortInfo.productIdentifier(), 16) : blankString) << endl << "Busy: " << (serialPortInfo.isBusy() ? "Yes" : "No") << endl;
-			//if((serialPortInfo.vendorIdentifier() == 0x0483) && (serialPortInfo.productIdentifier() == 0x5740)){
-			if((protocol != "P25") && (serialPortInfo.vendorIdentifier() == 0x0403) && (serialPortInfo.productIdentifier() >= 0x6001)){
-				serial = new QSerialPort;
-				serial->setPortName(serialPortInfo.portName());
-				serial->setBaudRate(460800);
-				serial->setDataBits(QSerialPort::Data8);
-				serial->setStopBits(QSerialPort::OneStop);
-				serial->setParity(QSerialPort::NoParity);
-				//out << "Baud rate == " << serial->baudRate() << endl;
-				if (serial->open(QIODevice::ReadWrite)) {
-					connect(serial, &QSerialPort::readyRead, this, &DudeStar::process_serial);
-					serial->setFlowControl(QSerialPort::HardwareControl);
-					serial->setRequestToSend(true);
-					QByteArray a;
-					a.clear();
-					a.append(reinterpret_cast<const char*>(AMBE3000_PARITY_DISABLE), sizeof(AMBE3000_PARITY_DISABLE));
-					serial->write(a);
-					QThread::msleep(100);
-					a.clear();
-					if(protocol == "DMR"){
-						a.append(reinterpret_cast<const char*>(AMBE3000_2450_1150), sizeof(AMBE3000_2450_1150));
-					}
-					else if( (protocol == "YSF") || (protocol == "NXDN") ){
-						a.append(reinterpret_cast<const char*>(AMBE3000_2450_0000), sizeof(AMBE3000_2450_0000));
-					}
-					else if(protocol == "P25"){
-						a.append(reinterpret_cast<const char*>(AMBEP251_4400_2800), sizeof(AMBEP251_4400_2800));
-					}
-					else{ //D-Star
-						a.append(reinterpret_cast<const char*>(AMBE2000_2400_1200), sizeof(AMBE2000_2400_1200));
-				   }
-                   serial->write(a);
-				   hw_ambe_present = true;
-				   ui->checkBoxSWTX->setDisabled(false);
-				   ui->checkBoxSWRX->setDisabled(false);
-				   ui->checkBoxSWTX->setChecked(false);
-				   ui->checkBoxSWRX->setChecked(false);
-				}
-				else{
-					hw_ambe_present = false;
-					std::cerr << "Error: Failed to open device." << std::endl;
-				}
+	if((protocol != "P25") && (p != "")){
+		serial = new QSerialPort;
+		serial->setPortName(p);
+		serial->setBaudRate(460800);
+		serial->setDataBits(QSerialPort::Data8);
+		serial->setStopBits(QSerialPort::OneStop);
+		serial->setParity(QSerialPort::NoParity);
+		//out << "Baud rate == " << serial->baudRate() << endl;
+		if (serial->open(QIODevice::ReadWrite)) {
+			connect(serial, &QSerialPort::readyRead, this, &DudeStar::process_serial);
+			serial->setFlowControl(QSerialPort::HardwareControl);
+			serial->setRequestToSend(true);
+			QByteArray a;
+			a.clear();
+			a.append(reinterpret_cast<const char*>(AMBE3000_PARITY_DISABLE), sizeof(AMBE3000_PARITY_DISABLE));
+			serial->write(a);
+			QThread::msleep(100);
+			a.clear();
+			if(protocol == "DMR"){
+				a.append(reinterpret_cast<const char*>(AMBE3000_2450_1150), sizeof(AMBE3000_2450_1150));
 			}
+			else if( (protocol == "YSF") || (protocol == "NXDN") ){
+				a.append(reinterpret_cast<const char*>(AMBE3000_2450_0000), sizeof(AMBE3000_2450_0000));
+			}
+			else if(protocol == "P25"){
+				a.append(reinterpret_cast<const char*>(AMBEP251_4400_2800), sizeof(AMBEP251_4400_2800));
+			}
+			else{ //D-Star
+				a.append(reinterpret_cast<const char*>(AMBE2000_2400_1200), sizeof(AMBE2000_2400_1200));
+			}
+			serial->write(a);
+			hw_ambe_present = true;
+			ui->checkBoxSWTX->setDisabled(false);
+			ui->checkBoxSWRX->setDisabled(false);
+			ui->checkBoxSWTX->setChecked(false);
+			ui->checkBoxSWRX->setChecked(false);
+		}
+		else{
+			hw_ambe_present = false;
+			std::cerr << "Error: Failed to open device." << std::endl;
 		}
 	}
 }
@@ -1206,6 +1256,9 @@ void DudeStar::process_connect()
         ui->rptr2->clear();
 		ui->streamid->clear();
 		ui->usertxt->clear();
+		ui->AmbeCombo->setEnabled(true);
+		ui->AudioOutCombo->setEnabled(true);
+		ui->AudioInCombo->setEnabled(true);
 		ui->modeCombo->setEnabled(true);
         ui->hostCombo->setEnabled(true);
         ui->callsignEdit->setEnabled(true);
@@ -1226,6 +1279,8 @@ void DudeStar::process_connect()
 		ping_cnt = 0;
 		ui->txButton->setDisabled(true);
 		status_txt->setText("Not connected");
+		delete audio;
+		delete audioin;
     }
     else{
 		hostname = ui->hostCombo->currentText().simplified();
@@ -1257,8 +1312,9 @@ void DudeStar::process_connect()
 			dmrid = nxdnids.key(callsign);
 			dmr_destid = ui->hostCombo->currentText().toUInt();
 		}
-		connect_to_serial();
+		connect_to_serial(ui->AmbeCombo->currentData().toString().simplified());
 		QHostInfo::lookupHost(host, this, SLOT(hostname_lookup(QHostInfo)));
+		setup_audio();
         audiodev = audio->start();
     }
 }
@@ -1767,6 +1823,9 @@ void DudeStar::readyReadYSF()
 			mbeenc->set_gain_adjust(1.0);
 			ui->connectButton->setText("Disconnect");
 			ui->connectButton->setEnabled(true);
+			ui->AmbeCombo->setEnabled(false);
+			ui->AudioOutCombo->setEnabled(false);
+			ui->AudioInCombo->setEnabled(false);
 			ui->modeCombo->setEnabled(false);
 			ui->hostCombo->setEnabled(false);
 			ui->callsignEdit->setEnabled(false);
@@ -1820,6 +1879,9 @@ void DudeStar::readyReadNXDN()
 			mbeenc->set_49bit_mode();
 			ui->connectButton->setText("Disconnect");
 			ui->connectButton->setEnabled(true);
+			ui->AmbeCombo->setEnabled(false);
+			ui->AudioOutCombo->setEnabled(false);
+			ui->AudioInCombo->setEnabled(false);
 			ui->modeCombo->setEnabled(false);
 			ui->hostCombo->setEnabled(false);
 			ui->callsignEdit->setEnabled(false);
@@ -1894,6 +1956,9 @@ void DudeStar::readyReadP25()
 			mbeenc->set_88bit_mode();
 			ui->connectButton->setText("Disconnect");
 			ui->connectButton->setEnabled(true);
+			ui->AmbeCombo->setEnabled(false);
+			ui->AudioOutCombo->setEnabled(false);
+			ui->AudioInCombo->setEnabled(false);
 			ui->modeCombo->setEnabled(false);
 			ui->hostCombo->setEnabled(false);
 			ui->callsignEdit->setEnabled(false);
@@ -1994,6 +2059,9 @@ void DudeStar::readyReadDMR()
 		delete udp;
 		connect_status = DISCONNECTED;
 		ui->connectButton->setText("Connect");
+		ui->AmbeCombo->setEnabled(true);
+		ui->AudioOutCombo->setEnabled(true);
+		ui->AudioInCombo->setEnabled(true);
 		ui->modeCombo->setEnabled(true);
 		ui->hostCombo->setEnabled(true);
 		ui->callsignEdit->setEnabled(true);
@@ -2059,6 +2127,9 @@ void DudeStar::readyReadDMR()
 			connect(dmr_header_timer, SIGNAL(timeout()), this, SLOT(tx_dmr_header()));
 			ui->connectButton->setText("Disconnect");
 			ui->connectButton->setEnabled(true);
+			ui->AmbeCombo->setEnabled(false);
+			ui->AudioOutCombo->setEnabled(false);
+			ui->AudioInCombo->setEnabled(false);
 			ui->modeCombo->setEnabled(false);
 			ui->hostCombo->setEnabled(false);
 			ui->callsignEdit->setEnabled(false);
@@ -2147,6 +2218,9 @@ void DudeStar::readyReadXRF()
 		mbe->setAutoGain(true);
 		ui->connectButton->setText("Disconnect");
 		ui->connectButton->setEnabled(true);
+		ui->AmbeCombo->setEnabled(false);
+		ui->AudioOutCombo->setEnabled(false);
+		ui->AudioInCombo->setEnabled(false);
 		ui->modeCombo->setEnabled(false);
 		ui->hostCombo->setEnabled(false);
 		ui->callsignEdit->setEnabled(false);
@@ -2271,6 +2345,9 @@ void DudeStar::readyReadDCS()
 		mbe->setAutoGain(true);
 		ui->connectButton->setText("Disconnect");
 		ui->connectButton->setEnabled(true);
+		ui->AmbeCombo->setEnabled(false);
+		ui->AudioOutCombo->setEnabled(false);
+		ui->AudioInCombo->setEnabled(false);
 		ui->modeCombo->setEnabled(false);
 		ui->hostCombo->setEnabled(false);
 		ui->callsignEdit->setEnabled(false);
@@ -2430,6 +2507,9 @@ void DudeStar::readyReadREF()
 			mbeenc->set_gain_adjust(3);
 			ui->connectButton->setText("Disconnect");
 			ui->connectButton->setEnabled(true);
+			ui->AmbeCombo->setEnabled(false);
+			ui->AudioOutCombo->setEnabled(false);
+			ui->AudioInCombo->setEnabled(false);
 			ui->modeCombo->setEnabled(false);
 			ui->hostCombo->setEnabled(false);
 			ui->callsignEdit->setEnabled(false);
