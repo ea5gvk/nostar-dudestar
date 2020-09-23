@@ -1,7 +1,7 @@
 # DUDE-Star
 Software to RX/TX D-STAR, DMR, Fusion YSF, NXDN, and P25 reflectors and repeaters/gateways over UDP
 
-This software connects to D-STAR, Fusion, NXDN, and P25 reflectors and gateways/repeaters over UDP.  It is similar in functionality to BlueDV (except not as pretty), and is compatible with all of the AMBE3000 based USB devices out there (ThumbDV, DVstick 30, etc). If a compatible DV dongle is detected, TX is enabled.  It includes software decoding and encoding support, using experimental open source IMBE/AMBE vocoder software.  This software is open source and uses the cross platform C++ library called Qt.  It will build and run on Linux, Windows, and Mac OSX.
+This software connects to D-STAR, Fusion, NXDN, and P25 reflectors and gateways/repeaters over UDP.  It is similar in functionality to BlueDV (except not as pretty), and is compatible with all of the AMBE3000 based USB devices out there (ThumbDV, DVstick 30, DVSI, etc). It includes software decoding and encoding support, using experimental open source IMBE/AMBE vocoder software.  This software is open source and uses the cross platform C++ library called Qt.  It will build and run on Linux, Windows, and Mac OSX.
 
 This software makes use of software from a number of other open source software projects, including MMDVMHost, MMDVM_CM, XLXD, DSDcc, MBELIB, op25 (GNU Radio), and others. Not only is software from these projects being used directly, but learning about the various network protocols and encoding/decoding of the various protocols was only possible thanks to the authors of all of these software projects.
 
