@@ -29,6 +29,7 @@
 #include <cmath>
 
 #include "mbeenc.h"
+#include "Golay24128.h"
 #include "ambe3600x2250_const.h"
 #include "ambe3600x2400_const.h"
 #include "vocoder_tables.h"
@@ -609,6 +610,7 @@ static void encode_49bit(uint8_t outp[49], const int b[9]) {
 
 MBEEncoder::MBEEncoder(void)
 	: d_49bit_mode(false),
+	d_dmr_mode(false),
 	d_88bit_mode(false),
 	d_dstar_mode(false),
 	d_gain_adjust(0),
@@ -628,6 +630,11 @@ void MBEEncoder::set_49bit_mode(void)
 	d_49bit_mode = true;
 }
 
+void MBEEncoder::set_dmr_mode(void)
+{
+	d_dmr_mode = true;
+}
+
 void MBEEncoder::set_88bit_mode(void)
 {
 	d_88bit_mode = true;
@@ -639,9 +646,11 @@ void MBEEncoder::set_88bit_mode(void)
 void MBEEncoder::encode(int16_t samples[], uint8_t codeword[])
 {
 	int b[9];
+	unsigned char dmr[9];
 	int16_t frame_vector[8];	// result ignored
 	uint8_t ambe_bytes[9];
 	memset(ambe_bytes, 0, 9);
+	memset(dmr, 0, 9);
 	//memset (b, 0, 9);
 /*
 	for(int i = 0; i < 160; ++i){
@@ -716,9 +725,18 @@ void MBEEncoder::encode(int16_t samples[], uint8_t codeword[])
 		encode_dstar(codeword, b, d_alt_dstar_interleave);
 	} else if (d_49bit_mode) {
 		encode_49bit(codeword, b);
-	} else {
+	} else if(d_dmr_mode){
+		encode_49bit(codeword, b);
+		for(int i = 0; i < 9; ++i){
+			for(int j = 0; j < 8; ++j){
+				//ambe_bytes[i] |= (ambe_frame[((8-i)*8)+(7-j)] << (7-j));
+				ambe_bytes[i] |= (codeword[(i*8)+j] << (7-j));
+			}
+		}
+		encode_dmr(ambe_bytes, dmr);
+		memcpy(codeword, dmr, 9);
 		// add FEC and interleaving - output rate is 3600 (72 bits)
-		encode_vcw(codeword, b);
+		//encode_vcw(codeword, b);
 	}
 	for(int i = 0; i < 9; ++i){
 		for(int j = 0; j < 8; ++j){
@@ -755,6 +773,56 @@ void MBEEncoder::encode_dstar(uint8_t result[72], const int b[9], bool alt_dstar
 			result[i] = pre_buf[alt_d_list[i]];
 		else
 			result[d_list[i]] = pre_buf[i];
+}
+
+void MBEEncoder::encode_dmr(const unsigned char* in, unsigned char* out)
+{
+	unsigned int aOrig = 0U;
+	unsigned int bOrig = 0U;
+	unsigned int cOrig = 0U;
+
+	unsigned int MASK = 0x000800U;
+	for (unsigned int i = 0U; i < 12U; i++, MASK >>= 1) {
+		unsigned int n1 = i;
+		unsigned int n2 = i + 12U;
+		if (READ_BIT(in, n1))
+			aOrig |= MASK;
+		if (READ_BIT(in, n2))
+			bOrig |= MASK;
+	}
+
+	MASK = 0x1000000U;
+	for (unsigned int i = 0U; i < 25U; i++, MASK >>= 1) {
+		unsigned int n = i + 24U;
+		if (READ_BIT(in, n))
+			cOrig |= MASK;
+	}
+
+	unsigned int a = CGolay24128::encode24128(aOrig);
+
+	// The PRNG
+	unsigned int p = PRNG_TABLE[aOrig] >> 1;
+
+	unsigned int b = CGolay24128::encode23127(bOrig) >> 1;
+	b ^= p;
+
+	MASK = 0x800000U;
+	for (unsigned int i = 0U; i < 24U; i++, MASK >>= 1) {
+		unsigned int aPos = DMR_A_TABLE[i];
+		WRITE_BIT(out, aPos, a & MASK);
+	}
+
+	MASK = 0x400000U;
+	for (unsigned int i = 0U; i < 23U; i++, MASK >>= 1) {
+		unsigned int bPos = DMR_B_TABLE[i];
+		WRITE_BIT(out, bPos, b & MASK);
+	}
+
+	MASK = 0x1000000U;
+	for (unsigned int i = 0U; i < 25U; i++, MASK >>= 1) {
+		unsigned int cPos = DMR_C_TABLE[i];
+		WRITE_BIT(out, cPos, cOrig & MASK);
+	}
 }
 
 void MBEEncoder::encode_vcw(uint8_t vf[], const int* b) {

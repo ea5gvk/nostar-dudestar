@@ -2121,7 +2121,7 @@ void DudeStar::readyReadDMR()
 			mbe = new MBEDecoder();
 			mbe->setAutoGain(false);
 			mbeenc = new MBEEncoder();
-			mbeenc->set_49bit_mode();
+			mbeenc->set_dmr_mode();
 			mbeenc->set_gain_adjust(2.5);
 			dmr_header_timer = new QTimer();
 			connect(dmr_header_timer, SIGNAL(timeout()), this, SLOT(tx_dmr_header()));
@@ -2840,8 +2840,11 @@ void DudeStar::tx_timer()
 			fprintf(stderr, "\n");
 			fflush(stderr);
 */
+			if(protocol == "DMR"){
+				memcpy(ambe_bytes, ambe_frame, 9);
+			}
 			for(int i = 0; i < frame_len; ++i){
-				if(protocol != "P25"){
+				if((protocol != "P25") && (protocol != "DMR")){
 					for(int j = 0; j < 8; ++j){
 						//ambe_bytes[i] |= (ambe_frame[((8-i)*8)+(7-j)] << (7-j));
 						//if(protocol != "YSF"){
@@ -2882,7 +2885,7 @@ void DudeStar::tx_timer()
 		transmit();
 		cnt = 0;
 	}
-	else{
+	else if((protocol == "P25") || (protocol == "REF") || (protocol == "DCS") || (protocol == "XRF")){
 		transmit();
 	}
 	++cnt;
@@ -3013,7 +3016,6 @@ void DudeStar::transmitNXDN()
 		txdata.append((char *)temp_nxdn, 43);
 		udp->writeDatagram(txdata, address, port);
 	}
-
 }
 
 void DudeStar::transmitYSF()
@@ -3288,7 +3290,8 @@ void DudeStar::transmitDMR()
 			}
 		}
 		while(ambeq.size() && (ambeq[0] != 0x61) && (ambeq[2] != 0x0b) && (ambeq[3] != 0x01)){
-			//std::cerr << "ERROR: Not an AMBE frame" << std::endl;
+		//while(ambeq.size() && (ambeq[0] != 0x61) && (ambeq[3] != 0x01)){
+			std::cerr << "ERROR: Not an AMBE frame" << std::endl;
 			ambeq.dequeue();
 		}
 		for(int i = 0; i < 3; ++i){
