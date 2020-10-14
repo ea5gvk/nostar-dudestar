@@ -189,6 +189,7 @@ private slots:
 	void process_dcs_hosts();
 	void process_xrf_hosts();
 	void process_ysf_hosts();
+	void process_fcs_rooms();
 	void process_dmr_hosts();
 	void process_p25_hosts();
 	void process_nxdn_hosts();

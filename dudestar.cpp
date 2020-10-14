@@ -39,7 +39,7 @@
 #define HIWORD(dw)			((uint16_t)((((uint32_t)(dw)) >> 16) & 0xFFFF))
 #define DEBUG
 //#define DEBUGHW
-//#define DEBUG_YSF
+#define DEBUG_YSF
 #define CHANNEL_FRAME_TX    0x1001
 #define CODEC_FRAME_TX      0x1002
 #define CHANNEL_FRAME_RX    0x2001
@@ -290,6 +290,9 @@ void DudeStar::http_finished(QNetworkReply *reply)
 			process_dcs_hosts();
 		}
 		else if(filename == "YSFHosts.txt"){
+			process_ysf_hosts();
+		}
+		else if(filename == "FCSHosts.txt"){
 			process_ysf_hosts();
 		}
 		else if(filename == "P25Hosts.txt"){
@@ -632,12 +635,50 @@ void DudeStar::process_ysf_hosts()
 			}
 		}
 		f.close();
-		int i = ui->hostCombo->findText(saved_ysfhost);
-		ui->hostCombo->setCurrentIndex(i);
+		if(saved_ysfhost.left(3) != "FCS"){
+			int i = ui->hostCombo->findText(saved_ysfhost);
+			ui->hostCombo->setCurrentIndex(i);
+		}
 		ui->hostCombo->blockSignals(false);
+		process_fcs_rooms();
 	}
 	else{
 		start_request("/YSFHosts.txt");
+	}
+}
+
+void DudeStar::process_fcs_rooms()
+{
+	if(!QDir(config_path).exists()){
+		QDir().mkdir(config_path);
+	}
+
+	QFileInfo check_file(config_path + "/FCSHosts.txt");
+	if(check_file.exists() && check_file.isFile()){
+		ui->hostCombo->blockSignals(true);
+		QFile f(config_path + "/FCSHosts.txt");
+		if(f.open(QIODevice::ReadOnly)){
+			//ui->hostCombo->clear();
+			while(!f.atEnd()){
+				QString l = f.readLine();
+				if(l.at(0) == '#'){
+					continue;
+				}
+				QStringList ll = l.split(';');
+				if(ll.size() > 4){
+					ui->hostCombo->addItem(ll.at(0).simplified() + " - " + ll.at(1).simplified(), ll.at(2).left(6).toLower() + ".xreflector.net:62500");
+				}
+			}
+		}
+		f.close();
+		if(saved_ysfhost.left(3) == "FCS"){
+			int i = ui->hostCombo->findText(saved_ysfhost);
+			ui->hostCombo->setCurrentIndex(i);
+		}
+		ui->hostCombo->blockSignals(false);
+	}
+	else{
+		start_request("/FCSHosts.txt");
 	}
 }
 
@@ -1199,12 +1240,22 @@ void DudeStar::disconnect_from_host()
 		d.append((dmrid >> 0) & 0xff);
 	}
 	else if(protocol == "YSF"){
-		d.append('Y');
-		d.append('S');
-		d.append('F');
-		d.append('U');
-		d.append(callsign.toUtf8());
-		d.append(5, ' ');
+		if(hostname.left(3) == "FCS"){
+			d.append('C');
+			d.append('L');
+			d.append('O');
+			d.append('S');
+			d.append('E');
+			d.append(6, ' ');
+		}
+		else{
+			d.append('Y');
+			d.append('S');
+			d.append('F');
+			d.append('U');
+			d.append(callsign.toUtf8());
+			d.append(5, ' ');
+		}
 	}
 	else if(protocol == "DMR"){
 		d.append('R');
@@ -1295,7 +1346,7 @@ void DudeStar::process_connect()
 		ui->callsignEdit->setText(callsign);
 		module = ui->comboMod->currentText().toStdString()[0];
 		protocol = ui->modeCombo->currentText();
-
+		qDebug() << "Host info:" << hostname << ":" << host << ":" << port;
 		if(protocol == "DMR"){
 			//dmrid = dmrids.key(callsign);
 			//dmr_password = sl.at(2).simplified();
@@ -1345,12 +1396,24 @@ void DudeStar::hostname_lookup(QHostInfo i)
 		d.append(508, 0);
 	}
 	else if(protocol == "YSF"){
-		d.append('Y');
-		d.append('S');
-		d.append('F');
-		d.append('P');
-		d.append(callsign.toUtf8());
-		d.append(5, ' ');
+		if(hostname.left(3) == "FCS"){
+			d.append('P');
+			d.append('I');
+			d.append('N');
+			d.append('G');
+			d.append(callsign.toUtf8());
+			d.append(6 - callsign.size(), ' ');
+			d.append(saved_ysfhost.left(8).toUtf8());
+			d.append(7, '\x00');
+		}
+		else{
+			d.append('Y');
+			d.append('S');
+			d.append('F');
+			d.append('P');
+			d.append(callsign.toUtf8());
+			d.append(5, ' ');
+		}
 	}
 	else if(protocol == "DMR"){
 		d.append('R');
@@ -1681,7 +1744,8 @@ void DudeStar::process_ysf_data()
 	else if(f.getDataType() == 3){
 		ui->rptr2->setText("Voice Full Rate");
 	}
-
+	ui->urcall->setText(QString(ysfdec->getSrc()));
+	ui->rptr1->setText(QString(ysfdec->getDest()));
 	ui->streamid->setText(f.isInternetPath() ? "Internet" : "Local");
 	ui->usertxt->setText(QString::number(f.getFrameNumber()) + "/" + QString::number(f.getFrameTotal()));
 	ysfdec->m_mbeDecoder->set_hwrx(hwrx);
@@ -1753,12 +1817,24 @@ void DudeStar::process_ping()
 		out.append(0x20);
 	}
 	else if(protocol == "YSF"){
-		out.append('Y');
-		out.append('S');
-		out.append('F');
-		out.append('P');
-		out.append(callsign.toUtf8());
-		out.append(5, ' ');
+		if(hostname.left(3) == "FCS"){
+			out.append('P');
+			out.append('I');
+			out.append('N');
+			out.append('G');
+			out.append(callsign.toUtf8());
+			out.append(6 - callsign.size(), ' ');
+			out.append(saved_ysfhost.left(8).toUtf8());
+			out.append(7, '\x00');
+		}
+		else{
+			out.append('Y');
+			out.append('S');
+			out.append('F');
+			out.append('P');
+			out.append(callsign.toUtf8());
+			out.append(5, ' ');
+		}
 	}
 	else if(protocol == "DMR"){
 		char tag[] = { 'R','P','T','P','I','N','G' };
@@ -1803,6 +1879,7 @@ void DudeStar::readyReadYSF()
 	quint16 senderPort;
 	char ysftag[11], ysfsrc[11], ysfdst[11];
 	buf.resize(udp->pendingDatagramSize());
+	int p = 5000;
 	udp->readDatagram(buf.data(), buf.size(), &sender, &senderPort);
 #ifdef DEBUG_YSF
 	fprintf(stderr, "RECV: ");
@@ -1812,10 +1889,11 @@ void DudeStar::readyReadYSF()
 	fprintf(stderr, "\n");
 	fflush(stderr);
 #endif
-	if(buf.size() == 14){
+	if(((buf.size() == 14) && (hostname.left(3) != "FCS")) || ((buf.size() == 7) && (hostname.left(3) == "FCS"))){
 		if(connect_status == CONNECTING){
 			ysf = new YSFEncoder();
 			ysf->set_callsign(callsign.toStdString().c_str());
+			ysf->set_fcs_mode(false);
 			ysfdec = new DSDYSF();
 			mbeenc = new MBEEncoder();
 			mbeenc->set_49bit_mode();
@@ -1833,7 +1911,18 @@ void DudeStar::readyReadYSF()
 			connect_status = CONNECTED_RW;
 			ysftimer->start(90);
 			audiotimer->start(19);
-			ping_timer->start(5000);
+
+			if(hostname.left(3) == "FCS"){
+				char info[100U];
+				::sprintf(info, "%9u%9u%-6.6s%-12.12s%7u", 438000000, 438000000, "AA00AA", "MMDVM", 1234567);
+				::memset(info + 43U, ' ', 57U);
+				out.append(info, 100);
+				udp->writeDatagram(out, address, port);
+				p = 800;
+				ysf->set_fcs_mode(true, hostname.left(8).toStdString());
+			}
+
+			ping_timer->start(p);
 			if(hw_ambe_present || enable_swtx){
 				ui->txButton->setDisabled(false);
 			}
@@ -1842,13 +1931,22 @@ void DudeStar::readyReadYSF()
 	}
 	if((buf.size() == 155) && (::memcmp(buf.data(), "YSFD", 4U) == 0)){
 		memcpy(ysftag, buf.data() + 4, 10);ysftag[10] = '\0';
-		memcpy(ysfsrc, buf.data() + 14, 10);ysfsrc[10] = '\0';
-		memcpy(ysfdst, buf.data() + 24, 10);ysfdst[10] = '\0';
+		//memcpy(ysfsrc, buf.data() + 14, 10);ysfsrc[10] = '\0';
+		//memcpy(ysfdst, buf.data() + 24, 10);ysfdst[10] = '\0';
 		ui->mycall->setText(QString(ysftag));
-		ui->urcall->setText(QString(ysfsrc));
-		ui->rptr1->setText(QString(ysfdst));
+		//ui->urcall->setText(QString(ysfsrc));
+		//ui->rptr1->setText(QString(ysfdst));
 		for(int i = 0; i < 115; ++i){
 			ysfq.enqueue(buf.data()[40+i]);
+		}
+	}
+	else if(buf.size() == 130){
+		//memcpy(ysftag, buf.data() + 4, 10);ysftag[10] = '\0';
+		//memcpy(ysfsrc, buf.data() + 14, 10);ysfsrc[10] = '\0';
+		memcpy(ysftag, buf.data() + 0x79, 8);ysfdst[8] = '\0';
+		ui->mycall->setText(QString(ysftag));
+		for(int i = 0; i < 115; ++i){
+			ysfq.enqueue(buf.data()[5+i]);
 		}
 	}
 }
@@ -2497,9 +2595,8 @@ void DudeStar::readyReadREF()
 		fflush(stderr);
 	}
 #endif
-    if((connect_status == CONNECTING) && (buf.size() == 0x08)){
+	if((connect_status == CONNECTING) && (buf.size() == 0x03)){
 		if((memcmp(&buf.data()[4], "OKRW", 4) == 0) || (memcmp(&buf.data()[4], "OKRO", 4) == 0) || (memcmp(&buf.data()[4], "BUSY", 4) == 0)){
-		//if((buf.data()[4] == 0x4f) && (buf.data()[5] == 0x4b) && (buf.data()[6] == 0x52)){ // OKRW/OKRO response
 			mbe = new MBEDecoder();
 			mbe->setAutoGain(true);
 			mbeenc = new MBEEncoder();
@@ -3023,6 +3120,7 @@ void DudeStar::transmitYSF()
 	QByteArray ambe;
 	QByteArray txdata;
 	unsigned char *temp_ysf;
+	int frame_size;
 	if(tx || ambeq.size()){
 
 		ambe.clear();
@@ -3057,7 +3155,7 @@ void DudeStar::transmitYSF()
 			}
 		}
 		temp_ysf = ysf->get_frame((unsigned char *)ambe.data());
-
+		frame_size = ::memcmp(temp_ysf, "YSFD", 4) ? 130 : 155;
 /*
 		temp_ysf = ysftxdata + txcnt;
 		txcnt += 155;
@@ -3065,8 +3163,16 @@ void DudeStar::transmitYSF()
 			txcnt = 0;
 
 */
-		txdata.append((char *)temp_ysf, 155);
+		txdata.append((char *)temp_ysf, frame_size);
 		udp->writeDatagram(txdata, address, port);
+#ifdef DEBUG
+	fprintf(stderr, "SEND:%d: ", ambeq.size());
+	for(int i = 0; i < txdata.size(); ++i){
+		fprintf(stderr, "%02x ", (unsigned char)txdata.data()[i]);
+	}
+	fprintf(stderr, "\n");
+	fflush(stderr);
+#endif
 	}
 	else{
 		fprintf(stderr, "YSF TX stopped\n");
@@ -3074,7 +3180,8 @@ void DudeStar::transmitYSF()
 		audioindev->disconnect();
 		audioin->stop();
 		temp_ysf = ysf->get_eot();
-		txdata.append((char *)temp_ysf, 155);
+		frame_size = ::memcmp(temp_ysf, "YSFD", 4) ? 130 : 155;
+		txdata.append((char *)temp_ysf, frame_size);
 		udp->writeDatagram(txdata, address, port);
 	}
 }

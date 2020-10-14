@@ -47,6 +47,7 @@ const unsigned char YSF_MR_DIRECT   = 0x00U;
 const unsigned char YSF_MR_NOT_BUSY = 0x01U;
 const unsigned char YSF_MR_BUSY     = 0x02U;
 
+#include <string>
 #include "YSFFICH.h"
 
 class YSFEncoder
@@ -58,10 +59,10 @@ public:
 	unsigned char * get_eot();
 	void use_hwambe(bool y){ use_hw = y; }
 	void set_callsign(const char *);
+	void set_fcs_mode(bool y, std::string f = "        "){ m_fcs = y; m_fcsname = f; }
 private:
 	void encode_header(bool eot = 0);
 	void encode_dv2();
-	void AMBE2YSF(unsigned char *data);
 	void generate_vch_vd2(const unsigned char*);
 	void ysf_scramble(unsigned char *buf, const int len);
 	void writeDataFRModeData1(const unsigned char* dt, unsigned char* data);
@@ -80,6 +81,8 @@ private:
 	unsigned int ambe_b;
 	unsigned int ambe_c;
 	bool use_hw;
+	bool m_fcs;
+	std::string m_fcsname;
 };
 
 #endif

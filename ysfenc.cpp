@@ -82,18 +82,26 @@ unsigned char * YSFEncoder::get_eot()
 
 void YSFEncoder::encode_header(bool eot)
 {
-	::memcpy(m_ysfFrame + 0U, "YSFD", 4U);
-	::memcpy(m_ysfFrame + 4U, callsign, YSF_CALLSIGN_LENGTH);
-	::memcpy(m_ysfFrame + 14U, callsign, YSF_CALLSIGN_LENGTH);
-	::memcpy(m_ysfFrame + 24U, "ALL       ", YSF_CALLSIGN_LENGTH);
-
-	if(eot){
-		m_ysfFrame[34U] = ((ysf_cnt & 0x7f) << 1U) | 1U;
+	unsigned char *p_frame = m_ysfFrame;
+	if(m_fcs){
+		::memset(p_frame + 120U, 0, 10U);
+		::memcpy(p_frame + 121U, m_fcsname.c_str(), 8);
 	}
 	else{
-		m_ysfFrame[34U] = 0U;
+		::memcpy(p_frame + 0U, "YSFD", 4U);
+		::memcpy(p_frame + 4U, callsign, YSF_CALLSIGN_LENGTH);
+		::memcpy(p_frame + 14U, callsign, YSF_CALLSIGN_LENGTH);
+		::memcpy(p_frame + 24U, "ALL       ", YSF_CALLSIGN_LENGTH);
+
+		if(eot){
+			p_frame[34U] = ((ysf_cnt & 0x7f) << 1U) | 1U;
+		}
+		else{
+			p_frame[34U] = 0U;
+		}
+		p_frame = m_ysfFrame + 35U;
 	}
-	::memcpy(m_ysfFrame + 35U, YSF_SYNC_BYTES, 5);
+	::memcpy(p_frame, YSF_SYNC_BYTES, 5);
 	
 	fich.setFI(eot ? YSF_FI_TERMINATOR : YSF_FI_HEADER);
 	fich.setCS(2U);
@@ -103,12 +111,12 @@ void YSFEncoder::encode_header(bool eot)
 	fich.setFN(0U);
 	fich.setFT(6U);
 	fich.setDev(0U);
-	fich.setMR(0U); // Must be 2 for Wires-X?
+	fich.setMR(0U);
 	fich.setVoIP(false);
 	fich.setDT(YSF_DT_VD_MODE2);
 	fich.setSQL(false);
 	fich.setSQ(0U);
-	fich.encode(m_ysfFrame + 35U);
+	fich.encode(p_frame);
 
 	unsigned char csd1[20U], csd2[20U];
 	memset(csd1, '*', YSF_CALLSIGN_LENGTH);
@@ -119,18 +127,26 @@ void YSFEncoder::encode_header(bool eot)
 	memcpy(csd2 + YSF_CALLSIGN_LENGTH, callsign, YSF_CALLSIGN_LENGTH);
 	//memset(csd2, ' ', YSF_CALLSIGN_LENGTH + YSF_CALLSIGN_LENGTH);
 
-	writeDataFRModeData1(csd1, m_ysfFrame + 35U);
-	writeDataFRModeData2(csd2, m_ysfFrame + 35U);
+	writeDataFRModeData1(csd1, p_frame);
+	writeDataFRModeData2(csd2, p_frame);
 }
 
 void YSFEncoder::encode_dv2()
 {
-	::memcpy(m_ysfFrame + 0U, "YSFD", 4U);
-	::memcpy(m_ysfFrame + 4U, callsign, YSF_CALLSIGN_LENGTH);
-	::memcpy(m_ysfFrame + 14U, callsign, YSF_CALLSIGN_LENGTH);
-	::memcpy(m_ysfFrame + 24U, "ALL       ", YSF_CALLSIGN_LENGTH);
-	m_ysfFrame[34U] = (ysf_cnt & 0x7f) << 1;
-	::memcpy(m_ysfFrame + 35U, YSF_SYNC_BYTES, 5);
+	unsigned char *p_frame = m_ysfFrame;
+	if(m_fcs){
+		::memset(p_frame + 120U, 0, 10U);
+		::memcpy(p_frame + 121U, m_fcsname.c_str(), 8);
+	}
+	else{
+		::memcpy(m_ysfFrame + 0U, "YSFD", 4U);
+		::memcpy(m_ysfFrame + 4U, callsign, YSF_CALLSIGN_LENGTH);
+		::memcpy(m_ysfFrame + 14U, callsign, YSF_CALLSIGN_LENGTH);
+		::memcpy(m_ysfFrame + 24U, "ALL       ", YSF_CALLSIGN_LENGTH);
+		m_ysfFrame[34U] = (ysf_cnt & 0x7f) << 1;
+		p_frame = m_ysfFrame + 35U;
+	}
+	::memcpy(p_frame, YSF_SYNC_BYTES, 5);
 	unsigned int fn = (ysf_cnt - 1U) % 7U;
 
 	fich.setFI(YSF_FI_COMMUNICATIONS);
@@ -141,160 +157,55 @@ void YSFEncoder::encode_dv2()
 	fich.setFN(fn);
 	fich.setFT(6U);
 	fich.setDev(0U);
-	fich.setMR(0U); // 2/false for GM repeater
+	fich.setMR(0U);
 	fich.setVoIP(false);
 	fich.setDT(YSF_DT_VD_MODE2);
 	fich.setSQL(false);
 	fich.setSQ(0U);
-	fich.encode(m_ysfFrame + 35U);
+	fich.encode(p_frame);
 
-	//const uint8_t mys1[10] = {0x67, 0x22, 0x61, 0x5f, 0x2b, 0x03, 0x77, 0x00, 0x00, 0x00};
-	//const uint8_t mys2[10] = {0x15, 0x22, 0x61, 0x5f, 0x28, 0x03, 0x22, 0x00, 0x00, 0x00};
-	//const uint8_t mys3[10] = {0x07, 0x22, 0x61, 0x5f, 0x2b, 0x03, 0x17, 0x00, 0x00, 0x00};
-	//const uint8_t mys4[10] = {0x8b, 0x22, 0x61, 0x5f, 0x25, 0x03, 0x95, 0x00, 0x00, 0x00};
-	//const uint8_t mys5[10] = {0x13, 0x22, 0x61, 0x5f, 0x2a, 0x03, 0x22, 0x00, 0x00, 0x00};
-
-	const uint8_t ft70d1[10] = {0x01, 0x22, 0x61, 0x5f, 0x2b, 0x03, 0x11, 0x00, 0x00, 0x00}; // 2019-09-10 10:50 power on
-	//const uint8_t frame_6[10] = {0x30, 0x22, 0x61, 0x5f, 0x28, 0x03, 0x3d, 0x00, 0x00, 0x00}; // Openspot2 DMR2YSF W8WAC
-	//const uint8_t gps1[10] = {0x16, 0x22, 0x62, 0x5f, 0x25, 0x34, 0x54, 0x34, 0x53, 0x54};
-	//const uint8_t gps2[10] = {0x52, 0x33, 0x58, 0x38, 0x6c, 0x20, 0x3a, 0x20, 0x03, 0x9f};
-
-	//const uint8_t gps3[10] = {0x03, 0x22, 0x62, 0x5f, 0x27, 0x54, 0x34, 0x50, 0x57, 0x32};
-	//const uint8_t gps4[10] = {0x56, 0x70, 0x35, 0x3a, 0x6c, 0x20, 0x1c, 0x20, 0x03, 0x6e};
-
+	const uint8_t ft70d1[10] = {0x01, 0x22, 0x61, 0x5f, 0x2b, 0x03, 0x11, 0x00, 0x00, 0x00};
 	//const uint8_t dt1_temp[] = {0x31, 0x22, 0x62, 0x5F, 0x29, 0x00, 0x00, 0x00, 0x00, 0x00};
-	const uint8_t dt2_temp[] = {0x00, 0x00, 0x00, 0x00, 0x6C, 0x20, 0x1C, 0x20, 0x03, 0x08};
+	const uint8_t dt2_temp[10] = {0x00, 0x00, 0x00, 0x00, 0x6C, 0x20, 0x1C, 0x20, 0x03, 0x08};
 
 	switch (fn) {
 	case 0:
 		//memset(dch, '*', YSF_CALLSIGN_LENGTH/2);
 		//memcpy(dch + YSF_CALLSIGN_LENGTH/2, ysf_radioid, YSF_CALLSIGN_LENGTH/2);
-		writeVDMode2Data(m_ysfFrame + 35U, (const unsigned char*)"**********");
 		//writeVDMode2Data(m_ysfFrame + 35U, dch);	//Dest
+		writeVDMode2Data(p_frame, (const unsigned char*)"**********");
 		break;
 	case 1:
-		writeVDMode2Data(m_ysfFrame + 35U, (const unsigned char*)callsign_full);		//Src
+		writeVDMode2Data(p_frame, (const unsigned char*)callsign_full);		//Src
 		break;
 	case 2:
-		writeVDMode2Data(m_ysfFrame + 35U, (const unsigned char*)callsign);	//D/L
-		//writeVDMode2Data(m_ysfFrame + 35U, (const unsigned char*)"KD8GRN    ");	//D/L
+		writeVDMode2Data(p_frame, (const unsigned char*)callsign);				//D/L
 		break;
 	case 3:
-		writeVDMode2Data(m_ysfFrame + 35U, (const unsigned char*)callsign);	//U/L
-		//writeVDMode2Data(m_ysfFrame + 35U, (const unsigned char*)"N8YMT/R   ");	//U/L
+		writeVDMode2Data(p_frame, (const unsigned char*)callsign);				//U/L
 		break;
 	case 4:
-		writeVDMode2Data(m_ysfFrame + 35U, (const unsigned char*)"          ");	//Rem1/2
+		writeVDMode2Data(p_frame, (const unsigned char*)"          ");			//Rem1/2
 		break;
 	case 5:
-		writeVDMode2Data(m_ysfFrame + 35U, (const unsigned char*)"          ");	//Rem3/4
+		writeVDMode2Data(p_frame, (const unsigned char*)"          ");			//Rem3/4
 		//memset(dch, ' ', YSF_CALLSIGN_LENGTH/2);
 		//memcpy(dch + YSF_CALLSIGN_LENGTH/2, ysf_radioid, YSF_CALLSIGN_LENGTH/2);
-		//writeVDMode2Data(m_ysfFrame + 35U, dch);	// Rem3/4
+		//writeVDMode2Data(frame, dch);	// Rem3/4
 		break;
 	case 6:
-		//for (unsigned int i = 0U; i < 5U; i++) {
-		//	::memcpy(m_ysfFrame + 65U + (18U*i), &vd2_dch[fn][i*5], 5U);
-		//	AMBE2YSF(&m_ambe[9*i]);
-		//	::memcpy(m_ysfFrame + 70U + (18U*i), m_vch, 13U);
-		//}
-		writeVDMode2Data(m_ysfFrame + 35U, ft70d1);
+		writeVDMode2Data(p_frame, ft70d1);
 		break;
 	case 7:
-		writeVDMode2Data(m_ysfFrame + 35U, dt2_temp);
+		writeVDMode2Data(p_frame, dt2_temp);
 		break;
 	default:
-		writeVDMode2Data(m_ysfFrame + 35U, (const unsigned char*)"          ");
+		writeVDMode2Data(p_frame, (const unsigned char*)"          ");
 	}
 }
-
-void YSFEncoder::AMBE2YSF(unsigned char *data)
-{
-	unsigned char vch[13U];
-	unsigned char ysfFrame[13U];
-	::memset(vch, 0U, 13U);
-	::memset(ysfFrame, 0, 13U);
-	unsigned int a = 0U, b = 0U, c = 0U;
-
-	unsigned int MASK = 0x800000U;
-	for (unsigned int i = 0U; i < 24U; i++, MASK >>= 1) {
-		unsigned int a1Pos = DMR_A_TABLE[i];
-
-		if (READ_BIT(data, a1Pos))
-			a |= MASK;
-
-	}
-
-	MASK = 0x400000U;
-	for (unsigned int i = 0U; i < 23U; i++, MASK >>= 1) {
-		unsigned int b1Pos = DMR_B_TABLE[i];
-
-		if (READ_BIT(data, b1Pos))
-			b |= MASK;
-	}
-
-	MASK = 0x1000000U;
-	for (unsigned int i = 0U; i < 25U; i++, MASK >>= 1) {
-		unsigned int c1Pos = DMR_C_TABLE[i];
-
-		if (READ_BIT(data, c1Pos))
-			c |= MASK;
-	}
-
-	unsigned int dat_a = a >> 12;
-
-	// The PRNG
-	b ^= (PRNG_TABLE[dat_a] >> 1);
-
-	unsigned int dat_b = b >> 11;
-
-	for (unsigned int i = 0U; i < 12U; i++) {
-		bool s = (dat_a << (20U + i)) & 0x80000000U;
-		WRITE_BIT(vch, 3*i + 0U, s);
-		WRITE_BIT(vch, 3*i + 1U, s);
-		WRITE_BIT(vch, 3*i + 2U, s);
-	}
-	
-	for (unsigned int i = 0U; i < 12U; i++) {
-		bool s = (dat_b << (20U + i)) & 0x80000000U;
-		WRITE_BIT(vch, 3*(i + 12U) + 0U, s);
-		WRITE_BIT(vch, 3*(i + 12U) + 1U, s);
-		WRITE_BIT(vch, 3*(i + 12U) + 2U, s);
-	}
-	
-	for (unsigned int i = 0U; i < 3U; i++) {
-		bool s = (c << (7U + i)) & 0x80000000U;
-		WRITE_BIT(vch, 3*(i + 24U) + 0U, s);
-		WRITE_BIT(vch, 3*(i + 24U) + 1U, s);
-		WRITE_BIT(vch, 3*(i + 24U) + 2U, s);
-	}
-
-	for (unsigned int i = 0U; i < 22U; i++) {
-		bool s = (c << (10U + i)) & 0x80000000U;
-		WRITE_BIT(vch, i + 81U, s);
-	}
-	
-	WRITE_BIT(vch, 103U, 0U);
-
-	// Scramble
-	for (unsigned int i = 0U; i < 13U; i++)
-		vch[i] ^= WHITENING_DATA[i];
-
-	// Interleave
-	for (unsigned int i = 0U; i < 104U; i++) {
-		unsigned int n = INTERLEAVE_TABLE_26_4[i];
-		bool s = READ_BIT(vch, i);
-		WRITE_BIT(ysfFrame, n, s);
-	}
-	::memcpy(m_vch, ysfFrame, 13);
-}
-
 
 void YSFEncoder::writeDataFRModeData1(const unsigned char* dt, unsigned char* data)
 {
-	//assert(dt != NULL);
-	//assert(data != NULL);
-
 	data += YSF_SYNC_LENGTH_BYTES + YSF_FICH_LENGTH_BYTES;
 
 	unsigned char output[25U];
@@ -499,7 +410,6 @@ void YSFEncoder::writeVDMode2Data(unsigned char* data, const unsigned char* dt)
 				di_bits[ii] = ambe_bits[vd2DVSIInterleave[ii]];
 			}
 			generate_vch_vd2(di_bits);
-			//AMBE2YSF(&m_ambe[9*i]);
 		}
 		else{
 			unsigned char a[56];
@@ -510,7 +420,6 @@ void YSFEncoder::writeVDMode2Data(unsigned char* data, const unsigned char* dt)
 					//a[((8*i)+j)+1] = (1 & (data[5-i] >> j));
 				}
 			}
-			//generate_vch_vd2(&m_ambe[9*i]);
 			generate_vch_vd2(a);
 		}
 		::memcpy(p1+5, m_vch, 13);
