@@ -39,7 +39,7 @@
 #define HIWORD(dw)			((uint16_t)((((uint32_t)(dw)) >> 16) & 0xFFFF))
 #define DEBUG
 //#define DEBUGHW
-#define DEBUG_YSF
+//#define DEBUG_YSF
 #define CHANNEL_FRAME_TX    0x1001
 #define CODEC_FRAME_TX      0x1002
 #define CHANNEL_FRAME_RX    0x2001
@@ -577,7 +577,6 @@ void DudeStar::process_dcs_hosts()
 	}
 }
 
-
 void DudeStar::process_xrf_hosts()
 {
 	if(!QDir(config_path).exists()){
@@ -811,6 +810,11 @@ void DudeStar::delete_host_files()
 	check_file.setFile(config_path + "/YSFHosts.txt");
 	if(check_file.exists() && check_file.isFile()){
 		QFile f(config_path + "/YSFHosts.txt");
+		f.remove();
+	}
+	check_file.setFile(config_path + "/FCSHosts.txt");
+	if(check_file.exists() && check_file.isFile()){
+		QFile f(config_path + "/FCSHosts.txt");
 		f.remove();
 	}
 	check_file.setFile(config_path + "/DMRHosts.txt");
@@ -1877,7 +1881,7 @@ void DudeStar::readyReadYSF()
 	QByteArray out;
 	QHostAddress sender;
 	quint16 senderPort;
-	char ysftag[11], ysfsrc[11], ysfdst[11];
+	char ysftag[11];
 	buf.resize(udp->pendingDatagramSize());
 	int p = 5000;
 	udp->readDatagram(buf.data(), buf.size(), &sender, &senderPort);
@@ -1929,21 +1933,18 @@ void DudeStar::readyReadYSF()
 		}
 		status_txt->setText(" Host: " + host + ":" + QString::number(port) + " Ping: " + QString::number(ping_cnt++));
 	}
+	if((buf.size() == 10) && (::memcmp(buf.data(), "ONLINE", 6U) == 0)){
+		status_txt->setText(" Host: " + host + ":" + QString::number(port) + " Ping: " + QString::number(ping_cnt++));
+	}
 	if((buf.size() == 155) && (::memcmp(buf.data(), "YSFD", 4U) == 0)){
 		memcpy(ysftag, buf.data() + 4, 10);ysftag[10] = '\0';
-		//memcpy(ysfsrc, buf.data() + 14, 10);ysfsrc[10] = '\0';
-		//memcpy(ysfdst, buf.data() + 24, 10);ysfdst[10] = '\0';
 		ui->mycall->setText(QString(ysftag));
-		//ui->urcall->setText(QString(ysfsrc));
-		//ui->rptr1->setText(QString(ysfdst));
 		for(int i = 0; i < 115; ++i){
 			ysfq.enqueue(buf.data()[40+i]);
 		}
 	}
 	else if(buf.size() == 130){
-		//memcpy(ysftag, buf.data() + 4, 10);ysftag[10] = '\0';
-		//memcpy(ysfsrc, buf.data() + 14, 10);ysfsrc[10] = '\0';
-		memcpy(ysftag, buf.data() + 0x79, 8);ysfdst[8] = '\0';
+		memcpy(ysftag, buf.data() + 0x79, 8);ysftag[8] = '\0';
 		ui->mycall->setText(QString(ysftag));
 		for(int i = 0; i < 115; ++i){
 			ysfq.enqueue(buf.data()[5+i]);
@@ -2595,7 +2596,7 @@ void DudeStar::readyReadREF()
 		fflush(stderr);
 	}
 #endif
-	if((connect_status == CONNECTING) && (buf.size() == 0x03)){
+	if((connect_status == CONNECTING) && (buf.size() == 0x08)){
 		if((memcmp(&buf.data()[4], "OKRW", 4) == 0) || (memcmp(&buf.data()[4], "OKRO", 4) == 0) || (memcmp(&buf.data()[4], "BUSY", 4) == 0)){
 			mbe = new MBEDecoder();
 			mbe->setAutoGain(true);
