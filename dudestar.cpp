@@ -1139,7 +1139,7 @@ void DudeStar::discover_vocoders()
 	const QString blankString = "N/A";
 	QTextStream out(stdout);
 	const auto serialPortInfos = QSerialPortInfo::availablePorts();
-
+	ui->AmbeCombo->addItem("Software vocoder", "");
 	if(serialPortInfos.count()){
 		for(const QSerialPortInfo &serialPortInfo : serialPortInfos) {
 			out << "Port: " << serialPortInfo.portName() << ENDLINE
