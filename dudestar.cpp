@@ -155,6 +155,7 @@ DudeStar::~DudeStar()
 	stream << "DMRHOST:" << saved_dmrhost << ENDLINE;
 	stream << "P25HOST:" << saved_p25host << ENDLINE;
 	stream << "NXDNHOST:" << saved_nxdnhost << ENDLINE;
+	stream << "M17HOST:" << saved_m17host << ENDLINE;
 	stream << "MODULE:" << ui->comboMod->currentText() << ENDLINE;
 	stream << "CALLSIGN:" << ui->callsignEdit->text() << ENDLINE;
 	stream << "DMRID:" << ui->dmridEdit->text() << ENDLINE;
@@ -210,6 +211,7 @@ void DudeStar::init_gui()
 	ui->involSlider->setRange(0, 100);
 	ui->involSlider->setValue(100);
 	ui->txButton->setDisabled(true);
+	ui->m17VoiceFull->setChecked(true);
     connect(ui->actionAbout, SIGNAL(triggered()), this, SLOT(about()));
     connect(ui->actionQuit, SIGNAL(triggered()), this, SLOT(close()));
 	connect(ui->actionUpdate_DMR_IDs, SIGNAL(triggered()), this, SLOT(update_dmr_ids()));
@@ -237,6 +239,7 @@ void DudeStar::init_gui()
 	ui->modeCombo->addItem("DMR");
 	ui->modeCombo->addItem("P25");
 	ui->modeCombo->addItem("NXDN");
+	ui->modeCombo->addItem("M17");
 	ui->dmrccEdit->setText(QString::number(dmrcc));
 	ui->dmrslotEdit->setText(QString::number(dmrslot));
 	connect(ui->modeCombo, SIGNAL(currentTextChanged(const QString &)), this, SLOT(process_mode_change(const QString &)));
@@ -304,6 +307,9 @@ void DudeStar::http_finished(QNetworkReply *reply)
 		else if(filename == "NXDNHosts.txt"){
 			process_nxdn_hosts();
 		}
+		else if(filename == "M17Hosts.txt"){
+			process_m17_hosts();
+		}
 		else if(filename == "DMRIDs.dat"){
 			process_dmr_ids();
 		}
@@ -333,6 +339,9 @@ void DudeStar::process_host_change(const QString &h)
 	if(ui->modeCombo->currentText().simplified() == "NXDN"){
 		saved_nxdnhost = h.simplified();
 	}
+	if(ui->modeCombo->currentText().simplified() == "M17"){
+		saved_m17host = h.simplified();
+	}
 }
 
 void DudeStar::process_mode_change(const QString &m)
@@ -351,6 +360,8 @@ void DudeStar::process_mode_change(const QString &m)
 		ui->rptr1Edit->setEnabled(true);
 		ui->rptr2Edit->setEnabled(true);
 		ui->usertxtEdit->setEnabled(true);
+		ui->m17VoiceFull->setEnabled(false);
+		ui->m17VoiceData->setEnabled(false);
 		ui->label_1->setText("MYCALL");
 		ui->label_2->setText("URCALL");
 		ui->label_3->setText("RPTR1");
@@ -372,6 +383,8 @@ void DudeStar::process_mode_change(const QString &m)
 		ui->rptr1Edit->setEnabled(true);
 		ui->rptr2Edit->setEnabled(true);
 		ui->usertxtEdit->setEnabled(true);
+		ui->m17VoiceFull->setEnabled(false);
+		ui->m17VoiceData->setEnabled(false);
 		ui->label_1->setText("MYCALL");
 		ui->label_2->setText("URCALL");
 		ui->label_3->setText("RPTR1");
@@ -393,6 +406,8 @@ void DudeStar::process_mode_change(const QString &m)
 		ui->rptr1Edit->setEnabled(true);
 		ui->rptr2Edit->setEnabled(true);
 		ui->usertxtEdit->setEnabled(true);
+		ui->m17VoiceFull->setEnabled(false);
+		ui->m17VoiceData->setEnabled(false);
 		ui->label_1->setText("MYCALL");
 		ui->label_2->setText("URCALL");
 		ui->label_3->setText("RPTR1");
@@ -414,6 +429,8 @@ void DudeStar::process_mode_change(const QString &m)
 		ui->rptr1Edit->setEnabled(false);
 		ui->rptr2Edit->setEnabled(false);
 		ui->usertxtEdit->setEnabled(false);
+		ui->m17VoiceFull->setEnabled(false);
+		ui->m17VoiceData->setEnabled(false);
 		ui->label_1->setText("Gateway");
 		ui->label_2->setText("Callsign");
 		ui->label_3->setText("Dest");
@@ -435,6 +452,8 @@ void DudeStar::process_mode_change(const QString &m)
 		ui->rptr1Edit->setEnabled(false);
 		ui->rptr2Edit->setEnabled(false);
 		ui->usertxtEdit->setEnabled(false);
+		ui->m17VoiceFull->setEnabled(false);
+		ui->m17VoiceData->setEnabled(false);
 		ui->label_1->setText("Callsign");
 		ui->label_2->setText("SrcID");
 		ui->label_3->setText("DestID");
@@ -456,6 +475,8 @@ void DudeStar::process_mode_change(const QString &m)
 		ui->rptr1Edit->setEnabled(false);
 		ui->rptr2Edit->setEnabled(false);
 		ui->usertxtEdit->setEnabled(false);
+		ui->m17VoiceFull->setEnabled(false);
+		ui->m17VoiceData->setEnabled(false);
 		ui->label_1->setText("Callsign");
 		ui->label_2->setText("SrcID");
 		ui->label_3->setText("DestID");
@@ -466,6 +487,7 @@ void DudeStar::process_mode_change(const QString &m)
 	else if(m == "NXDN"){
 		process_nxdn_hosts();
 		ui->comboMod->setEnabled(false);
+		ui->dmridEdit->setEnabled(true);
 		ui->dmrtgEdit->setEnabled(false);
 		ui->dmrccEdit->setEnabled(false);
 		ui->dmrslotEdit->setEnabled(false);
@@ -475,11 +497,35 @@ void DudeStar::process_mode_change(const QString &m)
 		ui->rptr1Edit->setEnabled(false);
 		ui->rptr2Edit->setEnabled(false);
 		ui->usertxtEdit->setEnabled(false);
+		ui->m17VoiceFull->setEnabled(false);
+		ui->m17VoiceData->setEnabled(false);
 		ui->label_1->setText("Callsign");
 		ui->label_2->setText("SrcID");
 		ui->label_3->setText("DestID");
 		ui->label_4->setText("");
 		ui->label_5->setText("Seq#");
+		ui->label_6->setText("");
+	}
+	else if(m == "M17"){
+		process_m17_hosts();
+		ui->comboMod->setEnabled(true);
+		ui->dmridEdit->setEnabled(false);
+		ui->dmrtgEdit->setEnabled(false);
+		ui->dmrccEdit->setEnabled(false);
+		ui->dmrslotEdit->setEnabled(false);
+		ui->checkBoxDMRPC->setEnabled(false);
+		ui->mycallEdit->setEnabled(false);
+		ui->urcallEdit->setEnabled(false);
+		ui->rptr1Edit->setEnabled(false);
+		ui->rptr2Edit->setEnabled(false);
+		ui->usertxtEdit->setEnabled(false);
+		ui->m17VoiceFull->setEnabled(true);
+		ui->m17VoiceData->setEnabled(true);
+		ui->label_1->setText("SrcID");
+		ui->label_2->setText("DstID");
+		ui->label_3->setText("Type");
+		ui->label_4->setText("Frame #");
+		ui->label_5->setText("Stream ID");
 		ui->label_6->setText("");
 	}
 }
@@ -790,6 +836,40 @@ void DudeStar::process_nxdn_hosts()
 	}
 }
 
+void DudeStar::process_m17_hosts()
+{
+	if(!QDir(config_path).exists()){
+		QDir().mkdir(config_path);
+	}
+
+	QFileInfo check_file(config_path + "/M17Hosts.txt");
+	if(check_file.exists() && check_file.isFile()){
+		ui->hostCombo->blockSignals(true);
+		QFile f(config_path + "/M17Hosts.txt");
+		if(f.open(QIODevice::ReadOnly)){
+			ui->hostCombo->clear();
+			while(!f.atEnd()){
+				QString l = f.readLine();
+				if(l.at(0) == '#'){
+					continue;
+				}
+				QStringList ll = l.simplified().split(' ');
+				if(ll.size() > 2){
+					//qDebug() << ll.at(0).simplified() << " " <<  ll.at(2) + ":" + ll.at(4);
+					ui->hostCombo->addItem(ll.at(0).simplified(), ll.at(1) + ":" + ll.at(2));
+				}
+			}
+		}
+		f.close();
+		int i = ui->hostCombo->findText(saved_m17host);
+		ui->hostCombo->setCurrentIndex(i);
+		ui->hostCombo->blockSignals(false);
+	}
+	else{
+		start_request("/M17Hosts.txt");
+	}
+}
+
 void DudeStar::delete_host_files()
 {
 	QFileInfo check_file(config_path + "/dplus.txt");
@@ -830,6 +910,11 @@ void DudeStar::delete_host_files()
 	check_file.setFile(config_path + "/NXDNHosts.txt");
 	if(check_file.exists() && check_file.isFile()){
 		QFile f(config_path + "/NXDNHosts.txt");
+		f.remove();
+	}
+	check_file.setFile(config_path + "/M17Hosts.txt");
+	if(check_file.exists() && check_file.isFile()){
+		QFile f(config_path + "/M17Hosts.txt");
 		f.remove();
 	}
 	process_mode_change(ui->modeCombo->currentText().simplified());
@@ -1006,6 +1091,13 @@ void DudeStar::process_settings()
 						ui->hostCombo->setCurrentIndex(i);
 					}
 				}
+				if(sl.at(0) == "M17HOST"){
+					saved_m17host = sl.at(1).simplified();
+					if(ui->modeCombo->currentText().simplified() == "M17"){
+						int i = ui->hostCombo->findText(saved_m17host);
+						ui->hostCombo->setCurrentIndex(i);
+					}
+				}
 				if(sl.at(0) == "MODULE"){
 					ui->comboMod->setCurrentText(sl.at(1).simplified());
 				}
@@ -1165,7 +1257,7 @@ void DudeStar::connect_to_serial(QString p)
 	ui->checkBoxSWTX->setChecked(true);
 	ui->checkBoxSWRX->setChecked(true);
 
-	if((protocol != "P25") && (p != "")){
+	if((protocol != "P25") && (protocol != "M17") && (p != "")){
 		serial = new QSerialPort;
 		serial->setPortName(p);
 		serial->setBaudRate(460800);
@@ -1292,6 +1384,19 @@ void DudeStar::disconnect_from_host()
 		d.append((dmr_destid >> 8) & 0xff);
 		d.append((dmr_destid >> 0) & 0xff);
 	}
+	else if(protocol == "M17"){
+		uint8_t cs[10];
+		memset(cs, ' ', 9);
+		memcpy(cs, callsign.toLocal8Bit(), callsign.size());
+		cs[8] = 'D';
+		cs[9] = 0x00;
+		M17Codec::encode_callsign(cs);
+		d.append('D');
+		d.append('I');
+		d.append('S');
+		d.append('C');
+		d.append((char *)cs, 6);
+	}
 	ping_timer->stop();
 	udp->writeDatagram(d, QHostAddress(host), port);
 	//disconnect(udp, SIGNAL(readyRead()));
@@ -1318,7 +1423,7 @@ void DudeStar::process_connect()
         ui->hostCombo->setEnabled(true);
         ui->callsignEdit->setEnabled(true);
 
-		if((protocol == "DCS") || (protocol == "XRF")){
+		if((protocol == "DCS") || (protocol == "XRF") || (protocol == "M17")){
 			ui->comboMod->setEnabled(true);
 		}
 
@@ -1366,6 +1471,8 @@ void DudeStar::process_connect()
 		if(protocol == "NXDN"){
 			dmrid = nxdnids.key(callsign);
 			dmr_destid = ui->hostCombo->currentText().toUInt();
+		}
+		if(protocol == "M17"){
 		}
 		connect_to_serial(ui->AmbeCombo->currentData().toString().simplified());
 		QHostInfo::lookupHost(host, this, SLOT(hostname_lookup(QHostInfo)));
@@ -1445,18 +1552,32 @@ void DudeStar::hostname_lookup(QHostInfo i)
 		d.append((dmr_destid >> 8) & 0xff);
 		d.append((dmr_destid >> 0) & 0xff);
 	}
+	else if(protocol == "M17"){
+		uint8_t cs[10];
+		memset(cs, ' ', 9);
+		memcpy(cs, callsign.toLocal8Bit(), callsign.size());
+		cs[8] = 'D';
+		cs[9] = 0x00;
+		M17Codec::encode_callsign(cs);
+		d.append('C');
+		d.append('O');
+		d.append('N');
+		d.append('N');
+		d.append((char *)cs, 6);
+		d.append(module);
+	}
 	if (!i.addresses().isEmpty()) {
 		address = i.addresses().first();
 		udp = new QUdpSocket(this);
 		connect(udp, SIGNAL(readyRead()), this, SLOT(readyRead()));
 		udp->writeDatagram(d, address, port);
 #ifdef DEBUG
-	fprintf(stderr, "SEND: ");
-	for(int i = 0; i < d.size(); ++i){
-		fprintf(stderr, "%02x ", (unsigned char)d.data()[i]);
-	}
-	fprintf(stderr, "\n");
-	fflush(stderr);
+		fprintf(stderr, "SEND: ");
+		for(int i = 0; i < d.size(); ++i){
+			fprintf(stderr, "%02x ", (unsigned char)d.data()[i]);
+		}
+		fprintf(stderr, "\n");
+		fflush(stderr);
 #endif
 	}
 }
@@ -1514,8 +1635,8 @@ void DudeStar::process_input_mute_button()
 void DudeStar::process_audio()
 {
 	int nbAudioSamples = 0;
-	short *audioSamples;
-	unsigned char d[11];
+	int16_t *audioSamples;
+	uint8_t d[16];
 	char ch_pkt_hdr[6] = {0x61, 0x00, 0x0b, 0x01, 0x01, 0x48};
 	QByteArray ambe;
 	QByteArray audio;
@@ -1584,6 +1705,16 @@ void DudeStar::process_audio()
 */
 		serial->write(ambe);
 	}
+	else if( (protocol == "M17") && (audioq.size() >= 8) ){
+		int16_t m17audio[320];
+		for(int i = 0; i < 8; ++i){
+			d[i] = audioq.dequeue();
+		}
+		m17->decode_audio(m17audio, d);
+		//m17->decode_audio(&m17audio[160], &d[8]);
+		audiodev->write((const char *) m17audio, sizeof(int16_t) * (m17->get_mode() ? 160 : 320));
+		return;
+	}
 	else if(audioq.size() >= 9){
 		for(int i = 0; i < 9; ++i){
 			d[i] = audioq.dequeue();
@@ -1630,7 +1761,7 @@ void DudeStar::process_audio()
 		}
 		//audiodev->write(audio);
 	}
-	else if (mbe && !hwrx){
+	else if ((mbe) && (!hwrx) && (protocol != "M17")){
 		audioSamples = mbe->getAudio(nbAudioSamples);
 		audiodev->write((const char *) audioSamples, sizeof(short) * nbAudioSamples);
 		mbe->resetAudio();
@@ -1790,6 +1921,9 @@ void DudeStar::readyRead()
 	else if (protocol == "NXDN"){
 		readyReadNXDN();
 	}
+	else if (protocol == "M17"){
+		readyReadM17();
+	}
 }
 
 void DudeStar::process_ping()
@@ -1864,6 +1998,19 @@ void DudeStar::process_ping()
 		out.append((dmr_destid >> 8) & 0xff);
 		out.append((dmr_destid >> 0) & 0xff);
 	}
+	else if(protocol == "M17"){
+		uint8_t cs[10];
+		memset(cs, ' ', 9);
+		memcpy(cs, callsign.toLocal8Bit(), callsign.size());
+		cs[8] = 'D';
+		cs[9] = 0x00;
+		M17Codec::encode_callsign(cs);
+		out.append('P');
+		out.append('O');
+		out.append('N');
+		out.append('G');
+		out.append((char *)cs, 6);
+	}
 	udp->writeDatagram(out, address, port);
 #ifdef DEBUG
 	fprintf(stderr, "PING: ");
@@ -1873,6 +2020,79 @@ void DudeStar::process_ping()
 	fprintf(stderr, "\n");
 	fflush(stderr);
 #endif
+}
+
+void DudeStar::readyReadM17()
+{
+	QByteArray buf;
+	QHostAddress sender;
+	quint16 senderPort;
+	//static uint8_t cnt = 0;
+	static unsigned short streamid = 0;
+
+	buf.resize(udp->pendingDatagramSize());
+	udp->readDatagram(buf.data(), buf.size(), &sender, &senderPort);
+#ifdef DEBUG
+	fprintf(stderr, "RECV: ");
+	for(int i = 0; i < buf.size(); ++i){
+		fprintf(stderr, "%02x ", (unsigned char)buf.data()[i]);
+	}
+	fprintf(stderr, "\n");
+	fflush(stderr);
+#endif
+	if((buf.size() == 4) && (::memcmp(buf.data(), "ACKN", 4U) == 0)){
+		if(connect_status == CONNECTING){
+			m17 = new M17Codec();
+			ui->connectButton->setText("Disconnect");
+			ui->connectButton->setEnabled(true);
+			ui->AmbeCombo->setEnabled(false);
+			ui->AudioOutCombo->setEnabled(false);
+			ui->AudioInCombo->setEnabled(false);
+			ui->modeCombo->setEnabled(false);
+			ui->hostCombo->setEnabled(false);
+			ui->callsignEdit->setEnabled(false);
+			ui->comboMod->setEnabled(false);
+			ui->txButton->setDisabled(false);
+			connect_status = CONNECTED_RW;
+			audiotimer->start(19);
+			//ping_timer->start(1000);
+			status_txt->setText(" Host: " + host + ":" + QString::number(port) + " Ping: " + QString::number(ping_cnt++));
+		}
+	}
+	if((buf.size() == 10) && (::memcmp(buf.data(), "PING", 4U) == 0)){
+		process_ping();
+		status_txt->setText(" Host: " + host + ":" + QString::number(port) + " Ping: " + QString::number(ping_cnt++));
+	}
+	if((buf.size() == 54) && (::memcmp(buf.data(), "M17 ", 4U) == 0)){
+		uint8_t cs[10];
+		uint8_t sz;
+		::memcpy(cs, &(buf.data()[12]), 6);
+		M17Codec::decode_callsign(cs);
+		ui->mycall->setText(QString((char *)cs));
+		::memcpy(cs, &(buf.data()[6]), 6);
+		M17Codec::decode_callsign(cs);
+		ui->urcall->setText(QString((char *)cs));
+		if((buf.data()[19] & 0x06U) == 0x04U){
+			ui->rptr1->setText("3200 Voice");
+			m17->set_mode(true);
+			sz = 16;
+		}
+		else{
+			ui->rptr1->setText("1600 V/D");
+			m17->set_mode(false);
+			sz = 8;
+		}
+		streamid = (buf.data()[4] << 8) | (buf.data()[5] & 0xff);
+		uint16_t fn = (buf.data()[34] << 8) | (buf.data()[35] & 0xff);
+		QString ss = QString("%1").arg(streamid, 4, 16, QChar('0'));
+		QString n = QString("%1").arg(fn, 4, 16, QChar('0'));
+		ui->rptr2->setText(n);
+		ui->streamid->setText(ss);
+
+		for(int i = 0; i < sz; ++i){
+			audioq.enqueue(buf.data()[36+i]);
+		}
+	}
 }
 
 void DudeStar::readyReadYSF()
@@ -2766,6 +2986,9 @@ void DudeStar::press_tx()
     //std::cerr << "Pressed TX buffersize == " << audioin->bufferSize() << std::endl;
 	tx = true;
 	audiotx_cnt = 0;
+	if(protocol == "M17"){
+		m17->set_mode(true);
+	}
 #ifdef USE_FLITE
 	int id = tts_voices->checkedId();
 	if(id == 1){
@@ -2786,7 +3009,7 @@ void DudeStar::press_tx()
 		//audio_buffer.open(QBuffer::ReadWrite|QBuffer::Truncate);
 		//audiofile.setFileName("audio.pcm");
 		//audiofile.open(QIODevice::WriteOnly | QIODevice::Truncate);
-		audioin->setBufferSize(512);
+		audioin->setBufferSize(480);
 		//audioin->start(&audio_buffer);
 		ambeq.clear();
 		audioinq.clear();
@@ -2915,6 +3138,10 @@ void DudeStar::tx_timer()
 				mbeenc->encode(audio_samples, ambe_bytes);
 				frame_len = 11;
 			}
+			else if(protocol == "M17"){
+				m17->encode_c2(audio_samples, ambe_bytes);
+				frame_len = 8;
+			}
 			else{
 				mbeenc->encode(audio_samples, ambe_frame);
 				if((protocol == "YSF") || (protocol == "NXDN")){
@@ -2942,7 +3169,7 @@ void DudeStar::tx_timer()
 				memcpy(ambe_bytes, ambe_frame, 9);
 			}
 			for(int i = 0; i < frame_len; ++i){
-				if((protocol != "P25") && (protocol != "DMR")){
+				if((protocol != "P25") && (protocol != "DMR") && (protocol != "M17")){
 					for(int j = 0; j < 8; ++j){
 						//ambe_bytes[i] |= (ambe_frame[((8-i)*8)+(7-j)] << (7-j));
 						//if(protocol != "YSF"){
@@ -2962,13 +3189,14 @@ void DudeStar::tx_timer()
 				}
 				ambeq.enqueue(ambe_bytes[i]);
 			}
-
+/*
 			fprintf(stderr, "AMBESW: ");
 			for(int i = 0; i < frame_len; ++i){
 				fprintf(stderr, "%02x ", ambe_bytes[i]);
 			}
 			fprintf(stderr, "\n");
 			fflush(stderr);
+*/
 		}
 	}
 	if((protocol == "YSF") && (cnt == 5)){
@@ -2980,6 +3208,10 @@ void DudeStar::tx_timer()
 		cnt = 0;
 	}
 	else if((protocol == "DMR") && (cnt == 3)){
+		transmit();
+		cnt = 0;
+	}
+	else if((protocol == "M17") && (cnt == 2)){
 		transmit();
 		cnt = 0;
 	}
@@ -3052,6 +3284,134 @@ void DudeStar::transmit()
 	}
 	else if (protocol == "NXDN"){
 		transmitNXDN();
+	}
+	else if (protocol == "M17"){
+		transmitM17();
+	}
+}
+
+void DudeStar::transmitM17()
+{
+	QByteArray txframe;
+	static uint16_t txstreamid = 0;
+	static uint16_t tx_cnt = 0;
+
+	txframe.clear();
+	if(tx || ambeq.size()){
+		if(ambeq.size() < 28){
+			if(!tx){
+				ambeq.clear();
+				return;
+			}
+			else{
+				std::cerr << "ERROR: Codec2 queue < 28" << std::endl;
+				return;
+			}
+		}
+
+		while(ambeq.size() && (ambeq[0] != 0x61) && (ambeq[3] != 0x01)){
+			std::cerr << "ERROR: Not an Codec2 frame" << std::endl;
+			ambeq.dequeue();
+		}
+
+		if(txstreamid == 0){
+		   txstreamid = static_cast<uint16_t>((::rand() & 0xFFFF));
+		   //std::cerr << "txstreamid == " << txstreamid << std::endl;
+		}
+		uint8_t src[10];
+		uint8_t dst[10];
+		memset(dst, ' ', 9);
+		memcpy(dst, hostname.toLocal8Bit(), hostname.size());
+		dst[8] =  module;
+		dst[9] = 0x00;
+		M17Codec::encode_callsign(dst);
+		memset(src, ' ', 9);
+		memcpy(src, callsign.toLocal8Bit(), callsign.size());
+		src[8] = 'D';
+		src[9] = 0x00;
+		M17Codec::encode_callsign(src);
+
+		txframe.append('M');
+		txframe.append('1');
+		txframe.append('7');
+		txframe.append(' ');
+		txframe.append(txstreamid >> 8);
+		txframe.append(txstreamid & 0xff);
+		txframe.append((char *)dst, 6);
+		txframe.append((char *)src, 6);
+		txframe.append('\x00');
+		txframe.append(0x05); // Frame type voice only
+		txframe.append(14, 0x00); //Blank nonce
+		txframe.append((char)(tx_cnt >> 8));
+		txframe.append((char)tx_cnt & 0xff);
+
+		for (int i = 0; i < 6; ++i){
+			ambeq.dequeue();
+		}
+		for (int i = 0; i < 8; ++i){
+			txframe.append(ambeq.dequeue());
+		}
+		for (int i = 0; i < 6; ++i){
+			ambeq.dequeue();
+		}
+		for (int i = 0; i < 8; ++i){
+			txframe.append(ambeq.dequeue());
+		}
+		txframe.append(2, 0x00);
+		udp->writeDatagram(txframe, address, port);
+		++tx_cnt;
+		fprintf(stderr, "SEND:%d: ", ambeq.size());
+		for(int i = 0; i < txframe.size(); ++i){
+			fprintf(stderr, "%02x ", (unsigned char)txframe.data()[i]);
+		}
+		fprintf(stderr, "\n");
+		fflush(stderr);
+	}
+	else{
+		const uint8_t quiet[] = { 0x00u, 0x01u, 0x43u, 0x09u, 0xe4u, 0x9cu, 0x08u, 0x21u };
+		uint8_t src[10];
+		uint8_t dst[10];
+		memset(dst, ' ', 9);
+		memcpy(dst, hostname.toLocal8Bit(), hostname.size());
+		dst[8] =  module;
+		dst[9] = 0x00;
+		M17Codec::encode_callsign(dst);
+		memset(src, ' ', 9);
+		memcpy(src, callsign.toLocal8Bit(), callsign.size());
+		src[8] = 'D';
+		src[9] = 0x00;
+		M17Codec::encode_callsign(src);
+		tx_cnt |= 0x8000u;
+
+		txframe.append('M');
+		txframe.append('1');
+		txframe.append('7');
+		txframe.append(' ');
+		txframe.append(txstreamid >> 8);
+		txframe.append(txstreamid & 0xff);
+		txframe.append((char *)dst, 6);
+		txframe.append((char *)src, 6);
+		txframe.append('\x00');
+		txframe.append(0x05); // Frame type voice only
+		txframe.append(14, 0x00); //Blank nonce
+		txframe.append((char)(tx_cnt >> 8));
+		txframe.append((char)tx_cnt & 0xff);
+		txframe.append((char *)quiet, 8);
+		txframe.append((char *)quiet, 8);
+		txframe.append(2, 0x00);
+
+		udp->writeDatagram(txframe, address, port);
+		txstreamid = 0;
+		tx_cnt = 0;
+		txtimer->stop();
+		audioindev->disconnect();
+		audioin->stop();
+		fprintf(stderr, "LAST:%d: ", ambeq.size());
+		for(int i = 0; i < txframe.size(); ++i){
+			fprintf(stderr, "%02x ", (unsigned char)txframe.data()[i]);
+		}
+		fprintf(stderr, "\n");
+		fflush(stderr);
 	}
 }
 
@@ -3167,12 +3527,12 @@ void DudeStar::transmitYSF()
 		txdata.append((char *)temp_ysf, frame_size);
 		udp->writeDatagram(txdata, address, port);
 #ifdef DEBUG
-	fprintf(stderr, "SEND:%d: ", ambeq.size());
-	for(int i = 0; i < txdata.size(); ++i){
-		fprintf(stderr, "%02x ", (unsigned char)txdata.data()[i]);
-	}
-	fprintf(stderr, "\n");
-	fflush(stderr);
+		fprintf(stderr, "SEND:%d: ", ambeq.size());
+		for(int i = 0; i < txdata.size(); ++i){
+			fprintf(stderr, "%02x ", (unsigned char)txdata.data()[i]);
+		}
+		fprintf(stderr, "\n");
+		fflush(stderr);
 #endif
 	}
 	else{

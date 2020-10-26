@@ -7,7 +7,7 @@ TEMPLATE = app
 VERSION_BUILD='$(shell cd $$PWD;git rev-parse --short HEAD)'
 DEFINES += QT_DEPRECATED_WARNINGS
 DEFINES += VERSION_NUMBER=\"\\\"$${VERSION_BUILD}\\\"\"
-#DEFINES += USE_FLITE
+DEFINES += USE_FLITE
 DEFINES += USE_SWTX
 CONFIG += c++11
 
@@ -22,6 +22,14 @@ SOURCES += \
         cbptc19696.cpp \
         cgolay2087.cpp \
         chamming.cpp \
+        codec2/codebooks.cpp \
+        codec2/codec2.cpp \
+        codec2/kiss_fft.cpp \
+        codec2/lpc.cpp \
+        codec2/nlp.cpp \
+        codec2/pack.cpp \
+        codec2/qbase.cpp \
+        codec2/quantise.cpp \
         crc.cpp \
         crs129.cpp \
         dmrencoder.cpp \
@@ -49,6 +57,7 @@ SOURCES += \
         imbe_vocoder/uv_synt.cc \
         imbe_vocoder/v_synt.cc \
         imbe_vocoder/v_uv_det.cc \
+        m17codec.cpp \
         main.cpp \
         mbedec.cpp \
         mbeenc.cc \
@@ -75,6 +84,14 @@ HEADERS += \
         cbptc19696.h \
         cgolay2087.h \
         chamming.h \
+        codec2/codec2.h \
+        codec2/codec2_internal.h \
+        codec2/defines.h \
+        codec2/kiss_fft.h \
+        codec2/lpc.h \
+        codec2/nlp.h \
+        codec2/qbase.h \
+        codec2/quantise.h \
         crc.h \
         crs129.h \
         dmrencoder.h \
@@ -106,6 +123,7 @@ HEADERS += \
         imbe_vocoder/uv_synt.h \
         imbe_vocoder/v_synt.h \
         imbe_vocoder/v_uv_det.h \
+        m17codec.h \
         mbedec.h \
         mbeenc.h \
         mbefec.h \

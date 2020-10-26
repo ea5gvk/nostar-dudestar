@@ -543,22 +543,6 @@
       </property>
      </widget>
     </item>
-    <item row="10" column="2">
-     <widget class="QCheckBox" name="checkBoxSWTX">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="toolTip">
-       <string>Use software encoding</string>
-      </property>
-      <property name="text">
-       <string>SWTX</string>
-      </property>
-     </widget>
-    </item>
     <item row="19" column="0">
      <widget class="QLabel" name="label_6">
       <property name="sizePolicy">
@@ -670,6 +654,42 @@
       </property>
       <property name="toolTip">
        <string>Select audio input</string>
+      </property>
+     </widget>
+    </item>
+    <item row="10" column="1">
+     <widget class="QCheckBox" name="checkBoxSWTX">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="toolTip">
+       <string>Use software encoding</string>
+      </property>
+      <property name="text">
+       <string>SWTX</string>
+      </property>
+     </widget>
+    </item>
+    <item row="10" column="2">
+     <widget class="QRadioButton" name="m17VoiceFull">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="text">
+       <string>3200 Voice</string>
+      </property>
+     </widget>
+    </item>
+    <item row="10" column="3">
+     <widget class="QRadioButton" name="m17VoiceData">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="text">
+       <string>1600 V/D</string>
       </property>
      </widget>
     </item>

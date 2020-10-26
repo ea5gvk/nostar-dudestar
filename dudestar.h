@@ -36,6 +36,7 @@
 #include "dmrencoder.h"
 #include "p25encoder.h"
 #include "nxdnencoder.h"
+#include "m17codec.h"
 
 
 namespace Ui {
@@ -60,6 +61,7 @@ private:
 	void transmitDMR();
 	void transmitP25();
 	void transmitNXDN();
+	void transmitM17();
     void calcPFCS(char *d);
     Ui::DudeStar *ui;
 	QSerialPort *serial = nullptr;
@@ -96,6 +98,7 @@ private:
 	QString saved_dmrhost;
 	QString saved_p25host;
 	QString saved_nxdnhost;
+	QString saved_m17host;
     char module;
 	uint32_t dmrid;
 	uint32_t dmr_srcid;
@@ -112,6 +115,7 @@ private:
 	DMREncoder *dmr;
 	p25encoder *p25;
 	NXDNEncoder *nxdn;
+	M17Codec *m17;
     QAudioOutput *audio;
 	QAudioInput *audioin;
 	QBuffer audio_buffer;
@@ -171,6 +175,7 @@ private slots:
 	void readyReadDMR();
 	void readyReadP25();
 	void readyReadNXDN();
+	void readyReadM17();
 	void disconnect_from_host();
     void handleStateChanged(QAudio::State);
     void hostname_lookup(QHostInfo);
@@ -193,6 +198,7 @@ private slots:
 	void process_dmr_hosts();
 	void process_p25_hosts();
 	void process_nxdn_hosts();
+	void process_m17_hosts();
 	void delete_host_files();
 	void process_dmr_ids();
 	void update_dmr_ids();
