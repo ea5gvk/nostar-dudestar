@@ -1196,7 +1196,7 @@ void DudeStar::setup_audio()
 		}
 		qDebug() << "Using playback device " << info.deviceName();
 		audio = new QAudioOutput(info, tempformat, this);
-		audio->setBufferSize(8192);
+		audio->setBufferSize(6400);
 		//connect(audio, SIGNAL(stateChanged(QAudio::State)), this, SLOT(handleStateChanged(QAudio::State)));
 	}
 
@@ -1443,7 +1443,6 @@ void DudeStar::process_connect()
 		delete audioin;
     }
     else{
-		hostname = ui->hostCombo->currentText().simplified();
 		QStringList sl = ui->hostCombo->currentData().toString().simplified().split(':');
 		connect_status = CONNECTING;
 		status_txt->setText("Connecting...");
@@ -1455,6 +1454,8 @@ void DudeStar::process_connect()
 		ui->callsignEdit->setText(callsign);
 		module = ui->comboMod->currentText().toStdString()[0];
 		protocol = ui->modeCombo->currentText();
+		hostname = ui->hostCombo->currentText().simplified();
+
 		qDebug() << "Host info:" << hostname << ":" << host << ":" << port;
 		if(protocol == "DMR"){
 			//dmrid = dmrids.key(callsign);
@@ -2013,7 +2014,7 @@ void DudeStar::process_ping()
 	}
 	udp->writeDatagram(out, address, port);
 #ifdef DEBUG
-	fprintf(stderr, "PING: ");
+	fprintf(stderr, "SEND: ");
 	for(int i = 0; i < out.size(); ++i){
 		fprintf(stderr, "%02x ", (unsigned char)out.data()[i]);
 	}
@@ -2055,12 +2056,12 @@ void DudeStar::readyReadM17()
 			ui->txButton->setDisabled(false);
 			connect_status = CONNECTED_RW;
 			audiotimer->start(19);
-			//ping_timer->start(1000);
+			ping_timer->start(8000);
 			status_txt->setText(" Host: " + host + ":" + QString::number(port) + " Ping: " + QString::number(ping_cnt++));
 		}
 	}
 	if((buf.size() == 10) && (::memcmp(buf.data(), "PING", 4U) == 0)){
-		process_ping();
+		//process_ping();
 		status_txt->setText(" Host: " + host + ":" + QString::number(port) + " Ping: " + QString::number(ping_cnt++));
 	}
 	if((buf.size() == 54) && (::memcmp(buf.data(), "M17 ", 4U) == 0)){
