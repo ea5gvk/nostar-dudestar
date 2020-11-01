@@ -27,11 +27,7 @@
 #include <QSerialPortInfo>
 #include <time.h>
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
-#define ENDLINE	endl
-#else
-#define ENDLINE Qt::endl
-#endif
+#define ENDLINE "\n"
 
 #define LOBYTE(w)			((uint8_t)(uint16_t)(w & 0x00FF))
 #define HIBYTE(w)			((uint8_t)((((uint16_t)(w)) >> 8) & 0xFF))
@@ -87,6 +83,8 @@ extern cst_voice * register_cmu_us_rms(const char *);
 DudeStar::DudeStar(QWidget *parent) :
     QMainWindow(parent),
 	ui(new Ui::DudeStar),
+	audio(nullptr),
+	audioin(nullptr),
 	enable_swtx(false)
 {
 	dmrslot = 2;
@@ -211,7 +209,11 @@ void DudeStar::init_gui()
 	ui->involSlider->setRange(0, 100);
 	ui->involSlider->setValue(100);
 	ui->txButton->setDisabled(true);
+	m17rates = new QButtonGroup();
+	m17rates->addButton(ui->m17VoiceFull, 0);
+	m17rates->addButton(ui->m17VoiceData, 1);
 	ui->m17VoiceFull->setChecked(true);
+	ui->m17VoiceData->setEnabled(false);
     connect(ui->actionAbout, SIGNAL(triggered()), this, SLOT(about()));
     connect(ui->actionQuit, SIGNAL(triggered()), this, SLOT(close()));
 	connect(ui->actionUpdate_DMR_IDs, SIGNAL(triggered()), this, SLOT(update_dmr_ids()));
@@ -219,10 +221,6 @@ void DudeStar::init_gui()
     connect(ui->connectButton, SIGNAL(clicked()), this, SLOT(process_connect()));
     connect(ui->txButton, SIGNAL(pressed()), this, SLOT(press_tx()));
     connect(ui->txButton, SIGNAL(released()), this, SLOT(release_tx()));
-	connect(ui->muteButton, SIGNAL(clicked()), this, SLOT(process_mute_button()));
-	connect(ui->volumeSlider, SIGNAL(valueChanged(int)), this, SLOT(process_volume_changed(int)));
-	connect(ui->inmuteButton, SIGNAL(clicked()), this, SLOT(process_input_mute_button()));
-	connect(ui->involSlider, SIGNAL(valueChanged(int)), this, SLOT(process_input_volume_changed(int)));
 	ui->statusBar->insertPermanentWidget(0, status_txt, 1);
 	connect(ui->checkBoxSWRX, SIGNAL(stateChanged(int)), this, SLOT(swrx_state_changed(int)));
 	connect(ui->checkBoxSWTX, SIGNAL(stateChanged(int)), this, SLOT(swtx_state_changed(int)));
@@ -282,7 +280,7 @@ void DudeStar::http_finished(QNetworkReply *reply)
 		hosts_file->close();
 		delete hosts_file;
 		status_txt->setText(tr("Downloaded " + filename.toLocal8Bit()));
-		qDebug() << "Downloaded " << filename;
+		fprintf(stderr, "Downloaded %s\n", filename.toStdString().c_str());fflush(stderr);
 		if(filename == "dplus.txt"){
 			process_ref_hosts();
 		}
@@ -360,8 +358,8 @@ void DudeStar::process_mode_change(const QString &m)
 		ui->rptr1Edit->setEnabled(true);
 		ui->rptr2Edit->setEnabled(true);
 		ui->usertxtEdit->setEnabled(true);
-		ui->m17VoiceFull->setEnabled(false);
-		ui->m17VoiceData->setEnabled(false);
+		//ui->m17VoiceFull->setEnabled(false);
+		//ui->m17VoiceData->setEnabled(false);
 		ui->label_1->setText("MYCALL");
 		ui->label_2->setText("URCALL");
 		ui->label_3->setText("RPTR1");
@@ -383,8 +381,8 @@ void DudeStar::process_mode_change(const QString &m)
 		ui->rptr1Edit->setEnabled(true);
 		ui->rptr2Edit->setEnabled(true);
 		ui->usertxtEdit->setEnabled(true);
-		ui->m17VoiceFull->setEnabled(false);
-		ui->m17VoiceData->setEnabled(false);
+		//ui->m17VoiceFull->setEnabled(false);
+		//ui->m17VoiceData->setEnabled(false);
 		ui->label_1->setText("MYCALL");
 		ui->label_2->setText("URCALL");
 		ui->label_3->setText("RPTR1");
@@ -406,8 +404,8 @@ void DudeStar::process_mode_change(const QString &m)
 		ui->rptr1Edit->setEnabled(true);
 		ui->rptr2Edit->setEnabled(true);
 		ui->usertxtEdit->setEnabled(true);
-		ui->m17VoiceFull->setEnabled(false);
-		ui->m17VoiceData->setEnabled(false);
+		//ui->m17VoiceFull->setEnabled(false);
+		//ui->m17VoiceData->setEnabled(false);
 		ui->label_1->setText("MYCALL");
 		ui->label_2->setText("URCALL");
 		ui->label_3->setText("RPTR1");
@@ -429,8 +427,8 @@ void DudeStar::process_mode_change(const QString &m)
 		ui->rptr1Edit->setEnabled(false);
 		ui->rptr2Edit->setEnabled(false);
 		ui->usertxtEdit->setEnabled(false);
-		ui->m17VoiceFull->setEnabled(false);
-		ui->m17VoiceData->setEnabled(false);
+		//ui->m17VoiceFull->setEnabled(false);
+		//ui->m17VoiceData->setEnabled(false);
 		ui->label_1->setText("Gateway");
 		ui->label_2->setText("Callsign");
 		ui->label_3->setText("Dest");
@@ -452,8 +450,8 @@ void DudeStar::process_mode_change(const QString &m)
 		ui->rptr1Edit->setEnabled(false);
 		ui->rptr2Edit->setEnabled(false);
 		ui->usertxtEdit->setEnabled(false);
-		ui->m17VoiceFull->setEnabled(false);
-		ui->m17VoiceData->setEnabled(false);
+		//ui->m17VoiceFull->setEnabled(false);
+		//ui->m17VoiceData->setEnabled(false);
 		ui->label_1->setText("Callsign");
 		ui->label_2->setText("SrcID");
 		ui->label_3->setText("DestID");
@@ -475,8 +473,8 @@ void DudeStar::process_mode_change(const QString &m)
 		ui->rptr1Edit->setEnabled(false);
 		ui->rptr2Edit->setEnabled(false);
 		ui->usertxtEdit->setEnabled(false);
-		ui->m17VoiceFull->setEnabled(false);
-		ui->m17VoiceData->setEnabled(false);
+		//ui->m17VoiceFull->setEnabled(false);
+		//ui->m17VoiceData->setEnabled(false);
 		ui->label_1->setText("Callsign");
 		ui->label_2->setText("SrcID");
 		ui->label_3->setText("DestID");
@@ -497,8 +495,8 @@ void DudeStar::process_mode_change(const QString &m)
 		ui->rptr1Edit->setEnabled(false);
 		ui->rptr2Edit->setEnabled(false);
 		ui->usertxtEdit->setEnabled(false);
-		ui->m17VoiceFull->setEnabled(false);
-		ui->m17VoiceData->setEnabled(false);
+		//ui->m17VoiceFull->setEnabled(false);
+		//ui->m17VoiceData->setEnabled(false);
 		ui->label_1->setText("Callsign");
 		ui->label_2->setText("SrcID");
 		ui->label_3->setText("DestID");
@@ -519,8 +517,8 @@ void DudeStar::process_mode_change(const QString &m)
 		ui->rptr1Edit->setEnabled(false);
 		ui->rptr2Edit->setEnabled(false);
 		ui->usertxtEdit->setEnabled(false);
-		ui->m17VoiceFull->setEnabled(true);
-		ui->m17VoiceData->setEnabled(true);
+		//ui->m17VoiceFull->setEnabled(true);
+		//ui->m17VoiceData->setEnabled(true);
 		ui->label_1->setText("SrcID");
 		ui->label_2->setText("DstID");
 		ui->label_3->setText("Type");
@@ -1151,13 +1149,13 @@ void DudeStar::discover_audio_devices()
 	QList<QAudioDeviceInfo> devices = QAudioDeviceInfo::availableDevices(QAudio::AudioOutput);
 
 	for (QList<QAudioDeviceInfo>::ConstIterator it = devices.constBegin(); it != devices.constEnd(); ++it ) {
-		//qDebug() << "Playback device name = " << (*it).deviceName();
+		fprintf(stderr, "Playback device name = %s\n", (*it).deviceName().toStdString().c_str());fflush(stderr);
 		ui->AudioOutCombo->addItem((*it).deviceName());
 	}
 	devices = QAudioDeviceInfo::availableDevices(QAudio::AudioInput);
 
 	for (QList<QAudioDeviceInfo>::ConstIterator it = devices.constBegin(); it != devices.constEnd(); ++it ) {
-		//qDebug() << "Recording device name = " << (*it).deviceName();
+		fprintf(stderr, "Recording device name = %s\n", (*it).deviceName().toStdString().c_str());fflush(stderr);
 		ui->AudioInCombo->addItem((*it).deviceName());
 	}
 }
@@ -1176,7 +1174,7 @@ void DudeStar::setup_audio()
 	QList<QAudioDeviceInfo> devices = QAudioDeviceInfo::availableDevices(QAudio::AudioOutput);
 
 	if(devices.size() == 0){
-		qDebug() << "No audio playback hardware found";
+		fprintf(stderr, "No audio playback hardware found\n");fflush(stderr);
 	}
 	else{
 		QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
@@ -1194,16 +1192,18 @@ void DudeStar::setup_audio()
 		else{
 			tempformat = format;
 		}
-		qDebug() << "Using playback device " << info.deviceName();
+		fprintf(stderr, "Using playback device %s\n", info.deviceName().toStdString().c_str());fflush(stderr);
 		audio = new QAudioOutput(info, tempformat, this);
 		audio->setBufferSize(6400);
+		connect(ui->muteButton, SIGNAL(clicked()), this, SLOT(process_mute_button()));
+		connect(ui->volumeSlider, SIGNAL(valueChanged(int)), this, SLOT(process_volume_changed(int)));
 		//connect(audio, SIGNAL(stateChanged(QAudio::State)), this, SLOT(handleStateChanged(QAudio::State)));
 	}
 
 	devices = QAudioDeviceInfo::availableDevices(QAudio::AudioInput);
 
 	if(devices.size() == 0){
-		qDebug() << "No audio recording hardware found";
+		fprintf(stderr, "No audio recording hardware found\n");fflush(stderr);
 	}
 	else{
 		QAudioDeviceInfo info(QAudioDeviceInfo::defaultInputDevice());
@@ -1221,27 +1221,31 @@ void DudeStar::setup_audio()
 		else{
 			tempformat = format;
 		}
-		qDebug() << "Using recording device " << info.deviceName();
+		fprintf(stderr, "Using recording device %s\n", info.deviceName().toStdString().c_str());fflush(stderr);
 		audioin = new QAudioInput(info, format, this);
+		connect(ui->inmuteButton, SIGNAL(clicked()), this, SLOT(process_input_mute_button()));
+		connect(ui->involSlider, SIGNAL(valueChanged(int)), this, SLOT(process_input_volume_changed(int)));
+
 	}
 }
 
 void DudeStar::discover_vocoders()
 {
 	const QString blankString = "N/A";
-	QTextStream out(stdout);
+	QString out;
 	const auto serialPortInfos = QSerialPortInfo::availablePorts();
 	ui->AmbeCombo->addItem("Software vocoder", "");
 	if(serialPortInfos.count()){
 		for(const QSerialPortInfo &serialPortInfo : serialPortInfos) {
-			out << "Port: " << serialPortInfo.portName() << ENDLINE
-				<< "Location: " << serialPortInfo.systemLocation() << ENDLINE
-				<< "Description: " << (!serialPortInfo.description().isEmpty() ? serialPortInfo.description() : blankString) << ENDLINE
-				<< "Manufacturer: " << (!serialPortInfo.manufacturer().isEmpty() ? serialPortInfo.manufacturer() : blankString) << ENDLINE
-				<< "Serial number: " << (!serialPortInfo.serialNumber().isEmpty() ? serialPortInfo.serialNumber() : blankString) << ENDLINE
-				<< "Vendor Identifier: " << (serialPortInfo.hasVendorIdentifier() ? QByteArray::number(serialPortInfo.vendorIdentifier(), 16) : blankString) << ENDLINE
-				<< "Product Identifier: " << (serialPortInfo.hasProductIdentifier() ? QByteArray::number(serialPortInfo.productIdentifier(), 16) : blankString) << ENDLINE
-				<< "Busy: " << (serialPortInfo.isBusy() ? "Yes" : "No") << ENDLINE;
+			out = "Port: " + serialPortInfo.portName() + ENDLINE
+				+ "Location: " + serialPortInfo.systemLocation() + ENDLINE
+				+ "Description: " + (!serialPortInfo.description().isEmpty() ? serialPortInfo.description() : blankString) + ENDLINE
+				+ "Manufacturer: " + (!serialPortInfo.manufacturer().isEmpty() ? serialPortInfo.manufacturer() : blankString) + ENDLINE
+				+ "Serial number: " + (!serialPortInfo.serialNumber().isEmpty() ? serialPortInfo.serialNumber() : blankString) + ENDLINE
+				+ "Vendor Identifier: " + (serialPortInfo.hasVendorIdentifier() ? QByteArray::number(serialPortInfo.vendorIdentifier(), 16) : blankString) + ENDLINE
+				+ "Product Identifier: " + (serialPortInfo.hasProductIdentifier() ? QByteArray::number(serialPortInfo.productIdentifier(), 16) : blankString) + ENDLINE
+				+ "Busy: " + (serialPortInfo.isBusy() ? "Yes" : "No") + ENDLINE;
+			fprintf(stderr, "%s", out.toStdString().c_str());fflush(stderr);
 			if((!serialPortInfo.description().isEmpty()) && (!serialPortInfo.isBusy())){
 				ui->AmbeCombo->addItem(serialPortInfo.portName() + " - " + serialPortInfo.manufacturer() + " " + serialPortInfo.description() + " - " + serialPortInfo.serialNumber(), serialPortInfo.systemLocation());
 			}
@@ -1303,6 +1307,7 @@ void DudeStar::connect_to_serial(QString p)
 
 void DudeStar::disconnect_from_host()
 {
+	fprintf(stderr, "disconnect_from_host() called protocol == %s\n", protocol.toStdString().c_str());fflush(stderr);
 	QByteArray d;
 	if(protocol == "REF"){
 		d.append(0x05);
@@ -1407,6 +1412,7 @@ void DudeStar::disconnect_from_host()
 
 void DudeStar::process_connect()
 {
+	fprintf(stderr, "process_connect() called connect_status == %d\n", connect_status);fflush(stderr);
     if(connect_status != DISCONNECTED){
         connect_status = DISCONNECTED;
         ui->connectButton->setText("Connect");
@@ -1432,6 +1438,7 @@ void DudeStar::process_connect()
 		if(hw_ambe_present){
 			serial->close();
 		}
+
 		audiotimer->stop();
 		ysftimer->stop();
 		audioq.clear();
@@ -1439,8 +1446,18 @@ void DudeStar::process_connect()
 		ping_cnt = 0;
 		ui->txButton->setDisabled(true);
 		status_txt->setText("Not connected");
-		delete audio;
-		delete audioin;
+
+		if(audio != nullptr){
+			ui->volumeSlider->disconnect();
+			ui->muteButton->disconnect();
+			delete audio;
+		}
+
+		if(audioin != nullptr){
+			ui->involSlider->disconnect();
+			ui->inmuteButton->disconnect();
+			delete audioin;
+		}
     }
     else{
 		QStringList sl = ui->hostCombo->currentData().toString().simplified().split(':');
@@ -1456,7 +1473,6 @@ void DudeStar::process_connect()
 		protocol = ui->modeCombo->currentText();
 		hostname = ui->hostCombo->currentText().simplified();
 
-		qDebug() << "Host info:" << hostname << ":" << host << ":" << port;
 		if(protocol == "DMR"){
 			//dmrid = dmrids.key(callsign);
 			//dmr_password = sl.at(2).simplified();
@@ -2053,7 +2069,7 @@ void DudeStar::readyReadM17()
 			ui->hostCombo->setEnabled(false);
 			ui->callsignEdit->setEnabled(false);
 			ui->comboMod->setEnabled(false);
-			ui->txButton->setDisabled(false);
+			if(audioin != nullptr) ui->txButton->setDisabled(false);
 			connect_status = CONNECTED_RW;
 			audiotimer->start(19);
 			ping_timer->start(8000);
@@ -2149,7 +2165,7 @@ void DudeStar::readyReadYSF()
 
 			ping_timer->start(p);
 			if(hw_ambe_present || enable_swtx){
-				ui->txButton->setDisabled(false);
+				if(audioin != nullptr) ui->txButton->setDisabled(false);
 			}
 		}
 		status_txt->setText(" Host: " + host + ":" + QString::number(port) + " Ping: " + QString::number(ping_cnt++));
@@ -2210,7 +2226,7 @@ void DudeStar::readyReadNXDN()
 			nxdn->set_srcid(dmrid);
 			nxdn->set_dstid(dmr_destid);
 			if(hw_ambe_present || enable_swtx){
-				ui->txButton->setDisabled(false);
+				if(audioin != nullptr) ui->txButton->setDisabled(false);
 			}
 			audiotimer->start(19);
 			ping_timer->start(1000);
@@ -2287,7 +2303,7 @@ void DudeStar::readyReadP25()
 			connect_status = CONNECTED_RW;
 			audiotimer->start(19);
 			ping_timer->start(5000);
-			ui->txButton->setDisabled(false);
+			if(audioin != nullptr) ui->txButton->setDisabled(false);
 		}
 		status_txt->setText(" Host: " + host + ":" + QString::number(port) + " Ping: " + QString::number(ping_cnt++));
 	}
@@ -2459,7 +2475,7 @@ void DudeStar::readyReadDMR()
 			audiotimer->start(19);
 			ping_timer->start(5000);
 			if(hw_ambe_present || enable_swtx){
-				ui->txButton->setDisabled(false);
+				if(audioin != nullptr) ui->txButton->setDisabled(false);
 			}
 			else{
 				tx_dmr_header();
@@ -2554,7 +2570,7 @@ void DudeStar::readyReadXRF()
 		rptr2[8] = 0;
 		ui->rptr2Edit->setText(rptr2);
 		if(hw_ambe_present || enable_swtx){
-			ui->txButton->setDisabled(false);
+			if(audioin != nullptr) ui->txButton->setDisabled(false);
 		}
 		status_txt->setText("RW connect to " + host + ":" + QString::number(port));
 	}
@@ -2681,7 +2697,7 @@ void DudeStar::readyReadDCS()
 		rptr2[8] = 0;
 		ui->rptr2Edit->setText(rptr2);
 		if(hw_ambe_present || enable_swtx){
-			ui->txButton->setDisabled(false);
+			if(audioin != nullptr) ui->txButton->setDisabled(false);
 		}
 		status_txt->setText("RW connect to " + host + ":" +  QString::number(port));
 	}
@@ -2794,7 +2810,6 @@ void DudeStar::readyReadREF()
 		out.append(10,'\x00');
 		out.append(serial.toUtf8());
 		//out.append("DV072475", 8);
-		qDebug() << "serial == " << serial;
         udp->writeDatagram(out, address, 20001);
     }
     if(buf.size() == 3){ //2 way keep alive ping
@@ -2841,7 +2856,7 @@ void DudeStar::readyReadREF()
 				rptr2[8] = 0;
 				ui->rptr2Edit->setText(rptr2);
 				if(hw_ambe_present || enable_swtx){
-					ui->txButton->setDisabled(false);
+					if(audioin != nullptr) ui->txButton->setDisabled(false);
 				}
 				audiotimer->start(19);
 				ping_timer->start(1000);

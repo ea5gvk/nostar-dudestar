@@ -66,6 +66,7 @@ private:
     Ui::DudeStar *ui;
 	QSerialPort *serial = nullptr;
     QUdpSocket *udp = nullptr;
+	QButtonGroup *m17rates;
 	enum{
 		DISCONNECTED,
 		CONNECTING,
