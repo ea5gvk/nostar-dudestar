@@ -203,6 +203,9 @@ void DudeStar::init_gui()
 	ui->checkBoxSlt->hide();
 	ui->TTSEdit->hide();
 #endif
+	ui->txButton->setAutoFillBackground(true);
+	ui->txButton->setStyleSheet("background-color: rgb(215, 214, 213); color: rgb(134, 132, 130)");
+	ui->txButton->update();
 	ui->checkBoxTTSOff->setCheckState(Qt::Checked);
 	ui->volumeSlider->setRange(0, 100);
 	ui->volumeSlider->setValue(100);
@@ -1505,6 +1508,7 @@ void DudeStar::process_connect()
 		audioq.clear();
 		ysfq.clear();
 		ping_cnt = 0;
+		ui->txButton->setStyleSheet("background-color: rgb(215, 214, 213); color: rgb(134, 132, 130)");
 		ui->txButton->setDisabled(true);
 		status_txt->setText("Not connected");
 
@@ -2130,7 +2134,10 @@ void DudeStar::readyReadM17()
 			ui->hostCombo->setEnabled(false);
 			ui->callsignEdit->setEnabled(false);
 			ui->comboMod->setEnabled(false);
-			if(audioin != nullptr) ui->txButton->setDisabled(false);
+			if(audioin != nullptr){
+				ui->txButton->setDisabled(false);
+				ui->txButton->setStyleSheet("background-color: rgb(128, 195, 66); color: rgb(0,0,0)");
+			}
 			connect_status = CONNECTED_RW;
 			audiotimer->start(19);
 			ping_timer->start(8000);
@@ -2226,7 +2233,10 @@ void DudeStar::readyReadYSF()
 
 			ping_timer->start(p);
 			if(hw_ambe_present || enable_swtx){
-				if(audioin != nullptr) ui->txButton->setDisabled(false);
+				if(audioin != nullptr){
+					ui->txButton->setDisabled(false);
+					ui->txButton->setStyleSheet("background-color: rgb(128, 195, 66); color: rgb(0,0,0)");
+				}
 			}
 		}
 		status_txt->setText(" Host: " + host + ":" + QString::number(port) + " Ping: " + QString::number(ping_cnt++));
@@ -2287,7 +2297,10 @@ void DudeStar::readyReadNXDN()
 			nxdn->set_srcid(dmrid);
 			nxdn->set_dstid(dmr_destid);
 			if(hw_ambe_present || enable_swtx){
-				if(audioin != nullptr) ui->txButton->setDisabled(false);
+				if(audioin != nullptr){
+					ui->txButton->setDisabled(false);
+					ui->txButton->setStyleSheet("background-color: rgb(128, 195, 66); color: rgb(0,0,0)");
+				}
 			}
 			audiotimer->start(19);
 			ping_timer->start(1000);
@@ -2364,7 +2377,10 @@ void DudeStar::readyReadP25()
 			connect_status = CONNECTED_RW;
 			audiotimer->start(19);
 			ping_timer->start(5000);
-			if(audioin != nullptr) ui->txButton->setDisabled(false);
+			if(audioin != nullptr){
+				ui->txButton->setDisabled(false);
+				ui->txButton->setStyleSheet("background-color: rgb(128, 195, 66); color: rgb(0,0,0)");
+			}
 		}
 		status_txt->setText(" Host: " + host + ":" + QString::number(port) + " Ping: " + QString::number(ping_cnt++));
 	}
@@ -2536,7 +2552,10 @@ void DudeStar::readyReadDMR()
 			audiotimer->start(19);
 			ping_timer->start(5000);
 			if(hw_ambe_present || enable_swtx){
-				if(audioin != nullptr) ui->txButton->setDisabled(false);
+				if(audioin != nullptr){
+					ui->txButton->setDisabled(false);
+					ui->txButton->setStyleSheet("background-color: rgb(128, 195, 66); color: rgb(0,0,0)");
+				}
 			}
 			else{
 				tx_dmr_header();
@@ -2631,7 +2650,10 @@ void DudeStar::readyReadXRF()
 		rptr2[8] = 0;
 		ui->rptr2Edit->setText(rptr2);
 		if(hw_ambe_present || enable_swtx){
-			if(audioin != nullptr) ui->txButton->setDisabled(false);
+			if(audioin != nullptr){
+				ui->txButton->setDisabled(false);
+				ui->txButton->setStyleSheet("background-color: rgb(128, 195, 66); color: rgb(0,0,0)");
+			}
 		}
 		status_txt->setText("RW connect to " + host + ":" + QString::number(port));
 	}
@@ -2758,7 +2780,10 @@ void DudeStar::readyReadDCS()
 		rptr2[8] = 0;
 		ui->rptr2Edit->setText(rptr2);
 		if(hw_ambe_present || enable_swtx){
-			if(audioin != nullptr) ui->txButton->setDisabled(false);
+			if(audioin != nullptr){
+				ui->txButton->setDisabled(false);
+				ui->txButton->setStyleSheet("background-color: rgb(128, 195, 66); color: rgb(0,0,0)");
+			}
 		}
 		status_txt->setText("RW connect to " + host + ":" +  QString::number(port));
 	}
@@ -2917,7 +2942,10 @@ void DudeStar::readyReadREF()
 				rptr2[8] = 0;
 				ui->rptr2Edit->setText(rptr2);
 				if(hw_ambe_present || enable_swtx){
-					if(audioin != nullptr) ui->txButton->setDisabled(false);
+					if(audioin != nullptr){
+						ui->txButton->setDisabled(false);
+						ui->txButton->setStyleSheet("background-color: rgb(128, 195, 66); color: rgb(0,0,0)");
+					}
 				}
 				audiotimer->start(19);
 				ping_timer->start(1000);
@@ -3066,6 +3094,7 @@ void DudeStar::press_tx()
 	if(protocol == "M17"){
 		m17->set_mode(true);
 	}
+	ui->txButton->setStyleSheet("background-color: rgb(180, 0, 0); color: rgb(0,0,0)");
 #ifdef USE_FLITE
 	int id = tts_voices->checkedId();
 	if(id == 1){
@@ -3086,7 +3115,7 @@ void DudeStar::press_tx()
 		//audio_buffer.open(QBuffer::ReadWrite|QBuffer::Truncate);
 		//audiofile.setFileName("audio.pcm");
 		//audiofile.open(QIODevice::WriteOnly | QIODevice::Truncate);
-		audioin->setBufferSize(480);
+		audioin->setBufferSize(640);
 		//audioin->start(&audio_buffer);
 		ambeq.clear();
 		audioinq.clear();
@@ -3102,6 +3131,7 @@ void DudeStar::release_tx()
 {
 	//std::cerr << "Released TX" << std::endl;
 	tx = false;
+	ui->txButton->setStyleSheet("background-color: rgb(128, 195, 66); color: rgb(0,0,0)");
 
 	/*
 	QByteArray a = audio_buffer.readAll();

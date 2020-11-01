@@ -20,6 +20,7 @@
 
 int main(int argc, char *argv[])
 {
+	QApplication::setStyle("fusion");
     QApplication a(argc, argv);
     DudeStar w;
     w.show();
