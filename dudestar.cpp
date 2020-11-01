@@ -557,6 +557,7 @@ void DudeStar::process_ref_hosts()
 		QDir().mkdir(config_path);
 	}
 
+	QMap<QString, QString> hostmap;
 	QFileInfo check_file(config_path + "/dplus.txt");
 	if(check_file.exists() && check_file.isFile()){
 		ui->hostCombo->blockSignals(true);
@@ -570,8 +571,14 @@ void DudeStar::process_ref_hosts()
 				}
 				QStringList ll = l.split('\t');
 				if(ll.size() > 1){
-					ui->hostCombo->addItem(ll.at(0).simplified(), ll.at(1) + ":20001");
+					//ui->hostCombo->addItem(ll.at(0).simplified(), ll.at(1) + ":20001");
+					hostmap[ll.at(0).simplified()] = ll.at(1) + ":20001";
 				}
+			}
+			QMap<QString, QString>::const_iterator i = hostmap.constBegin();
+			while (i != hostmap.constEnd()) {
+				ui->hostCombo->addItem(i.key(), i.value());
+				++i;
 			}
 		}
 		f.close();
@@ -590,6 +597,7 @@ void DudeStar::process_dcs_hosts()
 		QDir().mkdir(config_path);
 	}
 
+	QMap<QString, QString> hostmap;
 	QFileInfo check_file(config_path + "/dcs.txt");
 	if(check_file.exists() && check_file.isFile()){
 		ui->hostCombo->blockSignals(true);
@@ -603,8 +611,14 @@ void DudeStar::process_dcs_hosts()
 				}
 				QStringList ll = l.split('\t');
 				if(ll.size() > 1){
-					ui->hostCombo->addItem(ll.at(0).simplified(), ll.at(1) + ":30051");
+					//ui->hostCombo->addItem(ll.at(0).simplified(), ll.at(1) + ":30051");
+					hostmap[ll.at(0).simplified()] = ll.at(1) + ":30051";
 				}
+			}
+			QMap<QString, QString>::const_iterator i = hostmap.constBegin();
+			while (i != hostmap.constEnd()) {
+				ui->hostCombo->addItem(i.key(), i.value());
+				++i;
 			}
 		}
 		f.close();
@@ -627,6 +641,7 @@ void DudeStar::process_xrf_hosts()
 		QDir().mkdir(config_path);
 	}
 
+	QMap<QString, QString> hostmap;
 	QFileInfo check_file(config_path + "/dextra.txt");
 	if(check_file.exists() && check_file.isFile()){
 		ui->hostCombo->blockSignals(true);
@@ -640,8 +655,14 @@ void DudeStar::process_xrf_hosts()
 				}
 				QStringList ll = l.split('\t');
 				if(ll.size() > 1){
-					ui->hostCombo->addItem(ll.at(0).simplified(), ll.at(1) + ":30001");
+					//ui->hostCombo->addItem(ll.at(0).simplified(), ll.at(1) + ":30001");
+					hostmap[ll.at(0).simplified()] = ll.at(1) + ":30001";
 				}
+			}
+			QMap<QString, QString>::const_iterator i = hostmap.constBegin();
+			while (i != hostmap.constEnd()) {
+				ui->hostCombo->addItem(i.key(), i.value());
+				++i;
 			}
 		}
 		f.close();
@@ -660,6 +681,7 @@ void DudeStar::process_ysf_hosts()
 		QDir().mkdir(config_path);
 	}
 
+	QMap<QString, QString> hostmap;
 	QFileInfo check_file(config_path + "/YSFHosts.txt");
 	if(check_file.exists() && check_file.isFile()){
 		ui->hostCombo->blockSignals(true);
@@ -673,8 +695,14 @@ void DudeStar::process_ysf_hosts()
 				}
 				QStringList ll = l.split(';');
 				if(ll.size() > 4){
-					ui->hostCombo->addItem(ll.at(1).simplified() + " - " + ll.at(2).simplified(), ll.at(3) + ":" + ll.at(4));
+					//ui->hostCombo->addItem(ll.at(1).simplified() + " - " + ll.at(2).simplified(), ll.at(3) + ":" + ll.at(4));
+					hostmap[ll.at(1).simplified() + " - " + ll.at(2).simplified()] = ll.at(3) + ":" + ll.at(4);
 				}
+			}
+			QMap<QString, QString>::const_iterator i = hostmap.constBegin();
+			while (i != hostmap.constEnd()) {
+				ui->hostCombo->addItem(i.key(), i.value());
+				++i;
 			}
 		}
 		f.close();
@@ -696,6 +724,7 @@ void DudeStar::process_fcs_rooms()
 		QDir().mkdir(config_path);
 	}
 
+	QMap<QString, QString> hostmap;
 	QFileInfo check_file(config_path + "/FCSHosts.txt");
 	if(check_file.exists() && check_file.isFile()){
 		ui->hostCombo->blockSignals(true);
@@ -709,8 +738,14 @@ void DudeStar::process_fcs_rooms()
 				}
 				QStringList ll = l.split(';');
 				if(ll.size() > 4){
-					ui->hostCombo->addItem(ll.at(0).simplified() + " - " + ll.at(1).simplified(), ll.at(2).left(6).toLower() + ".xreflector.net:62500");
+					//ui->hostCombo->addItem(ll.at(0).simplified() + " - " + ll.at(1).simplified(), ll.at(2).left(6).toLower() + ".xreflector.net:62500");
+					hostmap[ll.at(0).simplified() + " - " + ll.at(1).simplified()] = ll.at(2).left(6).toLower() + ".xreflector.net:62500";
 				}
+			}
+			QMap<QString, QString>::const_iterator i = hostmap.constBegin();
+			while (i != hostmap.constEnd()) {
+				ui->hostCombo->addItem(i.key(), i.value());
+				++i;
 			}
 		}
 		f.close();
@@ -731,6 +766,7 @@ void DudeStar::process_dmr_hosts()
 		QDir().mkdir(config_path);
 	}
 
+	QMap<QString, QString> hostmap;
 	QFileInfo check_file(config_path + "/DMRHosts.txt");
 	if(check_file.exists() && check_file.isFile()){
 		ui->hostCombo->blockSignals(true);
@@ -749,9 +785,15 @@ void DudeStar::process_dmr_hosts()
 					 && (ll.at(0).simplified() != "DMR2YSF")
 					 && (ll.at(0).simplified() != "DMR2NXDN"))
 					{
-						ui->hostCombo->addItem(ll.at(0).simplified(), ll.at(2) + ":" + ll.at(4) + ":" + ll.at(3));
+						//ui->hostCombo->addItem(ll.at(0).simplified(), ll.at(2) + ":" + ll.at(4) + ":" + ll.at(3));
+						hostmap[ll.at(0).simplified()] = ll.at(2) + ":" + ll.at(4) + ":" + ll.at(3);
 					}
 				}
+			}
+			QMap<QString, QString>::const_iterator i = hostmap.constBegin();
+			while (i != hostmap.constEnd()) {
+				ui->hostCombo->addItem(i.key(), i.value());
+				++i;
 			}
 		}
 		f.close();
@@ -771,6 +813,7 @@ void DudeStar::process_p25_hosts()
 		QDir().mkdir(config_path);
 	}
 
+	QMap<QString, QString> hostmap;
 	QFileInfo check_file(config_path + "/P25Hosts.txt");
 	if(check_file.exists() && check_file.isFile()){
 		ui->hostCombo->blockSignals(true);
@@ -785,8 +828,14 @@ void DudeStar::process_p25_hosts()
 				QStringList ll = l.simplified().split(' ');
 				if(ll.size() > 2){
 					//qDebug() << ll.at(0).simplified() << " " <<  ll.at(2) + ":" + ll.at(4);
-					ui->hostCombo->addItem(ll.at(0).simplified(), ll.at(1) + ":" + ll.at(2));
+					//ui->hostCombo->addItem(ll.at(0).simplified(), ll.at(1) + ":" + ll.at(2));
+					hostmap[ll.at(0).simplified()] = ll.at(1) + ":" + ll.at(2);
 				}
+			}
+			QMap<QString, QString>::const_iterator i = hostmap.constBegin();
+			while (i != hostmap.constEnd()) {
+				ui->hostCombo->addItem(i.key(), i.value());
+				++i;
 			}
 		}
 		f.close();
@@ -806,6 +855,7 @@ void DudeStar::process_nxdn_hosts()
 		QDir().mkdir(config_path);
 	}
 
+	QMap<QString, QString> hostmap;
 	QFileInfo check_file(config_path + "/NXDNHosts.txt");
 	if(check_file.exists() && check_file.isFile()){
 		ui->hostCombo->blockSignals(true);
@@ -820,8 +870,14 @@ void DudeStar::process_nxdn_hosts()
 				QStringList ll = l.simplified().split(' ');
 				if(ll.size() > 2){
 					//qDebug() << ll.at(0).simplified() << " " <<  ll.at(2) + ":" + ll.at(4);
-					ui->hostCombo->addItem(ll.at(0).simplified(), ll.at(1) + ":" + ll.at(2));
+					//ui->hostCombo->addItem(ll.at(0).simplified(), ll.at(1) + ":" + ll.at(2));
+					hostmap[ll.at(0).simplified()] = ll.at(1) + ":" + ll.at(2);
 				}
+			}
+			QMap<QString, QString>::const_iterator i = hostmap.constBegin();
+			while (i != hostmap.constEnd()) {
+				ui->hostCombo->addItem(i.key(), i.value());
+				++i;
 			}
 		}
 		f.close();
@@ -839,7 +895,7 @@ void DudeStar::process_m17_hosts()
 	if(!QDir(config_path).exists()){
 		QDir().mkdir(config_path);
 	}
-
+	QMap<QString, QString> hostmap;
 	QFileInfo check_file(config_path + "/M17Hosts.txt");
 	if(check_file.exists() && check_file.isFile()){
 		ui->hostCombo->blockSignals(true);
@@ -853,12 +909,17 @@ void DudeStar::process_m17_hosts()
 				}
 				QStringList ll = l.simplified().split(' ');
 				if(ll.size() > 2){
-					//qDebug() << ll.at(0).simplified() << " " <<  ll.at(2) + ":" + ll.at(4);
-					ui->hostCombo->addItem(ll.at(0).simplified(), ll.at(1) + ":" + ll.at(2));
+					hostmap[ll.at(0).simplified()] = ll.at(1) + ":" + ll.at(2);
 				}
+			}
+			QMap<QString, QString>::const_iterator i = hostmap.constBegin();
+			while (i != hostmap.constEnd()) {
+				ui->hostCombo->addItem(i.key(), i.value());
+				++i;
 			}
 		}
 		f.close();
+
 		int i = ui->hostCombo->findText(saved_m17host);
 		ui->hostCombo->setCurrentIndex(i);
 		ui->hostCombo->blockSignals(false);
