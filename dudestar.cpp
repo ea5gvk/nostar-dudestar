@@ -2030,11 +2030,11 @@ void DudeStar::process_ping()
 		out.append(hostname.toUtf8());
 		out.append('\x00');
 		out.append(module);
-		out.append(module);
-		out.append(0x0a);
-		out.append('\x00');
-		out.append(0x20);
-		out.append(0x20);
+		//out.append(module);
+		//out.append(0x0a);
+		//out.append('\x00');
+		//out.append(0x20);
+		//out.append(0x20);
 	}
 	else if(protocol == "YSF"){
 		if(hostname.left(3) == "FCS"){
@@ -2744,6 +2744,7 @@ void DudeStar::readyReadDCS()
 	QByteArray out;
 	QHostAddress sender;
 	quint16 senderPort;
+	static QString dcs_msg = "";
 	static bool sd_sync = 0;
 	static int sd_seq = 0;
 	char mycall[9], urcall[9], rptr1[9], rptr2[9];
@@ -2760,6 +2761,7 @@ void DudeStar::readyReadDCS()
 	fflush(stderr);
 #endif
 	if ((buf.size() == 14) && (!memcmp(buf.data()+10, "ACK", 3))){
+		dcs_msg = "";
 		mbe = new MBEDecoder();
 		mbe->setAutoGain(true);
 		ui->connectButton->setText("Disconnect");
@@ -2773,7 +2775,7 @@ void DudeStar::readyReadDCS()
 		ui->comboMod->setEnabled(false);
 		connect_status = CONNECTED_RW;
 		audiotimer->start(19);
-		ping_timer->start(1000);
+		ping_timer->start(2000);
 		memset(rptr2, ' ', 8);
 		memcpy(rptr2, hostname.toLocal8Bit(), hostname.size());
 		rptr2[7] = module;
@@ -2785,10 +2787,15 @@ void DudeStar::readyReadDCS()
 				ui->txButton->setStyleSheet("background-color: rgb(128, 195, 66); color: rgb(0,0,0)");
 			}
 		}
+
 		status_txt->setText("RW connect to " + host + ":" +  QString::number(port));
 	}
 	if(buf.size() == 22){
-		status_txt->setText("Host: " + host + ":" + QString::number(port) + " Ping: " + QString::number(ping_cnt++));
+		status_txt->setText("Host: " + host + ":" + QString::number(port) + " Ping: " + QString::number(ping_cnt++) + " " + dcs_msg);
+	}
+	if(buf.size() == 35){
+		dcs_msg = QString(buf.data());
+		status_txt->setText("Host: " + host + ":" + QString::number(port) + " Ping: " + QString::number(ping_cnt++) + " " + dcs_msg);
 	}
 	if((buf.size() >= 100) && (!memcmp(buf.data(), "0001", 4))) {
 		streamid = (buf.data()[43] << 8) | (buf.data()[44] & 0xff);
@@ -2895,7 +2902,6 @@ void DudeStar::readyReadREF()
         out.append(callsign.toUpper().toLocal8Bit().data(), 6);
 		out.append(10,'\x00');
 		out.append(serial.toUtf8());
-		//out.append("DV072475", 8);
         udp->writeDatagram(out, address, 20001);
     }
     if(buf.size() == 3){ //2 way keep alive ping
@@ -3465,6 +3471,15 @@ void DudeStar::transmitM17()
 			txframe.append(ambeq.dequeue());
 		}
 		txframe.append(2, 0x00);
+
+		ui->mycall->setText(callsign);
+		ui->urcall->setText(hostname + " " + module);
+		ui->rptr1->setText("3200 Voice");
+
+		QString ss = QString("%1").arg(txstreamid, 4, 16, QChar('0'));
+		QString n = QString("TX %1").arg(tx_cnt, 4, 16, QChar('0'));
+		ui->rptr2->setText(n);
+		ui->streamid->setText(ss);
 		udp->writeDatagram(txframe, address, port);
 		++tx_cnt;
 		fprintf(stderr, "SEND:%d: ", ambeq.size());
@@ -3506,6 +3521,9 @@ void DudeStar::transmitM17()
 		txframe.append((char *)quiet, 8);
 		txframe.append((char *)quiet, 8);
 		txframe.append(2, 0x00);
+
+		QString n = QString("%1").arg(tx_cnt, 4, 16, QChar('0'));
+		ui->rptr2->setText(n);
 
 		udp->writeDatagram(txframe, address, port);
 		txstreamid = 0;
@@ -3563,6 +3581,11 @@ void DudeStar::transmitNXDN()
 		temp_nxdn = nxdn->get_frame((unsigned char *)ambe.data());
 
 		txdata.append((char *)temp_nxdn, 43);
+		ui->mycall->setText(callsign);
+		ui->urcall->setText(QString::number(dmrid));
+		ui->rptr1->setText(QString::number(dmr_destid));
+		ui->rptr2->setText(QString::number(dmrid));
+		ui->streamid->setText(QString("TX %1").arg(txdata.data()[4] & 0xff, 4, 16, QChar('0')));
 		udp->writeDatagram(txdata, address, port);
 
 		fprintf(stderr, "SEND:%d: ", ambeq.size());
@@ -3821,6 +3844,12 @@ void DudeStar::transmitP25()
 			p25step = 0;
 			break;
 		}
+		ui->mycall->setText(callsign);
+		ui->urcall->setText(QString::number(dmrid));
+		ui->rptr1->setText(QString::number(dmr_destid));
+		ui->rptr2->setText(QString::number(dmrid));
+		ui->streamid->setText(QString("TX %1").arg(p25step, 4, 16, QChar('0')));
+		udp->writeDatagram(txdata, address, port);
 		udp->writeDatagram(txdata, address, port);
 	}
 	else{
@@ -3832,7 +3861,6 @@ void DudeStar::transmitP25()
 		audioin->stop();
 		p25step = 0;
 	}
-
 }
 
 void DudeStar::transmitDMR()
@@ -3884,7 +3912,6 @@ void DudeStar::transmitDMR()
 			}
 		}
 		temp_dmr = dmr->get_frame((unsigned char *)ambe.data());
-
 /*
 		temp_ysf = ysftxdata + txcnt;
 		txcnt += 155;
@@ -3892,6 +3919,11 @@ void DudeStar::transmitDMR()
 			txcnt = 0;
 */
 		txdata.append((char *)temp_dmr, 55);
+		ui->mycall->setText(callsign);
+		ui->urcall->setText(QString::number(dmrid));
+		ui->rptr1->setText(QString::number(dmr_destid));
+		ui->rptr2->setText(QString::number(dmrid));
+		ui->streamid->setText(QString("TX %1").arg(txdata.data()[4] & 0xff, 4, 16, QChar('0')));
 		udp->writeDatagram(txdata, address, port);
 	}
 	else{
@@ -4078,6 +4110,11 @@ void DudeStar::transmitDCS()
 
 		//memset(txdata.data() + 17, 0x00, 9);
 		++tx_cnt;
+		ui->mycall->setText(mycall);
+		ui->urcall->setText(urcall);
+		ui->rptr1->setText(rptr1);
+		ui->rptr2->setText(rptr2);
+		ui->streamid->setText(QString("TX %1 %2").arg(txstreamid, 4, 16, QChar('0')).arg(tx_cnt));
 		udp->writeDatagram(txdata, address, 30051);
 	}
 	else if(!ambeq.size()){
@@ -4187,6 +4224,11 @@ void DudeStar::transmitXRF()
 		txdata[54] = 0;
 		txdata[55] = 0;
 		calcPFCS(txdata.data());
+		ui->mycall->setText(mycall);
+		ui->urcall->setText(urcall);
+		ui->rptr1->setText(rptr1);
+		ui->rptr2->setText(rptr2);
+		ui->streamid->setText(QString("TX %1 %2").arg(txstreamid, 4, 16, QChar('0')).arg(tx_cnt));
 		udp->writeDatagram(txdata, address, 30001);
 	}
 	else if(tx || ambeq.size()){
@@ -4281,6 +4323,11 @@ void DudeStar::transmitXRF()
 			txdata[26] = 0xf5;
 			break;
 		}
+		ui->mycall->setText(mycall);
+		ui->urcall->setText(urcall);
+		ui->rptr1->setText(rptr1);
+		ui->rptr2->setText(rptr2);
+		ui->streamid->setText(QString("TX %1 %2").arg(txstreamid, 4, 16, QChar('0')).arg(tx_cnt));
 		udp->writeDatagram(txdata, address, 30001);
 		++tx_cnt;
 		//if((tx_cnt * 9) >= sizeof(ad8dp)){
@@ -4398,6 +4445,11 @@ void DudeStar::transmitREF()
         txdata[56] = 0;
         txdata[57] = 0;
         calcPFCS(txdata.data());
+		ui->mycall->setText(mycall);
+		ui->urcall->setText(urcall);
+		ui->rptr1->setText(rptr1);
+		ui->rptr2->setText(rptr2);
+		ui->streamid->setText(QString("TX %1 %2").arg(txstreamid, 4, 16, QChar('0')).arg(tx_cnt));
         udp->writeDatagram(txdata, address, 20001);
     }
 	else if(tx || ambeq.size()){
@@ -4493,6 +4545,11 @@ void DudeStar::transmitREF()
             txdata[28] = 0xf5;
             break;
         }
+		ui->mycall->setText(mycall);
+		ui->urcall->setText(urcall);
+		ui->rptr1->setText(rptr1);
+		ui->rptr2->setText(rptr2);
+		ui->streamid->setText(QString("TX %1 %2").arg(txstreamid, 4, 16, QChar('0')).arg(tx_cnt));
         udp->writeDatagram(txdata, address, 20001);
         ++tx_cnt;
 		//if((tx_cnt * 9) >= sizeof(ad8dp)){
