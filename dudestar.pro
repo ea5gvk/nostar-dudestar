@@ -7,7 +7,7 @@ TEMPLATE = app
 VERSION_BUILD='$(shell cd $$PWD;git rev-parse --short HEAD)'
 DEFINES += QT_DEPRECATED_WARNINGS
 DEFINES += VERSION_NUMBER=\"\\\"$${VERSION_BUILD}\\\"\"
-#DEFINES += USE_FLITE
+DEFINES += USE_FLITE
 DEFINES += USE_SWTX
 CONFIG += c++11
 
@@ -35,6 +35,7 @@ SOURCES += \
         dmrencoder.cpp \
         dudestar.cpp \
         fec.cpp \
+        httpmanager.cpp \
         imbe_vocoder/aux_sub.cc \
         imbe_vocoder/basicop2.cc \
         imbe_vocoder/ch_decode.cc \
@@ -97,6 +98,7 @@ HEADERS += \
         dmrencoder.h \
         dudestar.h \
         fec.h \
+        httpmanager.h \
         imbe_vocoder/aux_sub.h \
         imbe_vocoder/basic_op.h \
         imbe_vocoder/ch_decode.h \

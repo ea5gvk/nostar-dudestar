@@ -17,11 +17,13 @@
 
 #include "dudestar.h"
 #include <QApplication>
+#include <QStyleFactory>
 
 int main(int argc, char *argv[])
 {
 	QApplication::setStyle("fusion");
     QApplication a(argc, argv);
+	//a.setPalette(palette);
     DudeStar w;
     w.show();
 
