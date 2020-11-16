@@ -29,6 +29,7 @@
 #ifdef USE_FLITE
 #include <flite/flite.h>
 #endif
+#include "httpmanager.h"
 #include "mbedec.h"
 #include "mbeenc.h"
 #include "ysfdec.h"
@@ -67,6 +68,7 @@ private:
 	QSerialPort *serial = nullptr;
     QUdpSocket *udp = nullptr;
 	QButtonGroup *m17rates;
+
 	enum{
 		DISCONNECTED,
 		CONNECTING,
@@ -76,16 +78,14 @@ private:
 		CONNECTED_RW,
 		CONNECTED_RO
 	} connect_status;
+
 	uint16_t usb_pid;
 	uint16_t usb_vid;
 	QLabel *status_txt;
-	QUrl hosts_site;
-	QNetworkAccessManager qnam;
-	QNetworkReply *reply;
-	bool httpRequestAborted;
 	QString host;
 	QString hostname;
 	QString hosts_filename;
+	bool m_update_host_files;
 	int port;
 	QHostAddress address;
     QString config_path;
@@ -200,14 +200,15 @@ private slots:
 	void process_p25_hosts();
 	void process_nxdn_hosts();
 	void process_m17_hosts();
-	void delete_host_files();
+	void check_host_files();
+	void update_host_files();
 	void process_dmr_ids();
 	void update_dmr_ids();
 	void process_nxdn_ids();
 	void update_nxdn_ids();
     void process_settings();
-	void start_request(QString);
-	void http_finished(QNetworkReply *reply);
+	void download_file(QString);
+	void file_downloaded(QString);
 	void tx_dmr_header();
 	//void download_dmrid_list();
 	void AppendVoiceLCToBuffer(QByteArray& buffer, uint32_t uiSrcId, uint32_t uiDstId) const;
