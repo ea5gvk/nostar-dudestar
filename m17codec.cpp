@@ -22,7 +22,10 @@ M17Codec::M17Codec(QString callsign, char module, QString hostname, QString host
 	m_host(host),
 	m_port(port),
 	m_tx(false),
-	m_ttsid(0)
+	m_ttsid(0),
+	m_cnt(0),
+	m_fn(0),
+	m_streamid(0)
 {
 #ifdef USE_FLITE
 	flite_init();
@@ -36,7 +39,6 @@ M17Codec::M17Codec(QString callsign, char module, QString hostname, QString host
 
 M17Codec::~M17Codec()
 {
-
 }
 
 void M17Codec::encode_callsign(uint8_t *callsign)
@@ -121,7 +123,7 @@ void M17Codec::process_udp()
 		}
 	}
 	if((buf.size() == 10) && (::memcmp(buf.data(), "PING", 4U) == 0)){
-		//status_txt->setText(" Host: " + host + ":" + QString::number(port) + " Ping: " + QString::number(ping_cnt++));
+		m_cnt++;
 	}
 	if((buf.size() == 54) && (::memcmp(buf.data(), "M17 ", 4U) == 0)){
 		uint8_t cs[10];
@@ -311,7 +313,7 @@ void M17Codec::transmit()
 	}
 #endif
 	if(m_ttsid == 0){
-		if(m_audio->read(pcm)){
+		if(m_audio->read(pcm, 320)){
 			m_c2->codec2_encode(c2, pcm);
 			if(get_mode()){
 				m_c2->codec2_encode(c2+8, pcm+160);
@@ -435,19 +437,11 @@ void M17Codec::transmit()
 	}
 }
 
-void M17Codec::input_src_changed(int id, QString t)
-{
-	qDebug() << "Received signal " << id << " " << t;
-	m_ttsid = id;
-	m_ttstext = t;
-}
-
 void M17Codec::deleteLater()
 {
 	m_ping_timer->stop();
 	send_disconnect();
-	//delete m_audio;
-	//delete m_c2;
+	m_cnt = 0;
 	QObject::deleteLater();
 }
 

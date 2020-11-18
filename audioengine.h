@@ -22,7 +22,7 @@ public:
 	void set_output_buffer_size(uint32_t b) { m_out->setBufferSize(b); }
 	void set_input_buffer_size(uint32_t b) { m_in->setBufferSize(b); }
 	bool frame_available() { return (m_audioinq.size() >= 320) ? true : false; }
-	uint16_t read(int16_t *);
+	uint16_t read(int16_t *, size_t);
 signals:
 
 private:

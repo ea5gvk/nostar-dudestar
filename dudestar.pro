@@ -65,7 +65,7 @@ SOURCES += \
         mbeenc.cc \
         mbefec.cpp \
         nxdnencoder.cpp \
-        p25encoder.cpp \
+        p25codec.cpp \
         pn.cpp \
         viterbi.cpp \
         viterbi5.cpp \
@@ -133,7 +133,7 @@ HEADERS += \
         mbefec.h \
         mbelib_parms.h \
         nxdnencoder.h \
-        p25encoder.h \
+        p25codec.h \
         pn.h \
         viterbi.h \
         viterbi5.h \

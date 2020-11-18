@@ -129,10 +129,10 @@ void AudioEngine::write(int16_t *pcm, size_t s)
 	m_outdev->write((const char *) pcm, sizeof(int16_t) * s);
 }
 
-uint16_t AudioEngine::read(int16_t *pcm)
+uint16_t AudioEngine::read(int16_t *pcm, size_t s)
 {
-	if(m_audioinq.size() >= 320){
-		for(int i = 0; i < 320; ++i){
+	if(m_audioinq.size() >= s){
+		for(int i = 0; i < s; ++i){
 			pcm[i] = m_audioinq.dequeue();
 		}
 		return 1;

@@ -3,7 +3,6 @@
 #include <string>
 #include "codec2/codec2.h"
 #include <QObject>
-#include <QMainWindow>
 #include <QtNetwork>
 #include "audioengine.h"
 #ifdef USE_FLITE
@@ -31,6 +30,7 @@ public:
 	int get_port() { return m_port; }
 	QString get_type() { return m_type; }
 	int get_fn() { return m_fn; }
+	int get_cnt() { return m_cnt; }
 	int get_streamid() { return m_streamid; }
 	void set_mode(bool m){ m_c2->codec2_set_mode(m);}
 	bool get_mode(){ return m_c2->codec2_get_mode(); }
@@ -49,7 +49,7 @@ private slots:
 
 	void transmit();
 	void hostname_lookup(QHostInfo i);
-	void input_src_changed(int id, QString t);// { m_ttsid = id; m_ttstext = t; }
+	void input_src_changed(int id, QString t) { m_ttsid = id; m_ttstext = t; }
 	void rate_changed(int r) { m_c2->codec2_set_mode(r); }
 private:
 
@@ -73,6 +73,7 @@ private:
 	uint16_t m_txcnt;
 	uint8_t m_ttsid;
 	QString m_ttstext;
+	int m_cnt;
 #ifdef USE_FLITE
 	cst_voice *voice_slt;
 	cst_voice *voice_kal;

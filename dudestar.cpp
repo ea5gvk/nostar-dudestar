@@ -42,26 +42,6 @@
 #define CHANNEL_FRAME_RX    0x2001
 #define CODEC_FRAME_RX      0x2002
 
-const unsigned char REC62[] = {0x62U, 0x02U, 0x02U, 0x0CU, 0x0BU, 0x12U, 0x64U, 0x00U, 0x00U, 0x80U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,0x00U, 0x00U, 0x00U, 0x00U, 0x00U};
-const unsigned char REC63[] = {0x63U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x02U};
-const unsigned char REC64[] = {0x64U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x02U};
-const unsigned char REC65[] = {0x65U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x02U};
-const unsigned char REC66[] = {0x66U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x02U};
-const unsigned char REC67[] = {0x67U, 0xF0U, 0x9DU, 0x6AU, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x02U};
-const unsigned char REC68[] = {0x68U, 0x19U, 0xD4U, 0x26U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x02U};
-const unsigned char REC69[] = {0x69U, 0xE0U, 0xEBU, 0x7BU, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x02U};
-const unsigned char REC6A[] = {0x6AU, 0x00U, 0x00U, 0x02U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U};
-const unsigned char REC6B[] = {0x6BU, 0x02U, 0x02U, 0x0CU, 0x0BU, 0x12U, 0x64U, 0x00U, 0x00U, 0x80U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U,0x00U, 0x00U, 0x00U, 0x00U, 0x00U};
-const unsigned char REC6C[] = {0x6CU, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x02U};
-const unsigned char REC6D[] = {0x6DU, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x02U};
-const unsigned char REC6E[] = {0x6EU, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x02U};
-const unsigned char REC6F[] = {0x6FU, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x02U};
-const unsigned char REC70[] = {0x70U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x02U};
-const unsigned char REC71[] = {0x71U, 0xACU, 0xB8U, 0xA4U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x02U};
-const unsigned char REC72[] = {0x72U, 0x9BU, 0xDCU, 0x75U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x02U};
-const unsigned char REC73[] = {0x73U, 0x00U, 0x00U, 0x02U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U};
-const unsigned char REC80[] = {0x80U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U};
-
 const uint8_t AMBEP251_4400_2800[17] = {0x61, 0x00, 0x0d, 0x00, 0x0a, 0x05U, 0x58U, 0x08U, 0x6BU, 0x10U, 0x30U, 0x00U, 0x00U, 0x00U, 0x00U, 0x01U, 0x90U};//DVSI P25 USB Dongle FEC
 //const uint8_t AMBEP251_4400_0000[17] = {0x61, 0x00, 0x0d, 0x00, 0x0a, 0x05U, 0x58U, 0x08U, 0x6BU, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x01U, 0x58U};//DVSI P25 USB Dongle No-FEC
 //const uint8_t AMBE1000_4400_2800[17] = {0x61, 0x00, 0x0d, 0x00, 0x0a, 0x00U, 0x58U, 0x08U, 0x87U, 0x30U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x44U, 0x90U};
@@ -1020,7 +1000,7 @@ void DudeStar::process_dmr_ids()
 				}
 				QStringList ll = l.simplified().split(' ');
 				//qDebug() << ll.at(0).simplified() << " " <<  ll.at(2) + ":" + ll.at(4);
-				dmrids[ll.at(0).toUInt()] = ll.at(1);
+				m_dmrids[ll.at(0).toUInt()] = ll.at(1);
 			}
 		}
 		f.close();
@@ -1222,82 +1202,6 @@ void DudeStar::process_settings()
 	}
 }
 
-void DudeStar::setup_audio()
-{
-	QAudioFormat format;
-	QAudioFormat tempformat;
-	format.setSampleRate(8000);
-	format.setChannelCount(1);
-	format.setSampleSize(16);
-	format.setCodec("audio/pcm");
-	format.setByteOrder(QAudioFormat::LittleEndian);
-	format.setSampleType(QAudioFormat::SignedInt);
-
-	QList<QAudioDeviceInfo> devices = QAudioDeviceInfo::availableDevices(QAudio::AudioOutput);
-
-	if(devices.size() == 0){
-		fprintf(stderr, "No audio playback hardware found\n");fflush(stderr);
-	}
-	else{
-		QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
-		for (QList<QAudioDeviceInfo>::ConstIterator it = devices.constBegin(); it != devices.constEnd(); ++it ) {
-			qDebug() << "Device name = " << (*it).deviceName();
-			//qDebug() << (*it).supportedByteOrders();
-			//qDebug() << (*it).supportedChannelCounts();
-			//qDebug() << (*it).supportedCodecs();
-			//qDebug() << (*it).supportedSampleRates();
-			//qDebug() << (*it).supportedSampleSizes();
-			//qDebug() << (*it).supportedSampleTypes();
-			if((*it).deviceName() == ui->AudioOutCombo->currentText()){
-				info = *it;
-			}
-		}
-		if (!info.isFormatSupported(format)) {
-			qWarning() << "Raw audio format not supported by backend, trying nearest format.";
-			tempformat = info.nearestFormat(format);
-			qWarning() << "Format now set to " << format.sampleRate() << ":" << format.sampleSize();
-		}
-		else{
-			tempformat = format;
-		}
-		fprintf(stderr, "Using playback device %s\n", info.deviceName().toStdString().c_str());fflush(stderr);
-
-		audio = new QAudioOutput(info, tempformat, this);
-		audio->setBufferSize(6400);
-		qDebug() << "Audio output Using endian " << audio->format().byteOrder();
-		connect(ui->muteButton, SIGNAL(clicked()), this, SLOT(process_mute_button()));
-		connect(ui->volumeSlider, SIGNAL(valueChanged(int)), this, SLOT(process_volume_changed(int)));
-		//connect(audio, SIGNAL(stateChanged(QAudio::State)), this, SLOT(handleStateChanged(QAudio::State)));
-	}
-
-	devices = QAudioDeviceInfo::availableDevices(QAudio::AudioInput);
-
-	if(devices.size() == 0){
-		fprintf(stderr, "No audio recording hardware found\n");fflush(stderr);
-	}
-	else{
-		QAudioDeviceInfo info(QAudioDeviceInfo::defaultInputDevice());
-		for (QList<QAudioDeviceInfo>::ConstIterator it = devices.constBegin(); it != devices.constEnd(); ++it ) {
-			//qDebug() << "Device name = " << (*it).deviceName();
-			if((*it).deviceName() == ui->AudioInCombo->currentText()){
-				info = *it;
-			}
-		}
-		if (!info.isFormatSupported(format)) {
-			qWarning() << "Raw audio format not supported by backend, trying nearest format.";
-			tempformat = info.nearestFormat(format);
-			qWarning() << "Format now set to " << format.sampleRate() << ":" << format.sampleSize();
-		}
-		else{
-			tempformat = format;
-		}
-		fprintf(stderr, "Using recording device %s\n", info.deviceName().toStdString().c_str());fflush(stderr);
-		audioin = new QAudioInput(info, format, this);
-		qDebug() << "Audio input Using endian " << audioin->format().byteOrder();
-		connect(ui->inmuteButton, SIGNAL(clicked()), this, SLOT(process_input_mute_button()));
-		connect(ui->involSlider, SIGNAL(valueChanged(int)), this, SLOT(process_input_volume_changed(int)));
-	}
-}
 
 void DudeStar::discover_vocoders()
 {
@@ -1554,9 +1458,20 @@ void DudeStar::process_connect()
 			dmr_destid = ui->dmrtgEdit->text().toUInt();
 		}
 		if(protocol == "P25"){
-			dmrid = dmrids.key(callsign);
+			dmrid = m_dmrids.key(callsign);
 			//dmr_destid = ui->hostCombo->currentText().toUInt();
 			dmr_destid = ui->dmrtgEdit->text().toUInt();
+			m_p25 = new P25Codec(callsign, dmr_destid, host, port);
+			m_modethread = new QThread;
+			m_p25->moveToThread(m_modethread);
+			connect(m_p25, SIGNAL(update()), this, SLOT(update_p25_data()));
+			connect(m_modethread, SIGNAL(started()), m_p25, SLOT(send_connect()));
+			connect(m_modethread, SIGNAL(finished()), m_p25, SLOT(deleteLater()));
+			connect(this, SIGNAL(input_source_changed(int, QString)), m_p25, SLOT(input_src_changed(int, QString)));
+			connect(ui->txButton, SIGNAL(pressed()), m_p25, SLOT(start_tx()));
+			connect(ui->txButton, SIGNAL(released()), m_p25, SLOT(stop_tx()));
+			emit input_source_changed(tts_voices->checkedId(), ui->TTSEdit->text());
+			m_modethread->start();
 		}
 		if(protocol == "NXDN"){
 			dmrid = nxdnids.key(callsign);
@@ -1640,11 +1555,6 @@ void DudeStar::hostname_lookup(QHostInfo i)
 		d.append((dmrid >> 8) & 0xff);
 		d.append((dmrid >> 0) & 0xff);
 	}
-	else if(protocol == "P25"){
-		d.append(0xf0);
-		d.append(callsign.toUtf8());
-		d.append(10 - callsign.size(), ' ');
-	}
 	else if(protocol == "NXDN"){
 		d.append('N');
 		d.append('X');
@@ -1655,20 +1565,6 @@ void DudeStar::hostname_lookup(QHostInfo i)
 		d.append(10 - callsign.size(), ' ');
 		d.append((dmr_destid >> 8) & 0xff);
 		d.append((dmr_destid >> 0) & 0xff);
-	}
-	else if(protocol == "M17"){
-		uint8_t cs[10];
-		memset(cs, ' ', 9);
-		memcpy(cs, callsign.toLocal8Bit(), callsign.size());
-		cs[8] = 'D';
-		cs[9] = 0x00;
-		M17Codec::encode_callsign(cs);
-		d.append('C');
-		d.append('O');
-		d.append('N');
-		d.append('N');
-		d.append((char *)cs, 6);
-		d.append(module);
 	}
 	if (!i.addresses().isEmpty()) {
 		address = i.addresses().first();
@@ -2018,14 +1914,8 @@ void DudeStar::readyRead()
 	else if (protocol == "DMR"){
 		readyReadDMR();
 	}
-	else if (protocol == "P25"){
-		readyReadP25();
-	}
 	else if (protocol == "NXDN"){
 		readyReadNXDN();
-	}
-	else if (protocol == "M17"){
-		//readyReadM17();
 	}
 }
 
@@ -2142,7 +2032,7 @@ void DudeStar::update_m17_data()
 		ui->txButton->setStyleSheet("background-color: rgb(128, 195, 66); color: rgb(0,0,0)");
 	}
 
-	status_txt->setText(" Host: " + m_m17->get_host() + ":" + QString::number( m_m17->get_port()) + " Ping: " + QString::number(ping_cnt++));
+	status_txt->setText(" Host: " + m_m17->get_host() + ":" + QString::number( m_m17->get_port()) + " Ping: " + QString::number(m_m17->get_cnt()));
 	ui->mycall->setText(m_m17->get_src());
 	ui->urcall->setText(m_m17->get_dst());
 	ui->rptr1->setText(m_m17->get_type());
@@ -2316,105 +2206,32 @@ void DudeStar::readyReadNXDN()
 	}
 }
 
-void DudeStar::readyReadP25()
+void DudeStar::update_p25_data()
 {
-	QByteArray buf;
-	QHostAddress sender;
-	quint16 senderPort;
-
-	buf.resize(udp->pendingDatagramSize());
-	udp->readDatagram(buf.data(), buf.size(), &sender, &senderPort);
-#ifdef DEBUG
-	fprintf(stderr, "RECV: ");
-	for(int i = 0; i < buf.size(); ++i){
-		fprintf(stderr, "%02x ", (unsigned char)buf.data()[i]);
+	if(connect_status == CONNECTING){
+		ui->connectButton->setText("Disconnect");
+		ui->connectButton->setEnabled(true);
+		ui->AmbeCombo->setEnabled(false);
+		ui->AudioOutCombo->setEnabled(false);
+		ui->AudioInCombo->setEnabled(false);
+		ui->modeCombo->setEnabled(false);
+		ui->hostCombo->setEnabled(false);
+		ui->callsignEdit->setEnabled(false);
+		ui->dmridEdit->setEnabled(false);
+		ui->comboMod->setEnabled(false);
+		connect_status = CONNECTED_RW;
+		ui->txButton->setDisabled(false);
+		ui->txButton->setStyleSheet("background-color: rgb(128, 195, 66); color: rgb(0,0,0)");
 	}
-	fprintf(stderr, "\n");
-	fflush(stderr);
-#endif
-	if(buf.size() == 11){
-		if(connect_status == CONNECTING){
-			mbe = new MBEDecoder();
-			mbe->setAutoGain(true);
-			p25 = new p25encoder();
-			mbeenc = new MBEEncoder();
-			mbeenc->set_88bit_mode();
-			ui->connectButton->setText("Disconnect");
-			ui->connectButton->setEnabled(true);
-			ui->AmbeCombo->setEnabled(false);
-			ui->AudioOutCombo->setEnabled(false);
-			ui->AudioInCombo->setEnabled(false);
-			ui->modeCombo->setEnabled(false);
-			ui->hostCombo->setEnabled(false);
-			ui->callsignEdit->setEnabled(false);
-			ui->dmridEdit->setEnabled(false);
-			ui->comboMod->setEnabled(false);
-			connect_status = CONNECTED_RW;
-			audiotimer->start(19);
-			ping_timer->start(5000);
-			if(audioin != nullptr){
-				ui->txButton->setDisabled(false);
-				ui->txButton->setStyleSheet("background-color: rgb(128, 195, 66); color: rgb(0,0,0)");
-			}
-		}
-		status_txt->setText(" Host: " + host + ":" + QString::number(port) + " Ping: " + QString::number(ping_cnt++));
+	status_txt->setText(" Host: " + m_p25->get_host() + ":" + QString::number( m_p25->get_port()) + " Ping: " + QString::number(m_p25->get_cnt()));
+	if(m_p25->get_src()){
+		ui->mycall->setText(m_dmrids[m_p25->get_src()]);
+		ui->urcall->setText(QString::number(m_p25->get_src()));
 	}
-	if(buf.size() > 11){
-		int offset = 0;
-		uint32_t id = 0;
-		ui->streamid->setText(QString::number(buf.data()[0] & 0xff, 16));
-		switch (buf.data()[0U]) {
-		case 0x62U:
-			offset = 10U;
-			break;
-		case 0x63U:
-			offset = 1U;
-			break;
-		case 0x64U:
-			offset = 5U;
-			break;
-		case 0x65U:
-			ui->rptr1->setText(QString::number((uint32_t)((buf.data()[1] << 16) | ((buf.data()[2] << 8) & 0xff00) | (buf.data()[3] & 0xff))));
-			offset = 5U;
-			break;
-		case 0x66U:
-			id = (uint32_t)((buf.data()[1] << 16) | ((buf.data()[2] << 8) & 0xff00) | (buf.data()[3] & 0xff));
-			ui->mycall->setText(dmrids[id]);
-			ui->urcall->setText(QString::number(id));
-			//ui->rptr1->setText(QString::number((uint32_t)((buf.data()[1] << 16) | ((buf.data()[2] << 8) & 0xff00) | (buf.data()[3] & 0xff))));
-			offset = 5U;
-			break;
-		case 0x67U:
-		case 0x68U:
-		case 0x69U:
-			offset = 5U;
-			break;
-		case 0x6AU:
-			offset = 4U;
-			break;
-		case 0x6BU:
-			offset = 10U;
-			break;
-		case 0x6CU:
-			offset = 1U;
-			break;
-		case 0x6DU:
-		case 0x6EU:
-		case 0x6FU:
-		case 0x70U:
-		case 0x71U:
-		case 0x72U:
-			offset = 5U;
-			break;
-		case 0x73U:
-			offset = 4U;
-			break;
-		default:
-			break;
-		}
-		for(int i = 0; i < 11; ++i){
-			audioq.enqueue(buf.data()[i + offset]);
-		}
+	ui->rptr1->setText(m_p25->get_dst() ? QString::number(m_p25->get_dst()) : "");
+	if(m_p25->get_fn()){
+		QString n = QString("%1").arg(m_p25->get_fn(), 2, 16, QChar('0'));
+		ui->streamid->setText(n);
 	}
 }
 
@@ -2565,7 +2382,7 @@ void DudeStar::readyReadDMR()
 			audioq.enqueue(dmr3ambe[i]);
 		}
 		uint32_t id = (uint32_t)((buf.data()[5] << 16) | ((buf.data()[6] << 8) & 0xff00) | (buf.data()[7] & 0xff));
-		ui->mycall->setText(dmrids[id]);
+		ui->mycall->setText(m_dmrids[id]);
 		ui->urcall->setText(QString::number(id));
 		ui->rptr1->setText(QString::number((uint32_t)((buf.data()[8] << 16) | ((buf.data()[9] << 8) & 0xff00) | (buf.data()[10] & 0xff))));
 		ui->rptr2->setText(QString::number((uint32_t)((buf.data()[11] << 24) | ((buf.data()[12] << 16) & 0xff0000) | ((buf.data()[13] << 8) & 0xff00) | (buf.data()[14] & 0xff))));
@@ -3069,67 +2886,12 @@ void DudeStar::audioin_data_ready()
 
 void DudeStar::press_tx()
 {
-    //std::cerr << "Pressed TX buffersize == " << audioin->bufferSize() << std::endl;
-	//tx = true;
-	//audiotx_cnt = 0;
-	//if(protocol == "M17"){
-		//m17->set_mode(true);
-	//}
 	ui->txButton->setStyleSheet("background-color: rgb(180, 0, 0); color: rgb(0,0,0)");
-	//m_m17->start_tx();
-	return;
-#ifdef USE_FLITE
-	int id = tts_voices->checkedId();
-	if(id == 1){
-		tts_audio = flite_text_to_wave(ui->TTSEdit->text().toStdString().c_str(), voice_kal);
-	}
-	else if(id == 2){
-		tts_audio = flite_text_to_wave(ui->TTSEdit->text().toStdString().c_str(), voice_rms);
-	}
-	else if(id == 3){
-		tts_audio = flite_text_to_wave(ui->TTSEdit->text().toStdString().c_str(), voice_awb);
-	}
-	else if(id == 4){
-		tts_audio = flite_text_to_wave(ui->TTSEdit->text().toStdString().c_str(), voice_slt);
-	}
-#endif
-	if(!txtimer->isActive()){
-		//fprintf(stderr, "press_tx()\n");
-		//audio_buffer.open(QBuffer::ReadWrite|QBuffer::Truncate);
-		//audiofile.setFileName("audio.pcm");
-		//audiofile.open(QIODevice::WriteOnly | QIODevice::Truncate);
-		audioin->setBufferSize(640);
-		//audioin->start(&audio_buffer);
-		ambeq.clear();
-		audioinq.clear();
-		s16_le_audioinq.clear();
-
-		audioindev = audioin->start();
-		connect(audioindev, SIGNAL(readyRead()), SLOT(audioin_data_ready()));
-		txtimer->start(19);
-	}
 }
 
 void DudeStar::release_tx()
 {
-	//std::cerr << "Released TX" << std::endl;
-	//tx = false;
 	ui->txButton->setStyleSheet("background-color: rgb(128, 195, 66); color: rgb(0,0,0)");
-	//m_m17->stop_tx();
-	/*
-	QByteArray a = audio_buffer.readAll();
-	fprintf(stderr, "RECV %d:%d:%d", audio_buffer.buffer().size(), audio_buffer.bytesAvailable(), audioin->bytesReady());
-	for(int i = 0; i < audio_buffer.buffer().size(); ++i){
-		fprintf(stderr, "%02x ", (unsigned char)audio_buffer.buffer().data()[i]);
-		std::cout << audio_buffer.buffer().data()[i];
-	}
-	fprintf(stderr, "\n");
-	fflush(stderr);
-	*/
-	//audio_buffer.reset();
-	//audio_buffer.close();
-
-	//audiofile.close();
 }
 
 void DudeStar::tx_timer()
@@ -3369,151 +3131,8 @@ void DudeStar::transmit()
 	else if (protocol == "DMR"){
 		transmitDMR();
 	}
-	else if (protocol == "P25"){
-		transmitP25();
-	}
 	else if (protocol == "NXDN"){
 		transmitNXDN();
-	}
-	else if (protocol == "M17"){
-		transmitM17();
-	}
-}
-
-void DudeStar::transmitM17()
-{
-	QByteArray txframe;
-	static uint16_t txstreamid = 0;
-	static uint16_t tx_cnt = 0;
-
-	txframe.clear();
-	if(tx || ambeq.size()){
-		if(ambeq.size() < 28){
-			if(!tx){
-				ambeq.clear();
-				return;
-			}
-			else{
-				std::cerr << "ERROR: Codec2 queue < 28" << std::endl;
-				return;
-			}
-		}
-
-		while(ambeq.size() && (ambeq[0] != 0x61) && (ambeq[3] != 0x01)){
-			std::cerr << "ERROR: Not an Codec2 frame" << std::endl;
-			ambeq.dequeue();
-		}
-
-		if(txstreamid == 0){
-		   txstreamid = static_cast<uint16_t>((::rand() & 0xFFFF));
-		   //std::cerr << "txstreamid == " << txstreamid << std::endl;
-		}
-		uint8_t src[10];
-		uint8_t dst[10];
-		memset(dst, ' ', 9);
-		memcpy(dst, hostname.toLocal8Bit(), hostname.size());
-		dst[8] =  module;
-		dst[9] = 0x00;
-		M17Codec::encode_callsign(dst);
-		memset(src, ' ', 9);
-		memcpy(src, callsign.toLocal8Bit(), callsign.size());
-		src[8] = 'D';
-		src[9] = 0x00;
-		M17Codec::encode_callsign(src);
-
-		txframe.append('M');
-		txframe.append('1');
-		txframe.append('7');
-		txframe.append(' ');
-		txframe.append(txstreamid >> 8);
-		txframe.append(txstreamid & 0xff);
-		txframe.append((char *)dst, 6);
-		txframe.append((char *)src, 6);
-		txframe.append('\x00');
-		txframe.append(0x05); // Frame type voice only
-		txframe.append(14, 0x00); //Blank nonce
-		txframe.append((char)(tx_cnt >> 8));
-		txframe.append((char)tx_cnt & 0xff);
-
-		for (int i = 0; i < 6; ++i){
-			ambeq.dequeue();
-		}
-		for (int i = 0; i < 8; ++i){
-			txframe.append(ambeq.dequeue());
-		}
-		for (int i = 0; i < 6; ++i){
-			ambeq.dequeue();
-		}
-		for (int i = 0; i < 8; ++i){
-			txframe.append(ambeq.dequeue());
-		}
-		txframe.append(2, 0x00);
-
-		ui->mycall->setText(callsign);
-		ui->urcall->setText(hostname + " " + module);
-		ui->rptr1->setText("3200 Voice");
-
-		QString ss = QString("%1").arg(txstreamid, 4, 16, QChar('0'));
-		QString n = QString("TX %1").arg(tx_cnt, 4, 16, QChar('0'));
-		ui->rptr2->setText(n);
-		ui->streamid->setText(ss);
-		udp->writeDatagram(txframe, address, port);
-		++tx_cnt;
-		fprintf(stderr, "SEND:%d: ", ambeq.size());
-		for(int i = 0; i < txframe.size(); ++i){
-			fprintf(stderr, "%02x ", (unsigned char)txframe.data()[i]);
-		}
-		fprintf(stderr, "\n");
-		fflush(stderr);
-	}
-	else{
-		const uint8_t quiet[] = { 0x00u, 0x01u, 0x43u, 0x09u, 0xe4u, 0x9cu, 0x08u, 0x21u };
-		uint8_t src[10];
-		uint8_t dst[10];
-		memset(dst, ' ', 9);
-		memcpy(dst, hostname.toLocal8Bit(), hostname.size());
-		dst[8] =  module;
-		dst[9] = 0x00;
-		M17Codec::encode_callsign(dst);
-		memset(src, ' ', 9);
-		memcpy(src, callsign.toLocal8Bit(), callsign.size());
-		src[8] = 'D';
-		src[9] = 0x00;
-		M17Codec::encode_callsign(src);
-		tx_cnt |= 0x8000u;
-
-		txframe.append('M');
-		txframe.append('1');
-		txframe.append('7');
-		txframe.append(' ');
-		txframe.append(txstreamid >> 8);
-		txframe.append(txstreamid & 0xff);
-		txframe.append((char *)dst, 6);
-		txframe.append((char *)src, 6);
-		txframe.append('\x00');
-		txframe.append(0x05); // Frame type voice only
-		txframe.append(14, 0x00); //Blank nonce
-		txframe.append((char)(tx_cnt >> 8));
-		txframe.append((char)tx_cnt & 0xff);
-		txframe.append((char *)quiet, 8);
-		txframe.append((char *)quiet, 8);
-		txframe.append(2, 0x00);
-
-		QString n = QString("%1").arg(tx_cnt, 4, 16, QChar('0'));
-		ui->rptr2->setText(n);
-
-		udp->writeDatagram(txframe, address, port);
-		txstreamid = 0;
-		tx_cnt = 0;
-		txtimer->stop();
-		audioindev->disconnect();
-		audioin->stop();
-		fprintf(stderr, "LAST:%d: ", ambeq.size());
-		for(int i = 0; i < txframe.size(); ++i){
-			fprintf(stderr, "%02x ", (unsigned char)txframe.data()[i]);
-		}
-		fprintf(stderr, "\n");
-		fflush(stderr);
 	}
 }
 
@@ -3654,191 +3273,6 @@ void DudeStar::transmitYSF()
 	}
 }
 
-void DudeStar::transmitP25()
-{
-	QByteArray ambe;
-	QByteArray txdata;
-	//unsigned char *m_p25Frame;
-	unsigned char m_p25Frame[11];
-	unsigned char buffer[22];
-	static uint8_t p25step = 0;
-
-	if(ambeq.size() < 17){
-		if(!tx){
-			txdata.append((char *)REC80, 17U);
-			udp->writeDatagram(txdata, address, port);
-			fprintf(stderr, "P25 TX stopped ambeq.size() == %d\n", ambeq.size());
-			txtimer->stop();
-			audioindev->disconnect();
-			audioin->stop();
-			p25step = 0;
-			ambeq.clear();
-			return;
-		}
-		else{
-			std::cerr << "ERROR: AMBEQ < 24" << std::endl;
-			return;
-		}
-	}
-	while(ambeq.size() && (ambeq[0] != 0x61) && (ambeq[2] != 0x0d) && (ambeq[3] != 0x01)){
-		std::cerr << "ERROR: Not an AMBE frame" << std::endl;
-		ambeq.dequeue();
-	}
-
-	if(ambeq.size() < 17){
-		std::cerr << "ERROR:  AMBE Q empty" << std::endl;
-		return;
-	}
-	else{
-		for (int i = 0; i < 6; ++i){
-			ambeq.dequeue();
-		}
-		for (int i = 0; i < 11; ++i){
-			//ambe.append(ambeq.dequeue());
-			m_p25Frame[i] = ambeq.dequeue();
-		}
-	}
-
-	if(tx || ambeq.size()){
-		//m_p25Frame = p25->get_frame((unsigned char *)ambe.data());
-
-		switch (p25step) {
-		case 0x00U:
-			::memcpy(buffer, REC62, 22U);
-			::memcpy(buffer + 10U, m_p25Frame, 11U);
-			txdata.append((char *)buffer, 22U);
-			++p25step;
-			break;
-		case 0x01U:
-			::memcpy(buffer, REC63, 14U);
-			::memcpy(buffer + 1U, m_p25Frame, 11U);
-			txdata.append((char *)buffer, 14U);
-			++p25step;
-			break;
-		case 0x02U:
-			::memcpy(buffer, REC64, 17U);
-			::memcpy(buffer + 5U, m_p25Frame, 11U);
-			buffer[1U] = 0x00U;
-			txdata.append((char *)buffer, 17U);
-			++p25step;
-			break;
-		case 0x03U:
-			dmr_destid = ui->dmrtgEdit->text().toUInt();
-			::memcpy(buffer, REC65, 17U);
-			::memcpy(buffer + 5U, m_p25Frame, 11U);
-			buffer[1U] = (dmr_destid >> 16) & 0xFFU;
-			buffer[2U] = (dmr_destid >> 8) & 0xFFU;
-			buffer[3U] = (dmr_destid >> 0) & 0xFFU;
-			txdata.append((char *)buffer, 17U);
-			++p25step;
-			break;
-		case 0x04U:
-			::memcpy(buffer, REC66, 17U);
-			::memcpy(buffer + 5U, m_p25Frame, 11U);
-			buffer[1U] = (dmrid >> 16) & 0xFFU;
-			buffer[2U] = (dmrid >> 8) & 0xFFU;
-			buffer[3U] = (dmrid >> 0) & 0xFFU;
-			txdata.append((char *)buffer, 17U);
-			++p25step;
-			break;
-		case 0x05U:
-			::memcpy(buffer, REC67, 17U);
-			::memcpy(buffer + 5U, m_p25Frame, 11U);
-			txdata.append((char *)buffer, 17U);
-			++p25step;
-			break;
-		case 0x06U:
-			::memcpy(buffer, REC68, 17U);
-			::memcpy(buffer + 5U, m_p25Frame, 11U);
-			txdata.append((char *)buffer, 17U);
-			++p25step;
-			break;
-		case 0x07U:
-			::memcpy(buffer, REC69, 17U);
-			::memcpy(buffer + 5U, m_p25Frame, 11U);
-			txdata.append((char *)buffer, 17U);
-			++p25step;
-			break;
-		case 0x08U:
-			::memcpy(buffer, REC6A, 16U);
-			::memcpy(buffer + 4U, m_p25Frame, 11U);
-			txdata.append((char *)buffer, 16U);
-			++p25step;
-			break;
-		case 0x09U:
-			::memcpy(buffer, REC6B, 22U);
-			::memcpy(buffer + 10U, m_p25Frame, 11U);
-			txdata.append((char *)buffer, 22U);
-			++p25step;
-			break;
-		case 0x0AU:
-			::memcpy(buffer, REC6C, 14U);
-			::memcpy(buffer + 1U, m_p25Frame, 11U);
-			txdata.append((char *)buffer, 14U);
-			++p25step;
-			break;
-		case 0x0BU:
-			::memcpy(buffer, REC6D, 17U);
-			::memcpy(buffer + 5U, m_p25Frame, 11U);
-			txdata.append((char *)buffer, 17U);
-			++p25step;
-			break;
-		case 0x0CU:
-			::memcpy(buffer, REC6E, 17U);
-			::memcpy(buffer + 5U, m_p25Frame, 11U);
-			txdata.append((char *)buffer, 17U);
-			++p25step;
-			break;
-		case 0x0DU:
-			::memcpy(buffer, REC6F, 17U);
-			::memcpy(buffer + 5U, m_p25Frame, 11U);
-			txdata.append((char *)buffer, 17U);
-			++p25step;
-			break;
-		case 0x0EU:
-			::memcpy(buffer, REC70, 17U);
-			::memcpy(buffer + 5U, m_p25Frame, 11U);
-			buffer[1U] = 0x80U;
-			txdata.append((char *)buffer, 17U);
-			++p25step;
-			break;
-		case 0x0FU:
-			::memcpy(buffer, REC71, 17U);
-			::memcpy(buffer + 5U, m_p25Frame, 11U);
-			txdata.append((char *)buffer, 17U);
-			++p25step;
-			break;
-		case 0x10U:
-			::memcpy(buffer, REC72, 17U);
-			::memcpy(buffer + 5U, m_p25Frame, 11U);
-			txdata.append((char *)buffer, 17U);
-			++p25step;
-			break;
-		case 0x11U:
-			::memcpy(buffer, REC73, 16U);
-			::memcpy(buffer + 4U, m_p25Frame, 11U);
-			txdata.append((char *)buffer, 16U);
-			p25step = 0;
-			break;
-		}
-		ui->mycall->setText(callsign);
-		ui->urcall->setText(QString::number(dmrid));
-		ui->rptr1->setText(QString::number(dmr_destid));
-		ui->rptr2->setText(QString::number(dmrid));
-		ui->streamid->setText(QString("TX %1").arg(p25step, 4, 16, QChar('0')));
-		udp->writeDatagram(txdata, address, port);
-		udp->writeDatagram(txdata, address, port);
-	}
-	else{
-		txdata.append((char *)REC80, 17U);
-		udp->writeDatagram(txdata, address, port);
-		fprintf(stderr, "P25 TX stopped\n");
-		txtimer->stop();
-		audioindev->disconnect();
-		audioin->stop();
-		p25step = 0;
-	}
-}
 
 void DudeStar::transmitDMR()
 {

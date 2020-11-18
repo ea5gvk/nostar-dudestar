@@ -35,7 +35,7 @@
 #include "ysfdec.h"
 #include "ysfenc.h"
 #include "dmrencoder.h"
-#include "p25encoder.h"
+#include "p25codec.h"
 #include "nxdnencoder.h"
 #include "m17codec.h"
 
@@ -118,7 +118,7 @@ private:
 	YSFEncoder *ysf;
 	DSDYSF *ysfdec;
 	DMREncoder *dmr;
-	p25encoder *p25;
+	P25Codec *m_p25;
 	NXDNEncoder *nxdn;
 	M17Codec *m_m17;
     QAudioOutput *audio;
@@ -148,7 +148,7 @@ private:
 	QQueue<unsigned char> ambeq;
 	QQueue<unsigned char> swambeq;
 	QQueue<unsigned char> ysfq;
-	QMap<uint32_t, QString> dmrids;
+	QMap<uint32_t, QString> m_dmrids;
 	QMap<uint16_t, QString> nxdnids;
     const unsigned char header[5] = {0x80,0x44,0x53,0x56,0x54}; //DVSI packet header
 #ifdef USE_FLITE
@@ -170,7 +170,6 @@ private slots:
 	void swtx_state_changed(int);
 	void tts_changed(int);
 	void tts_text_changed(QString);
-	void setup_audio();
 	void discover_vocoders();
 	void connect_to_serial(QString);
     void readyRead();
@@ -179,7 +178,7 @@ private slots:
 	void readyReadDCS();
 	void readyReadYSF();
 	void readyReadDMR();
-	void readyReadP25();
+	void update_p25_data();
 	void readyReadNXDN();
 	void update_m17_data();
 	void m17_rate_changed(int);
