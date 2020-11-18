@@ -16,6 +16,7 @@
 */
 
 #include "dudestar.h"
+#include "audioengine.h"
 #include "ui_dudestar.h"
 #include "SHA256.h"
 #include "crs129.h"
@@ -84,8 +85,8 @@ DudeStar::DudeStar(QWidget *parent) :
     QMainWindow(parent),
 	ui(new Ui::DudeStar),
 	m_update_host_files(false),
-	audio(nullptr),
-	audioin(nullptr),
+	//audio(nullptr),
+	//audioin(nullptr),
 	enable_swtx(false)
 {
 	dmrslot = 2;
@@ -106,8 +107,7 @@ DudeStar::DudeStar(QWidget *parent) :
 #endif
     ui->setupUi(this);
     init_gui();
-	discover_vocoders();
-	discover_audio_devices();
+
     udp = new QUdpSocket(this);
 #ifdef USE_FLITE
 	flite_init();
@@ -125,9 +125,9 @@ DudeStar::DudeStar(QWidget *parent) :
 	txtimer = new QTimer();
 	user_data.resize(21);
 	connect(txtimer, SIGNAL(timeout()), this, SLOT(tx_timer()));
-    connect(udp, SIGNAL(readyRead()), this, SLOT(readyRead()));
-    connect(audiotimer, SIGNAL(timeout()), this, SLOT(process_audio()));
-	connect(ping_timer, SIGNAL(timeout()), this, SLOT(process_ping()));
+	//connect(udp, SIGNAL(readyRead()), this, SLOT(readyRead()));
+	//connect(audiotimer, SIGNAL(timeout()), this, SLOT(process_audio()));
+	//connect(ping_timer, SIGNAL(timeout()), this, SLOT(process_ping()));
 	connect(ysftimer, SIGNAL(timeout()), this, SLOT(process_ysf_data()));
 
 	check_host_files();
@@ -215,6 +215,8 @@ void DudeStar::init_gui()
 	tts_voices->addButton(ui->checkBoxRms, 2);
 	tts_voices->addButton(ui->checkBoxAwb, 3);
 	tts_voices->addButton(ui->checkBoxSlt, 4);
+	connect(tts_voices, SIGNAL(buttonClicked(int)), this, SLOT(tts_changed(int)));
+	connect(ui->TTSEdit, SIGNAL(textChanged(QString)), this, SLOT(tts_text_changed(QString)));
 #endif
 #ifndef USE_FLITE
 	ui->checkBoxTTSOff->hide();
@@ -234,17 +236,18 @@ void DudeStar::init_gui()
 	ui->involSlider->setValue(100);
 	ui->txButton->setDisabled(true);
 	m17rates = new QButtonGroup();
-	m17rates->addButton(ui->m17VoiceFull, 0);
-	m17rates->addButton(ui->m17VoiceData, 1);
+	m17rates->addButton(ui->m17VoiceFull, 1);
+	m17rates->addButton(ui->m17VoiceData, 0);
 	ui->m17VoiceFull->setChecked(true);
-	ui->m17VoiceData->setEnabled(false);
+	connect(m17rates, SIGNAL(buttonClicked(int)), this, SLOT(m17_rate_changed(int)));
+	//ui->m17VoiceData->setEnabled(false);
     connect(ui->actionAbout, SIGNAL(triggered()), this, SLOT(about()));
     connect(ui->actionQuit, SIGNAL(triggered()), this, SLOT(close()));
 	connect(ui->actionUpdate_DMR_IDs, SIGNAL(triggered()), this, SLOT(update_dmr_ids()));
 	connect(ui->actionUpdate_host_files, SIGNAL(triggered()), this, SLOT(update_host_files()));
     connect(ui->connectButton, SIGNAL(clicked()), this, SLOT(process_connect()));
-    connect(ui->txButton, SIGNAL(pressed()), this, SLOT(press_tx()));
-    connect(ui->txButton, SIGNAL(released()), this, SLOT(release_tx()));
+	connect(ui->txButton, SIGNAL(pressed()), this, SLOT(press_tx()));
+	connect(ui->txButton, SIGNAL(released()), this, SLOT(release_tx()));
 	ui->statusBar->insertPermanentWidget(0, status_txt, 1);
 	connect(ui->checkBoxSWRX, SIGNAL(stateChanged(int)), this, SLOT(swrx_state_changed(int)));
 	connect(ui->checkBoxSWTX, SIGNAL(stateChanged(int)), this, SLOT(swtx_state_changed(int)));
@@ -277,6 +280,11 @@ void DudeStar::init_gui()
 	if(!enable_swtx){
 		ui->checkBoxSWTX->hide();
 	}
+	discover_vocoders();
+	ui->AudioOutCombo->addItem("OS Default");
+	ui->AudioOutCombo->addItems(AudioEngine::discover_audio_devices(AUDIO_OUT));
+	ui->AudioInCombo->addItem("OS Default");
+	ui->AudioInCombo->addItems(AudioEngine::discover_audio_devices(AUDIO_IN));
 }
 
 void DudeStar::download_file(QString f)
@@ -543,6 +551,22 @@ void DudeStar::process_mode_change(const QString &m)
 		ui->label_5->setText("Stream ID");
 		ui->label_6->setText("");
 	}
+}
+
+void DudeStar::tts_changed(int b)
+{
+	qDebug() << "tts_changed() called";
+	emit input_source_changed(b, ui->TTSEdit->text());
+}
+
+void DudeStar::tts_text_changed(QString s)
+{
+	emit input_source_changed(tts_voices->checkedId(), s);
+}
+
+void DudeStar::m17_rate_changed(int r)
+{
+	emit rate_changed(r);
 }
 
 void DudeStar::swrx_state_changed(int s)
@@ -1198,24 +1222,6 @@ void DudeStar::process_settings()
 	}
 }
 
-void DudeStar::discover_audio_devices()
-{
-	ui->AudioOutCombo->addItem("OS Default");
-	ui->AudioInCombo->addItem("OS Default");
-	QList<QAudioDeviceInfo> devices = QAudioDeviceInfo::availableDevices(QAudio::AudioOutput);
-
-	for (QList<QAudioDeviceInfo>::ConstIterator it = devices.constBegin(); it != devices.constEnd(); ++it ) {
-		fprintf(stderr, "Playback device name = %s\n", (*it).deviceName().toStdString().c_str());fflush(stderr);
-		ui->AudioOutCombo->addItem((*it).deviceName());
-	}
-	devices = QAudioDeviceInfo::availableDevices(QAudio::AudioInput);
-
-	for (QList<QAudioDeviceInfo>::ConstIterator it = devices.constBegin(); it != devices.constEnd(); ++it ) {
-		fprintf(stderr, "Recording device name = %s\n", (*it).deviceName().toStdString().c_str());fflush(stderr);
-		ui->AudioInCombo->addItem((*it).deviceName());
-	}
-}
-
 void DudeStar::setup_audio()
 {
 	QAudioFormat format;
@@ -1478,6 +1484,7 @@ void DudeStar::process_connect()
 {
 	fprintf(stderr, "process_connect() called connect_status == %d\n", connect_status);fflush(stderr);
     if(connect_status != DISCONNECTED){
+		m_modethread->quit();
         connect_status = DISCONNECTED;
         ui->connectButton->setText("Connect");
         ui->mycall->clear();
@@ -1492,25 +1499,26 @@ void DudeStar::process_connect()
 		ui->modeCombo->setEnabled(true);
         ui->hostCombo->setEnabled(true);
         ui->callsignEdit->setEnabled(true);
+		ui->txButton->setStyleSheet("background-color: rgb(53, 53, 53); color: rgb(134, 132, 130)");
+		ui->txButton->setDisabled(true);
+		status_txt->setText("Not connected");
 
 		if((protocol == "DCS") || (protocol == "XRF") || (protocol == "M17")){
 			ui->comboMod->setEnabled(true);
 		}
-
-		disconnect_from_host();
+		return;
+		//disconnect_from_host();
 
 		if(hw_ambe_present){
 			serial->close();
 		}
 
-		audiotimer->stop();
-		ysftimer->stop();
-		audioq.clear();
-		ysfq.clear();
-		ping_cnt = 0;
-		ui->txButton->setStyleSheet("background-color: rgb(53, 53, 53); color: rgb(134, 132, 130)");
-		ui->txButton->setDisabled(true);
-		status_txt->setText("Not connected");
+		//audiotimer->stop();
+		//ysftimer->stop();
+		//audioq.clear();
+		//ysfq.clear();
+		//ping_cnt = 0;
+
 
 		if(audio != nullptr){
 			ui->volumeSlider->disconnect();
@@ -1555,11 +1563,25 @@ void DudeStar::process_connect()
 			dmr_destid = ui->hostCombo->currentText().toUInt();
 		}
 		if(protocol == "M17"){
+			m_m17 = new M17Codec(callsign, module, hostname, host, port);
+			m_modethread = new QThread;
+			m_m17->moveToThread(m_modethread);
+			connect(m_m17, SIGNAL(update()), this, SLOT(update_m17_data()));
+			connect(this, SIGNAL(rate_changed(int)), m_m17, SLOT(rate_changed(int)));
+			connect(m_modethread, SIGNAL(started()), m_m17, SLOT(send_connect()));
+			connect(m_modethread, SIGNAL(finished()), m_m17, SLOT(deleteLater()));
+			connect(this, SIGNAL(input_source_changed(int, QString)), m_m17, SLOT(input_src_changed(int, QString)));
+			connect(ui->txButton, SIGNAL(pressed()), m_m17, SLOT(start_tx()));
+			connect(ui->txButton, SIGNAL(released()), m_m17, SLOT(stop_tx()));
+			emit input_source_changed(tts_voices->checkedId(), ui->TTSEdit->text());
+			m_modethread->start();
+
 		}
-		connect_to_serial(ui->AmbeCombo->currentData().toString().simplified());
-		QHostInfo::lookupHost(host, this, SLOT(hostname_lookup(QHostInfo)));
-		setup_audio();
-        audiodev = audio->start();
+
+		//connect_to_serial(ui->AmbeCombo->currentData().toString().simplified());
+		//QHostInfo::lookupHost(host, this, SLOT(hostname_lookup(QHostInfo)));
+		//setup_audio();
+		//audiodev = audio->start();
     }
 }
 
@@ -1792,9 +1814,9 @@ void DudeStar::process_audio()
 		for(int i = 0; i < 8; ++i){
 			d[i] = audioq.dequeue();
 		}
-		m17->decode_audio(m17audio, d);
+		m_m17->decode_c2(m17audio, d);
 		//m17->decode_audio(&m17audio[160], &d[8]);
-		audiodev->write((const char *) m17audio, sizeof(int16_t) * (m17->get_mode() ? 160 : 320));
+		audiodev->write((const char *) m17audio, sizeof(int16_t) * (m_m17->get_mode() ? 160 : 320));
 		return;
 	}
 	else if(audioq.size() >= 9){
@@ -1891,7 +1913,6 @@ void DudeStar::AppendVoiceLCToBuffer(QByteArray& buffer, uint32_t uiSrcId, uint3
 		payload[13U] = (payload[13U] & 0x0FU) | ((slottype[0U] << 6) & 0xC0U) | ((slottype[1U] >> 2) & 0x30U);
 		payload[19U] = (payload[19U] & 0xF0U) | ((slottype[1U] >> 2) & 0x0FU);
 		payload[20U] = (payload[20U] & 0x03U) | ((slottype[1U] << 6) & 0xC0U) | ((slottype[2U] >> 2) & 0x3CU);
-
 	}
 	// and encode
 	bptc.encode(lc, payload);
@@ -2004,7 +2025,7 @@ void DudeStar::readyRead()
 		readyReadNXDN();
 	}
 	else if (protocol == "M17"){
-		readyReadM17();
+		//readyReadM17();
 	}
 }
 
@@ -2104,79 +2125,33 @@ void DudeStar::process_ping()
 #endif
 }
 
-void DudeStar::readyReadM17()
+void DudeStar::update_m17_data()
 {
-	QByteArray buf;
-	QHostAddress sender;
-	quint16 senderPort;
-	//static uint8_t cnt = 0;
-	static unsigned short streamid = 0;
+	if( (connect_status == CONNECTING) && ( m_m17->get_status() == CONNECTED_RW)){
+		connect_status = CONNECTED_RW;
+		ui->connectButton->setText("Disconnect");
+		ui->connectButton->setEnabled(true);
+		ui->AmbeCombo->setEnabled(false);
+		ui->AudioOutCombo->setEnabled(false);
+		ui->AudioInCombo->setEnabled(false);
+		ui->modeCombo->setEnabled(false);
+		ui->hostCombo->setEnabled(false);
+		ui->callsignEdit->setEnabled(false);
+		ui->comboMod->setEnabled(false);
+		ui->txButton->setDisabled(false);
+		ui->txButton->setStyleSheet("background-color: rgb(128, 195, 66); color: rgb(0,0,0)");
+	}
 
-	buf.resize(udp->pendingDatagramSize());
-	udp->readDatagram(buf.data(), buf.size(), &sender, &senderPort);
-#ifdef DEBUG
-	fprintf(stderr, "RECV: ");
-	for(int i = 0; i < buf.size(); ++i){
-		fprintf(stderr, "%02x ", (unsigned char)buf.data()[i]);
+	status_txt->setText(" Host: " + m_m17->get_host() + ":" + QString::number( m_m17->get_port()) + " Ping: " + QString::number(ping_cnt++));
+	ui->mycall->setText(m_m17->get_src());
+	ui->urcall->setText(m_m17->get_dst());
+	ui->rptr1->setText(m_m17->get_type());
+	if(m_m17->get_fn()){
+			QString n = QString("%1").arg(m_m17->get_fn(), 4, 16, QChar('0'));
+			ui->rptr2->setText(n);
 	}
-	fprintf(stderr, "\n");
-	fflush(stderr);
-#endif
-	if((buf.size() == 4) && (::memcmp(buf.data(), "ACKN", 4U) == 0)){
-		if(connect_status == CONNECTING){
-			m17 = new M17Codec();
-			ui->connectButton->setText("Disconnect");
-			ui->connectButton->setEnabled(true);
-			ui->AmbeCombo->setEnabled(false);
-			ui->AudioOutCombo->setEnabled(false);
-			ui->AudioInCombo->setEnabled(false);
-			ui->modeCombo->setEnabled(false);
-			ui->hostCombo->setEnabled(false);
-			ui->callsignEdit->setEnabled(false);
-			ui->comboMod->setEnabled(false);
-			if(audioin != nullptr){
-				ui->txButton->setDisabled(false);
-				ui->txButton->setStyleSheet("background-color: rgb(128, 195, 66); color: rgb(0,0,0)");
-			}
-			connect_status = CONNECTED_RW;
-			audiotimer->start(19);
-			ping_timer->start(8000);
-			status_txt->setText(" Host: " + host + ":" + QString::number(port) + " Ping: " + QString::number(ping_cnt++));
-		}
-	}
-	if((buf.size() == 10) && (::memcmp(buf.data(), "PING", 4U) == 0)){
-		//process_ping();
-		status_txt->setText(" Host: " + host + ":" + QString::number(port) + " Ping: " + QString::number(ping_cnt++));
-	}
-	if((buf.size() == 54) && (::memcmp(buf.data(), "M17 ", 4U) == 0)){
-		uint8_t cs[10];
-		uint8_t sz;
-		::memcpy(cs, &(buf.data()[12]), 6);
-		M17Codec::decode_callsign(cs);
-		ui->mycall->setText(QString((char *)cs));
-		::memcpy(cs, &(buf.data()[6]), 6);
-		M17Codec::decode_callsign(cs);
-		ui->urcall->setText(QString((char *)cs));
-		if((buf.data()[19] & 0x06U) == 0x04U){
-			ui->rptr1->setText("3200 Voice");
-			m17->set_mode(true);
-			sz = 16;
-		}
-		else{
-			ui->rptr1->setText("1600 V/D");
-			m17->set_mode(false);
-			sz = 8;
-		}
-		streamid = (buf.data()[4] << 8) | (buf.data()[5] & 0xff);
-		uint16_t fn = (buf.data()[34] << 8) | (buf.data()[35] & 0xff);
-		QString ss = QString("%1").arg(streamid, 4, 16, QChar('0'));
-		QString n = QString("%1").arg(fn, 4, 16, QChar('0'));
-		ui->rptr2->setText(n);
-		ui->streamid->setText(ss);
-
-		for(int i = 0; i < sz; ++i){
-			audioq.enqueue(buf.data()[36+i]);
-		}
+	if(m_m17->get_streamid()){
+		ui->streamid->setText(QString::number(m_m17->get_streamid(), 16));
 	}
 }
 
@@ -3095,12 +3070,14 @@ void DudeStar::audioin_data_ready()
 void DudeStar::press_tx()
 {
     //std::cerr << "Pressed TX buffersize == " << audioin->bufferSize() << std::endl;
-	tx = true;
-	audiotx_cnt = 0;
-	if(protocol == "M17"){
-		m17->set_mode(true);
-	}
+	//tx = true;
+	//audiotx_cnt = 0;
+	//if(protocol == "M17"){
+		//m17->set_mode(true);
+	//}
 	ui->txButton->setStyleSheet("background-color: rgb(180, 0, 0); color: rgb(0,0,0)");
+	//m_m17->start_tx();
+	return;
 #ifdef USE_FLITE
 	int id = tts_voices->checkedId();
 	if(id == 1){
@@ -3136,9 +3113,9 @@ void DudeStar::press_tx()
 void DudeStar::release_tx()
 {
 	//std::cerr << "Released TX" << std::endl;
-	tx = false;
+	//tx = false;
 	ui->txButton->setStyleSheet("background-color: rgb(128, 195, 66); color: rgb(0,0,0)");
-
+	//m_m17->stop_tx();
 	/*
 	QByteArray a = audio_buffer.readAll();
 	fprintf(stderr, "RECV %d:%d:%d", audio_buffer.buffer().size(), audio_buffer.bytesAvailable(), audioin->bytesReady());
@@ -3252,7 +3229,7 @@ void DudeStar::tx_timer()
 				frame_len = 11;
 			}
 			else if(protocol == "M17"){
-				m17->encode_c2(audio_samples, ambe_bytes);
+				//m17->encode_c2(audio_samples, ambe_bytes);
 				frame_len = 8;
 			}
 			else{

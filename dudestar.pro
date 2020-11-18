@@ -19,6 +19,7 @@ SOURCES += \
         YSFConvolution.cpp \
         YSFFICH.cpp \
         ambe.c \
+        audioengine.cpp \
         cbptc19696.cpp \
         cgolay2087.cpp \
         chamming.cpp \
@@ -82,6 +83,7 @@ HEADERS += \
         ambe.h \
         ambe3600x2250_const.h \
         ambe3600x2400_const.h \
+        audioengine.h \
         cbptc19696.h \
         cgolay2087.h \
         chamming.h \

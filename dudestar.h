@@ -52,6 +52,9 @@ public:
     explicit DudeStar(QWidget *parent = nullptr);
     ~DudeStar();
 
+signals:
+	void input_source_changed(int, QString);
+	void rate_changed(int);
 private:
     void init_gui();
     void transmit();
@@ -109,6 +112,7 @@ private:
 	uint8_t dmrcalltype;
 	QString protocol;
 	uint64_t ping_cnt;
+	QThread *m_modethread;
     MBEDecoder *mbe;
 	MBEEncoder *mbeenc;
 	YSFEncoder *ysf;
@@ -116,7 +120,7 @@ private:
 	DMREncoder *dmr;
 	p25encoder *p25;
 	NXDNEncoder *nxdn;
-	M17Codec *m17;
+	M17Codec *m_m17;
     QAudioOutput *audio;
 	QAudioInput *audioin;
 	QBuffer audio_buffer;
@@ -164,7 +168,8 @@ private slots:
 	void process_host_change(const QString &);
 	void swrx_state_changed(int);
 	void swtx_state_changed(int);
-	void discover_audio_devices();
+	void tts_changed(int);
+	void tts_text_changed(QString);
 	void setup_audio();
 	void discover_vocoders();
 	void connect_to_serial(QString);
@@ -176,7 +181,8 @@ private slots:
 	void readyReadDMR();
 	void readyReadP25();
 	void readyReadNXDN();
-	void readyReadM17();
+	void update_m17_data();
+	void m17_rate_changed(int);
 	void disconnect_from_host();
     void handleStateChanged(QAudio::State);
     void hostname_lookup(QHostInfo);
