@@ -96,19 +96,19 @@ DudeStar::DudeStar(QWidget *parent) :
 	voice_awb = register_cmu_us_awb(nullptr);
 	voice_rms = register_cmu_us_rms(nullptr);
 #endif
-    audiotimer = new QTimer();
-	ping_timer = new QTimer();
-	ysftimer = new QTimer();
+	//audiotimer = new QTimer();
+	//ping_timer = new QTimer();
+	//ysftimer = new QTimer();
 
     connect_status = DISCONNECTED;
 	tx = false;
 	txtimer = new QTimer();
 	user_data.resize(21);
-	connect(txtimer, SIGNAL(timeout()), this, SLOT(tx_timer()));
+	//connect(txtimer, SIGNAL(timeout()), this, SLOT(tx_timer()));
 	//connect(udp, SIGNAL(readyRead()), this, SLOT(readyRead()));
 	//connect(audiotimer, SIGNAL(timeout()), this, SLOT(process_audio()));
 	//connect(ping_timer, SIGNAL(timeout()), this, SLOT(process_ping()));
-	connect(ysftimer, SIGNAL(timeout()), this, SLOT(process_ysf_data()));
+	//connect(ysftimer, SIGNAL(timeout()), this, SLOT(process_ysf_data()));
 
 	check_host_files();
 
@@ -197,6 +197,7 @@ void DudeStar::init_gui()
 	tts_voices->addButton(ui->checkBoxSlt, 4);
 	connect(tts_voices, SIGNAL(buttonClicked(int)), this, SLOT(tts_changed(int)));
 	connect(ui->TTSEdit, SIGNAL(textChanged(QString)), this, SLOT(tts_text_changed(QString)));
+	connect(ui->dmrtgEdit, SIGNAL(textChanged(QString)), this, SLOT(tgid_text_changed(QString)));
 #endif
 #ifndef USE_FLITE
 	ui->checkBoxTTSOff->hide();
@@ -535,6 +536,12 @@ void DudeStar::tts_changed(int b)
 {
 	qDebug() << "tts_changed() called";
 	emit input_source_changed(b, ui->TTSEdit->text());
+}
+
+void DudeStar::tgid_text_changed(QString s)
+{
+	qDebug() << "dmrid_text_changed() called s == " << s;
+	emit dmr_tgid_changed(s.toUInt());
 }
 
 void DudeStar::tts_text_changed(QString s)
@@ -1398,36 +1405,12 @@ void DudeStar::process_connect()
 		ui->modeCombo->setEnabled(true);
         ui->hostCombo->setEnabled(true);
         ui->callsignEdit->setEnabled(true);
+		ui->dmridEdit->setEnabled(true);
 		ui->txButton->setDisabled(true);
 		status_txt->setText("Not connected");
 
 		if((protocol == "DCS") || (protocol == "XRF") || (protocol == "M17")){
 			ui->comboMod->setEnabled(true);
-		}
-		return;
-		//disconnect_from_host();
-
-		if(hw_ambe_present){
-			serial->close();
-		}
-
-		//audiotimer->stop();
-		//ysftimer->stop();
-		//audioq.clear();
-		//ysfq.clear();
-		//ping_cnt = 0;
-
-
-		if(audio != nullptr){
-			ui->volumeSlider->disconnect();
-			ui->muteButton->disconnect();
-			delete audio;
-		}
-
-		if(audioin != nullptr){
-			ui->involSlider->disconnect();
-			ui->inmuteButton->disconnect();
-			delete audioin;
 		}
     }
     else{
@@ -1462,6 +1445,18 @@ void DudeStar::process_connect()
 			dmrid = ui->dmridEdit->text().toUInt();
 			dmr_password = (ui->dmrpwEdit->text().isEmpty()) ? sl.at(2).simplified() : ui->dmrpwEdit->text();
 			dmr_destid = ui->dmrtgEdit->text().toUInt();
+			m_dmr = new DMRCodec(callsign, dmrid, dmr_password, dmr_destid, host, port);
+			m_modethread = new QThread;
+			m_dmr->moveToThread(m_modethread);
+			connect(m_dmr, SIGNAL(update()), this, SLOT(update_dmr_data()));
+			connect(m_modethread, SIGNAL(started()), m_dmr, SLOT(send_connect()));
+			connect(m_modethread, SIGNAL(finished()), m_dmr, SLOT(deleteLater()));
+			connect(this, SIGNAL(input_source_changed(int, QString)), m_dmr, SLOT(input_src_changed(int, QString)));
+			connect(this, SIGNAL(dmr_tgid_changed(unsigned int)), m_dmr, SLOT(dmr_tgid_changed(unsigned int)));
+			connect(ui->txButton, SIGNAL(pressed()), m_dmr, SLOT(start_tx()));
+			connect(ui->txButton, SIGNAL(released()), m_dmr, SLOT(stop_tx()));
+			emit input_source_changed(tts_voices->checkedId(), ui->TTSEdit->text());
+			m_modethread->start();
 		}
 		if(protocol == "P25"){
 			dmrid = m_dmrids.key(callsign);
@@ -1496,7 +1491,6 @@ void DudeStar::process_connect()
 			connect(ui->txButton, SIGNAL(released()), m_m17, SLOT(stop_tx()));
 			emit input_source_changed(tts_voices->checkedId(), ui->TTSEdit->text());
 			m_modethread->start();
-
 		}
 
 		//connect_to_serial(ui->AmbeCombo->currentData().toString().simplified());
@@ -1868,9 +1862,6 @@ void DudeStar::readyRead()
 	else if (protocol == "DCS"){
 		readyReadDCS();
 	}
-	else if (protocol == "DMR"){
-		readyReadDMR();
-	}
 	else if (protocol == "NXDN"){
 		readyReadNXDN();
 	}
@@ -1904,39 +1895,6 @@ void DudeStar::process_ping()
 		//out.append(0x20);
 		//out.append(0x20);
 	}
-	else if(protocol == "YSF"){
-		if(hostname.left(3) == "FCS"){
-			out.append('P');
-			out.append('I');
-			out.append('N');
-			out.append('G');
-			out.append(callsign.toUtf8());
-			out.append(6 - callsign.size(), ' ');
-			out.append(saved_ysfhost.left(8).toUtf8());
-			out.append(7, '\x00');
-		}
-		else{
-			out.append('Y');
-			out.append('S');
-			out.append('F');
-			out.append('P');
-			out.append(callsign.toUtf8());
-			out.append(5, ' ');
-		}
-	}
-	else if(protocol == "DMR"){
-		char tag[] = { 'R','P','T','P','I','N','G' };
-		out.append(tag, 7);
-		out.append((dmrid >> 24) & 0xff);
-		out.append((dmrid >> 16) & 0xff);
-		out.append((dmrid >> 8) & 0xff);
-		out.append((dmrid >> 0) & 0xff);
-	}
-	else if(protocol == "P25"){
-		out.append(0xf0);
-		out.append(callsign.toUtf8());
-		out.append(10 - callsign.size(), ' ');
-	}
 	else if(protocol == "NXDN"){
 		out.append('N');
 		out.append('X');
@@ -1947,19 +1905,6 @@ void DudeStar::process_ping()
 		out.append(10 - callsign.size(), ' ');
 		out.append((dmr_destid >> 8) & 0xff);
 		out.append((dmr_destid >> 0) & 0xff);
-	}
-	else if(protocol == "M17"){
-		uint8_t cs[10];
-		memset(cs, ' ', 9);
-		memcpy(cs, callsign.toLocal8Bit(), callsign.size());
-		cs[8] = 'D';
-		cs[9] = 0x00;
-		M17Codec::encode_callsign(cs);
-		out.append('P');
-		out.append('O');
-		out.append('N');
-		out.append('G');
-		out.append((char *)cs, 6);
 	}
 	udp->writeDatagram(out, address, port);
 #ifdef DEBUG
@@ -2149,169 +2094,34 @@ void DudeStar::update_p25_data()
 	}
 }
 
-void DudeStar::readyReadDMR()
+void DudeStar::update_dmr_data()
 {
-	QByteArray buf;
-	QByteArray in;
-	QByteArray out;
-	QHostAddress sender;
-	quint16 senderPort;
-	CSHA256 sha256;
-	char buffer[400U];
+	if((connect_status == CONNECTING) && (m_dmr->get_status() == CONNECTED_RW)){
+		ui->connectButton->setText("Disconnect");
+		ui->connectButton->setEnabled(true);
+		ui->AmbeCombo->setEnabled(false);
+		ui->AudioOutCombo->setEnabled(false);
+		ui->AudioInCombo->setEnabled(false);
+		ui->modeCombo->setEnabled(false);
+		ui->hostCombo->setEnabled(false);
+		ui->callsignEdit->setEnabled(false);
+		ui->dmridEdit->setEnabled(false);
+		ui->dmrpwEdit->setEnabled(false);
+		ui->txButton->setDisabled(false);
+		//ui->dmrtgEdit->setEnabled(false);
 
-	buf.resize(udp->pendingDatagramSize());
-	udp->readDatagram(buf.data(), buf.size(), &sender, &senderPort);
-#ifdef DEBUG
-	fprintf(stderr, "RECV: ");
-	for(int i = 0; i < buf.size(); ++i){
-		fprintf(stderr, "%02x ", (unsigned char)buf.data()[i]);
 	}
-	fprintf(stderr, "\n");
-	fflush(stderr);
-#endif
-	if((connect_status != CONNECTED_RW) && (::memcmp(buf.data() + 3, "NAK", 3U) == 0)){
-		if(hw_ambe_present){
-			serial->close();
-		}
-		udp->disconnect();
-		udp->close();
-		delete udp;
-		connect_status = DISCONNECTED;
-		ui->connectButton->setText("Connect");
-		ui->AmbeCombo->setEnabled(true);
-		ui->AudioOutCombo->setEnabled(true);
-		ui->AudioInCombo->setEnabled(true);
-		ui->modeCombo->setEnabled(true);
-		ui->hostCombo->setEnabled(true);
-		ui->callsignEdit->setEnabled(true);
-		ui->dmridEdit->setEnabled(true);
-		ui->dmrpwEdit->setEnabled(true);
-		status_txt->setText("Connection refused");
+	status_txt->setText(" Host: " + m_dmr->get_host() + ":" + QString::number( m_dmr->get_port()) + " Ping: " + QString::number(m_dmr->get_cnt()));
+	if(m_dmr->get_src()){
+		ui->mycall->setText(m_dmrids[m_dmr->get_src()]);
+		ui->urcall->setText(QString::number(m_dmr->get_src()));
 	}
-	if((connect_status != CONNECTED_RW) && (::memcmp(buf.data(), "RPTACK", 6U) == 0)){
-		switch(connect_status){
-		case CONNECTING:
-			connect_status = DMR_AUTH;
-			in.append(buf[6]);
-			in.append(buf[7]);
-			in.append(buf[8]);
-			in.append(buf[9]);
-			in.append(dmr_password.toUtf8());
-
-			out.clear();
-			out.resize(40);
-			out[0] = 'R';
-			out[1] = 'P';
-			out[2] = 'T';
-			out[3] = 'K';
-			out[4] = (dmrid >> 24) & 0xff;
-			out[5] = (dmrid >> 16) & 0xff;
-			out[6] = (dmrid >> 8) & 0xff;
-			out[7] = (dmrid >> 0) & 0xff;
-
-			sha256.buffer((unsigned char *)in.data(), (unsigned int)(dmr_password.size() + sizeof(uint32_t)), (unsigned char *)out.data() + 8U);
-			break;
-		case DMR_AUTH:
-			out.clear();
-			buffer[0] = 'R';
-			buffer[1] = 'P';
-			buffer[2] = 'T';
-			buffer[3] = 'C';
-			buffer[4] = (dmrid >> 24) & 0xff;
-			buffer[5] = (dmrid >> 16) & 0xff;
-			buffer[6] = (dmrid >> 8) & 0xff;
-			buffer[7] = (dmrid >> 0) & 0xff;
-
-			connect_status = DMR_CONF;
-			char latitude[20U];
-			::sprintf(latitude, "50.00000");
-
-			char longitude[20U];
-			::sprintf(longitude, "03.000000");
-			::sprintf(buffer + 8U, "%-8.8s%09u%09u%02u%02u%8.8s%9.9s%03d%-20.20s%-19.19s%c%-124.124s%-40.40s%-40.40s", callsign.toStdString().c_str(),
-					438800000, 438800000, 1, 1, latitude, longitude, 0, "Detroit","USA", '2', "www.dudetronics.com", "20190131", "MMDVM");
-			out.append(buffer, 302);
-			break;
-		case DMR_CONF:
-			connect_status = CONNECTED_RW;
-			dmr = new DMREncoder();
-			dmr->set_srcid(dmrid);
-			dmr->set_dstid(dmr_destid);
-			mbe = new MBEDecoder();
-			mbe->setAutoGain(false);
-			mbeenc = new MBEEncoder();
-			mbeenc->set_dmr_mode();
-			mbeenc->set_gain_adjust(2.5);
-			dmr_header_timer = new QTimer();
-			connect(dmr_header_timer, SIGNAL(timeout()), this, SLOT(tx_dmr_header()));
-			ui->connectButton->setText("Disconnect");
-			ui->connectButton->setEnabled(true);
-			ui->AmbeCombo->setEnabled(false);
-			ui->AudioOutCombo->setEnabled(false);
-			ui->AudioInCombo->setEnabled(false);
-			ui->modeCombo->setEnabled(false);
-			ui->hostCombo->setEnabled(false);
-			ui->callsignEdit->setEnabled(false);
-			ui->dmridEdit->setEnabled(false);
-			ui->dmrpwEdit->setEnabled(false);
-			//ui->dmrtgEdit->setEnabled(false);
-			audiotimer->start(19);
-			ping_timer->start(5000);
-			if(hw_ambe_present || enable_swtx){
-				if(audioin != nullptr){
-					ui->txButton->setDisabled(false);
-					ui->txButton->setStyleSheet("background-color: rgb(128, 195, 66); color: rgb(0,0,0)");
-				}
-			}
-			else{
-				tx_dmr_header();
-				dmr_header_timer->start(300000);
-			}
-			status_txt->setText(" Host: " + host + ":" + QString::number(port) + " Ping: " + QString::number(ping_cnt));
-			break;
-		default:
-			break;
-		}
-		udp->writeDatagram(out, address, port);
+	ui->rptr1->setText(m_dmr->get_dst() ? QString::number(m_dmr->get_dst()) : "");
+	ui->rptr2->setText(m_dmr->get_gw() ? QString::number(m_dmr->get_gw()) : "");
+	if(m_dmr->get_fn()){
+		QString n = QString("%1").arg(m_dmr->get_fn(), 2, 16, QChar('0'));
+		ui->streamid->setText(n);
 	}
-	if((buf.size() == 11) && (::memcmp(buf.data(), "MSTPONG", 7U) == 0)){
-		status_txt->setText(" Host: " + host + ":" + QString::number(port) + " Ping: " + QString::number(ping_cnt++));
-	}
-	if((buf.size() == 55) && (::memcmp(buf.data(), "DMRD", 4U) == 0) && !((uint8_t)buf.data()[15] & 0x20)){
-		uint8_t dmrframe[33];
-		uint8_t dmr3ambe[27];
-		uint8_t dmrsync[7];
-		// get the 33 bytes ambe
-		memcpy(dmrframe, &(buf.data()[20]), 33);
-		// extract the 3 ambe frames
-		memcpy(dmr3ambe, dmrframe, 14);
-		dmr3ambe[13] &= 0xF0;
-		dmr3ambe[13] |= (dmrframe[19] & 0x0F);
-		memcpy(&dmr3ambe[14], &dmrframe[20], 13);
-		// extract sync
-		dmrsync[0] = dmrframe[13] & 0x0F;
-		::memcpy(&dmrsync[1], &dmrframe[14], 5);
-		dmrsync[6] = dmrframe[19] & 0xF0;
-		for(int i = 0; i < 27; ++i){
-			audioq.enqueue(dmr3ambe[i]);
-		}
-		uint32_t id = (uint32_t)((buf.data()[5] << 16) | ((buf.data()[6] << 8) & 0xff00) | (buf.data()[7] & 0xff));
-		ui->mycall->setText(m_dmrids[id]);
-		ui->urcall->setText(QString::number(id));
-		ui->rptr1->setText(QString::number((uint32_t)((buf.data()[8] << 16) | ((buf.data()[9] << 8) & 0xff00) | (buf.data()[10] & 0xff))));
-		ui->rptr2->setText(QString::number((uint32_t)((buf.data()[11] << 24) | ((buf.data()[12] << 16) & 0xff0000) | ((buf.data()[13] << 8) & 0xff00) | (buf.data()[14] & 0xff))));
-		ui->streamid->setText(QString::number(buf.data()[4] & 0xff, 16));
-	}
-#ifdef DEBUG
-	if(out.size() > 0){
-		fprintf(stderr, "SEND: ");
-		for(int i = 0; i < out.size(); ++i){
-			fprintf(stderr, "%02x ", (unsigned char)out.data()[i]);
-		}
-		fprintf(stderr, "\n");
-		fflush(stderr);
-	}
-#endif
 }
 
 void DudeStar::readyReadXRF()
@@ -3029,9 +2839,6 @@ void DudeStar::transmit()
 	if(protocol == "XRF"){
 		transmitXRF();
 	}
-	else if (protocol == "DMR"){
-		transmitDMR();
-	}
 	else if (protocol == "NXDN"){
 		transmitNXDN();
 	}
@@ -3101,88 +2908,6 @@ void DudeStar::transmitNXDN()
 		txdata.append((char *)temp_nxdn, 43);
 		udp->writeDatagram(txdata, address, port);
 	}
-}
-
-void DudeStar::transmitDMR()
-{
-	QByteArray ambe;
-	QByteArray txdata;
-	unsigned char *temp_dmr;
-	//static uint16_t txcnt = 0;
-	dmr_destid = ui->dmrtgEdit->text().toUInt();
-	dmr->set_dstid(dmr_destid);
-	dmr->set_cc(ui->dmrccEdit->text().toUInt());
-	dmr->set_slot(ui->dmrslotEdit->text().toUInt());
-	if(ui->checkBoxDMRPC->isChecked()){
-		dmr->set_calltype(3);
-	}
-	else{
-		dmr->set_calltype(0);
-	}
-	if(tx || ambeq.size()){
-
-		ambe.clear();
-		if(ambeq.size() < 45){
-			if(!tx){
-				ambeq.clear();
-				return;
-			}
-			else{
-				//std::cerr << "ERROR: AMBEQ < 45" << std::endl;
-				return;
-			}
-		}
-		while(ambeq.size() && (ambeq[0] != 0x61) && (ambeq[2] != 0x0b) && (ambeq[3] != 0x01)){
-		//while(ambeq.size() && (ambeq[0] != 0x61) && (ambeq[3] != 0x01)){
-			std::cerr << "ERROR: Not an AMBE frame" << std::endl;
-			ambeq.dequeue();
-		}
-		for(int i = 0; i < 3; ++i){
-			if(ambeq.size() < 15){
-				//std::cerr << "ERROR:  AMBE Q empty" << std::endl;
-				return;
-			}
-			else{
-				for (int i = 0; i < 6; ++i){
-					ambeq.dequeue();
-				}
-				for (int i = 0; i < 9; ++i){
-					ambe.append(ambeq.dequeue());
-				}
-			}
-		}
-		temp_dmr = dmr->get_frame((unsigned char *)ambe.data());
-/*
-		temp_ysf = ysftxdata + txcnt;
-		txcnt += 155;
-		if(txcnt >= sizeof(ysftxdata))
-			txcnt = 0;
-*/
-		txdata.append((char *)temp_dmr, 55);
-		ui->mycall->setText(callsign);
-		ui->urcall->setText(QString::number(dmrid));
-		ui->rptr1->setText(QString::number(dmr_destid));
-		ui->rptr2->setText(QString::number(dmrid));
-		ui->streamid->setText(QString("TX %1").arg(txdata.data()[4] & 0xff, 4, 16, QChar('0')));
-		udp->writeDatagram(txdata, address, port);
-	}
-	else{
-		//fprintf(stderr, "DMR TX stopped\n");
-		txtimer->stop();
-		audioindev->disconnect();
-		audioin->stop();
-		temp_dmr = dmr->get_eot();
-		txdata.append((char *)temp_dmr, 55);
-		udp->writeDatagram(txdata, address, port);
-	}
-#ifdef DEBUG
-	fprintf(stderr, "SEND:%d: ", ambeq.size());
-	for(int i = 0; i < txdata.size(); ++i){
-		fprintf(stderr, "%02x ", (unsigned char)txdata.data()[i]);
-	}
-	fprintf(stderr, "\n");
-	fflush(stderr);
-#endif
 }
 
 void DudeStar::transmitDCS()

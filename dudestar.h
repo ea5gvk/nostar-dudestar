@@ -33,7 +33,7 @@
 #include "mbedec.h"
 #include "mbeenc.h"
 #include "ysfcodec.h"
-#include "dmrencoder.h"
+#include "dmrcodec.h"
 #include "p25codec.h"
 #include "nxdnencoder.h"
 #include "m17codec.h"
@@ -53,6 +53,7 @@ public:
 
 signals:
 	void input_source_changed(int, QString);
+	void dmr_tgid_changed(unsigned int);
 	void rate_changed(int);
 private:
     void init_gui();
@@ -60,7 +61,6 @@ private:
 	void transmitREF();
 	void transmitDCS();
 	void transmitXRF();
-	void transmitDMR();
 	void transmitNXDN();
     void calcPFCS(char *d);
     Ui::DudeStar *ui;
@@ -112,7 +112,7 @@ private:
     MBEDecoder *mbe;
 	MBEEncoder *mbeenc;
 	YSFCodec *m_ysf;
-	DMREncoder *dmr;
+	DMRCodec *m_dmr;
 	P25Codec *m_p25;
 	NXDNEncoder *nxdn;
 	M17Codec *m_m17;
@@ -165,6 +165,7 @@ private slots:
 	void swtx_state_changed(int);
 	void tts_changed(int);
 	void tts_text_changed(QString);
+	void tgid_text_changed(QString);
 	void discover_vocoders();
 	void connect_to_serial(QString);
     void readyRead();
@@ -172,7 +173,7 @@ private slots:
 	void readyReadXRF();
 	void readyReadDCS();
 	void update_ysf_data();
-	void readyReadDMR();
+	void update_dmr_data();
 	void update_p25_data();
 	void readyReadNXDN();
 	void update_m17_data();
