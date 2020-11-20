@@ -35,15 +35,13 @@ public:
 	~P25Codec();
 	unsigned char * get_frame(unsigned char *ambe);
 	QString get_callsign() { return m_callsign; }
+	uint8_t get_status(){ return m_status; }
 	uint32_t get_src() { return m_srcid; }
 	uint32_t get_dst() { return m_dstid; }
 	QString get_host() { return m_host; }
 	int get_port() { return m_port; }
 	int get_fn() { return m_fn; }
 	int get_cnt() { return m_cnt; }
-public slots:
-	void start_tx();
-	void stop_tx();
 signals:
 	void update();
 private:
@@ -88,6 +86,8 @@ private:
 	AudioEngine *m_audio;
 
 private slots:
+	void start_tx();
+	void stop_tx();
 	void deleteLater();
 	void process_udp();
 	void send_ping();

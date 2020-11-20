@@ -73,7 +73,7 @@ DudeStar::DudeStar(QWidget *parent) :
 	dmrcc = 1;
 	dmrcalltype = 0;
 	mbe = nullptr;
-	ysf = nullptr;
+	m_ysf = nullptr;
 	ping_cnt = 0;
 	hwtx = false;
 	hwrx = true;
@@ -207,7 +207,7 @@ void DudeStar::init_gui()
 	ui->TTSEdit->hide();
 #endif
 	ui->txButton->setAutoFillBackground(true);
-	ui->txButton->setStyleSheet("color: rgb(134, 132, 130)");
+	ui->txButton->setStyleSheet("QPushButton:enabled { background-color: rgb(128, 195, 66); color: rgb(0,0,0); } QPushButton:pressed { background-color: rgb(180, 0, 0); color: rgb(0,0,0); }");
 	ui->txButton->update();
 	ui->checkBoxTTSOff->setCheckState(Qt::Checked);
 	ui->volumeSlider->setRange(0, 100);
@@ -226,8 +226,6 @@ void DudeStar::init_gui()
 	connect(ui->actionUpdate_DMR_IDs, SIGNAL(triggered()), this, SLOT(update_dmr_ids()));
 	connect(ui->actionUpdate_host_files, SIGNAL(triggered()), this, SLOT(update_host_files()));
     connect(ui->connectButton, SIGNAL(clicked()), this, SLOT(process_connect()));
-	connect(ui->txButton, SIGNAL(pressed()), this, SLOT(press_tx()));
-	connect(ui->txButton, SIGNAL(released()), this, SLOT(release_tx()));
 	ui->statusBar->insertPermanentWidget(0, status_txt, 1);
 	connect(ui->checkBoxSWRX, SIGNAL(stateChanged(int)), this, SLOT(swrx_state_changed(int)));
 	connect(ui->checkBoxSWTX, SIGNAL(stateChanged(int)), this, SLOT(swtx_state_changed(int)));
@@ -556,9 +554,6 @@ void DudeStar::swrx_state_changed(int s)
 	}
 	else{
 		hwrx = false;
-	}
-	if(ysfdec){
-		//ysfdec->m_mbeDecoder->set_hwrx(hwrx);
 	}
 }
 
@@ -1403,7 +1398,6 @@ void DudeStar::process_connect()
 		ui->modeCombo->setEnabled(true);
         ui->hostCombo->setEnabled(true);
         ui->callsignEdit->setEnabled(true);
-		ui->txButton->setStyleSheet("background-color: rgb(53, 53, 53); color: rgb(134, 132, 130)");
 		ui->txButton->setDisabled(true);
 		status_txt->setText("Not connected");
 
@@ -1449,7 +1443,19 @@ void DudeStar::process_connect()
 		module = ui->comboMod->currentText().toStdString()[0];
 		protocol = ui->modeCombo->currentText();
 		hostname = ui->hostCombo->currentText().simplified();
-
+		if(protocol == "YSF"){
+			m_ysf = new YSFCodec(callsign, hostname, host, port);
+			m_modethread = new QThread;
+			m_ysf->moveToThread(m_modethread);
+			connect(m_ysf, SIGNAL(update()), this, SLOT(update_ysf_data()));
+			connect(m_modethread, SIGNAL(started()), m_ysf, SLOT(send_connect()));
+			connect(m_modethread, SIGNAL(finished()), m_ysf, SLOT(deleteLater()));
+			connect(this, SIGNAL(input_source_changed(int, QString)), m_ysf, SLOT(input_src_changed(int, QString)));
+			connect(ui->txButton, SIGNAL(pressed()), m_ysf, SLOT(start_tx()));
+			connect(ui->txButton, SIGNAL(released()), m_ysf, SLOT(stop_tx()));
+			emit input_source_changed(tts_voices->checkedId(), ui->TTSEdit->text());
+			m_modethread->start();
+		}
 		if(protocol == "DMR"){
 			//dmrid = dmrids.key(callsign);
 			//dmr_password = sl.at(2).simplified();
@@ -1851,52 +1857,6 @@ void DudeStar::tx_dmr_header()
 	fflush(stderr);
 }
 
-void DudeStar::process_ysf_data()
-{
-	int nbAudioSamples = 0;
-	short *audioSamples;
-	unsigned char d[115];
-	if(ysfq.size() < 115){
-		//std::cerr << "process_ysf_data() no data" << std::endl;
-		return;
-	}
-	for(int i = 0; i < 115; ++i){
-		d[i] = ysfq.dequeue();
-	}
-	DSDYSF::FICH f = ysfdec->process_ysf(d);
-	//std::cerr << "process_ysf_data() f: " << f << std::endl;
-
-	if(f.getDataType() == 0){
-		ui->rptr2->setText("V/D mode 1");
-	}
-	else if(f.getDataType() == 1){
-		ui->rptr2->setText("Data Full Rate");
-	}
-	else if(f.getDataType() == 2){
-		ui->rptr2->setText("V/D mode 2");
-	}
-	else if(f.getDataType() == 3){
-		ui->rptr2->setText("Voice Full Rate");
-	}
-	ui->urcall->setText(QString(ysfdec->getSrc()));
-	ui->rptr1->setText(QString(ysfdec->getDest()));
-	ui->streamid->setText(f.isInternetPath() ? "Internet" : "Local");
-	ui->usertxt->setText(QString::number(f.getFrameNumber()) + "/" + QString::number(f.getFrameTotal()));
-	ysfdec->m_mbeDecoder->set_hwrx(hwrx);
-	if(hwrx){
-		//qDebug() << "mbe->ambe72.size() == " << mbe->ambe72.size();
-		while(ysfdec->m_mbeDecoder->ambe72.size()){
-			audioq.enqueue(ysfdec->m_mbeDecoder->ambe72.front());
-			ysfdec->m_mbeDecoder->ambe72.pop();
-		}
-	}
-	else{
-		audioSamples = ysfdec->getAudio(nbAudioSamples);
-		audiodev->write((const char *) audioSamples, sizeof(short) * nbAudioSamples);
-		ysfdec->resetAudio();
-	}
-}
-
 void DudeStar::readyRead()
 {
 	if(protocol == "REF"){
@@ -1907,9 +1867,6 @@ void DudeStar::readyRead()
 	}
 	else if (protocol == "DCS"){
 		readyReadDCS();
-	}
-	else if (protocol == "YSF"){
-		readyReadYSF();
 	}
 	else if (protocol == "DMR"){
 		readyReadDMR();
@@ -2029,7 +1986,6 @@ void DudeStar::update_m17_data()
 		ui->callsignEdit->setEnabled(false);
 		ui->comboMod->setEnabled(false);
 		ui->txButton->setDisabled(false);
-		ui->txButton->setStyleSheet("background-color: rgb(128, 195, 66); color: rgb(0,0,0)");
 	}
 
 	status_txt->setText(" Host: " + m_m17->get_host() + ":" + QString::number( m_m17->get_port()) + " Ping: " + QString::number(m_m17->get_cnt()));
@@ -2045,84 +2001,43 @@ void DudeStar::update_m17_data()
 	}
 }
 
-void DudeStar::readyReadYSF()
+void DudeStar::update_ysf_data()
 {
-	QByteArray buf;
-	QByteArray out;
-	QHostAddress sender;
-	quint16 senderPort;
-	char ysftag[11];
-	buf.resize(udp->pendingDatagramSize());
-	int p = 5000;
-	udp->readDatagram(buf.data(), buf.size(), &sender, &senderPort);
-#ifdef DEBUG_YSF
-	fprintf(stderr, "RECV: ");
-	for(int i = 0; i < buf.size(); ++i){
-		fprintf(stderr, "%02x ", (unsigned char)buf.data()[i]);
+	if( (connect_status == CONNECTING) && ( m_ysf->get_status() == CONNECTED_RW)){
+		connect_status = CONNECTED_RW;
+		ui->connectButton->setText("Disconnect");
+		ui->connectButton->setEnabled(true);
+		ui->AmbeCombo->setEnabled(false);
+		ui->AudioOutCombo->setEnabled(false);
+		ui->AudioInCombo->setEnabled(false);
+		ui->modeCombo->setEnabled(false);
+		ui->hostCombo->setEnabled(false);
+		ui->callsignEdit->setEnabled(false);
+		ui->comboMod->setEnabled(false);
+		ui->txButton->setDisabled(false);
 	}
-	fprintf(stderr, "\n");
-	fflush(stderr);
-#endif
-	if(((buf.size() == 14) && (hostname.left(3) != "FCS")) || ((buf.size() == 7) && (hostname.left(3) == "FCS"))){
-		if(connect_status == CONNECTING){
-			ysf = new YSFEncoder();
-			ysf->set_callsign(callsign.toStdString().c_str());
-			ysf->set_fcs_mode(false);
-			ysfdec = new DSDYSF();
-			mbeenc = new MBEEncoder();
-			mbeenc->set_49bit_mode();
-			//mbeenc->set_gain_adjust(2.5);
-			mbeenc->set_gain_adjust(1.0);
-			ui->connectButton->setText("Disconnect");
-			ui->connectButton->setEnabled(true);
-			ui->AmbeCombo->setEnabled(false);
-			ui->AudioOutCombo->setEnabled(false);
-			ui->AudioInCombo->setEnabled(false);
-			ui->modeCombo->setEnabled(false);
-			ui->hostCombo->setEnabled(false);
-			ui->callsignEdit->setEnabled(false);
-			ui->comboMod->setEnabled(false);
-			connect_status = CONNECTED_RW;
-			ysftimer->start(90);
-			audiotimer->start(19);
 
-			if(hostname.left(3) == "FCS"){
-				char info[100U];
-				::sprintf(info, "%9u%9u%-6.6s%-12.12s%7u", 438000000, 438000000, "AA00AA", "MMDVM", 1234567);
-				::memset(info + 43U, ' ', 57U);
-				out.append(info, 100);
-				udp->writeDatagram(out, address, port);
-				p = 800;
-				ysf->set_fcs_mode(true, hostname.left(8).toStdString());
-			}
-
-			ping_timer->start(p);
-			if(hw_ambe_present || enable_swtx){
-				if(audioin != nullptr){
-					ui->txButton->setDisabled(false);
-					ui->txButton->setStyleSheet("background-color: rgb(128, 195, 66); color: rgb(0,0,0)");
-				}
-			}
-		}
-		status_txt->setText(" Host: " + host + ":" + QString::number(port) + " Ping: " + QString::number(ping_cnt++));
+	status_txt->setText(" Host: " + m_ysf->get_host() + ":" + QString::number( m_ysf->get_port()) + " Ping: " + QString::number(m_ysf->get_cnt()));
+	ui->mycall->setText(m_ysf->get_gateway());
+	ui->urcall->setText(m_ysf->get_src());
+	ui->rptr1->setText(m_ysf->get_dst());
+	if(m_ysf->get_type() == 0){
+			ui->rptr2->setText("V/D mode 1");
 	}
-	if((buf.size() == 10) && (::memcmp(buf.data(), "ONLINE", 6U) == 0)){
-		status_txt->setText(" Host: " + host + ":" + QString::number(port) + " Ping: " + QString::number(ping_cnt++));
+	else if(m_ysf->get_type() == 1){
+		ui->rptr2->setText("Data Full Rate");
 	}
-	if((buf.size() == 155) && (::memcmp(buf.data(), "YSFD", 4U) == 0)){
-		memcpy(ysftag, buf.data() + 4, 10);ysftag[10] = '\0';
-		ui->mycall->setText(QString(ysftag));
-		for(int i = 0; i < 115; ++i){
-			ysfq.enqueue(buf.data()[40+i]);
-		}
+	else if(m_ysf->get_type() == 2){
+		ui->rptr2->setText("V/D mode 2");
 	}
-	else if(buf.size() == 130){
-		memcpy(ysftag, buf.data() + 0x79, 8);ysftag[8] = '\0';
-		ui->mycall->setText(QString(ysftag));
-		for(int i = 0; i < 115; ++i){
-			ysfq.enqueue(buf.data()[5+i]);
-		}
+	else if(m_ysf->get_type() == 3){
+		ui->rptr2->setText("Voice Full Rate");
 	}
+	else{
+		ui->rptr2->setText("Unknown type " + QString::number(m_ysf->get_type()));
+	}
+	ui->streamid->setText(m_ysf->get_path()  ? "Internet" : "Local");
+	ui->usertxt->setText(QString::number(m_ysf->get_fn()) + "/" + QString::number(m_ysf->get_ft()));
 }
 
 void DudeStar::readyReadNXDN()
@@ -2208,7 +2123,7 @@ void DudeStar::readyReadNXDN()
 
 void DudeStar::update_p25_data()
 {
-	if(connect_status == CONNECTING){
+	if( (connect_status == CONNECTING) && ( m_p25->get_status() == CONNECTED_RW)){
 		ui->connectButton->setText("Disconnect");
 		ui->connectButton->setEnabled(true);
 		ui->AmbeCombo->setEnabled(false);
@@ -2221,7 +2136,6 @@ void DudeStar::update_p25_data()
 		ui->comboMod->setEnabled(false);
 		connect_status = CONNECTED_RW;
 		ui->txButton->setDisabled(false);
-		ui->txButton->setStyleSheet("background-color: rgb(128, 195, 66); color: rgb(0,0,0)");
 	}
 	status_txt->setText(" Host: " + m_p25->get_host() + ":" + QString::number( m_p25->get_port()) + " Ping: " + QString::number(m_p25->get_cnt()));
 	if(m_p25->get_src()){
@@ -2884,16 +2798,6 @@ void DudeStar::audioin_data_ready()
 	}
 }
 
-void DudeStar::press_tx()
-{
-	ui->txButton->setStyleSheet("background-color: rgb(180, 0, 0); color: rgb(0,0,0)");
-}
-
-void DudeStar::release_tx()
-{
-	ui->txButton->setStyleSheet("background-color: rgb(128, 195, 66); color: rgb(0,0,0)");
-}
-
 void DudeStar::tx_timer()
 {
 	static uint8_t cnt = 0;
@@ -2978,7 +2882,7 @@ void DudeStar::tx_timer()
 	if(tx){
 		if(hwtx){
 			if(protocol == "YSF"){
-				ysf->use_hwambe(true);
+				//ysf->use_hwambe(true);
 			}
 			if(protocol == "NXDN"){
 				nxdn->set_hwtx(true);
@@ -3030,7 +2934,7 @@ void DudeStar::tx_timer()
 						}
 						else{
 							if(protocol == "YSF"){
-								ysf->use_hwambe(false);
+								//ysf->use_hwambe(false);
 							}
 							if(protocol == "NXDN"){
 								nxdn->set_hwtx(false);
@@ -3125,9 +3029,6 @@ void DudeStar::transmit()
 	if(protocol == "XRF"){
 		transmitXRF();
 	}
-	else if (protocol == "YSF"){
-		transmitYSF();
-	}
 	else if (protocol == "DMR"){
 		transmitDMR();
 	}
@@ -3201,78 +3102,6 @@ void DudeStar::transmitNXDN()
 		udp->writeDatagram(txdata, address, port);
 	}
 }
-
-void DudeStar::transmitYSF()
-{
-	QByteArray ambe;
-	QByteArray txdata;
-	unsigned char *temp_ysf;
-	int frame_size;
-	if(tx || ambeq.size()){
-
-		ambe.clear();
-		if(ambeq.size() < 65){
-			if(!tx){
-				ambeq.clear();
-				return;
-			}
-			else{
-				std::cerr << "ERROR: AMBEQ < 65" << std::endl;
-				return;
-			}
-		}
-		while(ambeq.size() && (ambeq[0] != 0x61) && (ambeq[3] != 0x01)){
-			std::cerr << "ERROR: Not an AMBE frame" << std::endl;
-			ambeq.dequeue();
-		}
-		for(int i = 0; i < 5; ++i){
-			if(ambeq.size() < 13){
-				std::cerr << "ERROR:  AMBE Q empty" << std::endl;
-				return;
-			}
-			else{
-				for (int i = 0; i < 6; ++i){
-					ambeq.dequeue();
-				}
-				for (int i = 0; i < 7; ++i){
-					ambe.append(ambeq.dequeue());
-				}
-				ambe.append('\x00');
-				ambe.append('\x00');
-			}
-		}
-		temp_ysf = ysf->get_frame((unsigned char *)ambe.data());
-		frame_size = ::memcmp(temp_ysf, "YSFD", 4) ? 130 : 155;
-/*
-		temp_ysf = ysftxdata + txcnt;
-		txcnt += 155;
-		if(txcnt >= sizeof(ysftxdata))
-			txcnt = 0;
-
-*/
-		txdata.append((char *)temp_ysf, frame_size);
-		udp->writeDatagram(txdata, address, port);
-#ifdef DEBUG
-		fprintf(stderr, "SEND:%d: ", ambeq.size());
-		for(int i = 0; i < txdata.size(); ++i){
-			fprintf(stderr, "%02x ", (unsigned char)txdata.data()[i]);
-		}
-		fprintf(stderr, "\n");
-		fflush(stderr);
-#endif
-	}
-	else{
-		fprintf(stderr, "YSF TX stopped\n");
-		txtimer->stop();
-		audioindev->disconnect();
-		audioin->stop();
-		temp_ysf = ysf->get_eot();
-		frame_size = ::memcmp(temp_ysf, "YSFD", 4) ? 130 : 155;
-		txdata.append((char *)temp_ysf, frame_size);
-		udp->writeDatagram(txdata, address, port);
-	}
-}
-
 
 void DudeStar::transmitDMR()
 {

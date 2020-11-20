@@ -35,12 +35,12 @@ public:
 	void set_mode(bool m){ m_c2->codec2_set_mode(m);}
 	bool get_mode(){ return m_c2->codec2_get_mode(); }
 	CCodec2 *m_c2;
-public slots:
-	void start_tx();
-	void stop_tx();
+
 signals:
 	void update();
 private slots:
+	void start_tx();
+	void stop_tx();
 	void deleteLater();
 	void process_udp();
 	void send_ping();
@@ -81,8 +81,6 @@ private:
 	cst_voice *voice_rms;
 	cst_wave *tts_audio;
 #endif
-	bool text2speech;
-
 	QString m_src;
 	QString m_dst;
 	QString m_type;

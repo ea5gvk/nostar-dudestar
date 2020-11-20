@@ -31,11 +31,9 @@ SOURCES += \
         codec2/pack.cpp \
         codec2/qbase.cpp \
         codec2/quantise.cpp \
-        crc.cpp \
         crs129.cpp \
         dmrencoder.cpp \
         dudestar.cpp \
-        fec.cpp \
         httpmanager.cpp \
         imbe_vocoder/aux_sub.cc \
         imbe_vocoder/basicop2.cc \
@@ -63,14 +61,10 @@ SOURCES += \
         main.cpp \
         mbedec.cpp \
         mbeenc.cc \
-        mbefec.cpp \
         nxdnencoder.cpp \
         p25codec.cpp \
         pn.cpp \
-        viterbi.cpp \
-        viterbi5.cpp \
-        ysfdec.cpp \
-        ysfenc.cpp
+        ysfcodec.cpp
 
 HEADERS += \
         CRCenc.h \
@@ -95,11 +89,9 @@ HEADERS += \
         codec2/nlp.h \
         codec2/qbase.h \
         codec2/quantise.h \
-        crc.h \
         crs129.h \
         dmrencoder.h \
         dudestar.h \
-        fec.h \
         httpmanager.h \
         imbe_vocoder/aux_sub.h \
         imbe_vocoder/basic_op.h \
@@ -130,16 +122,12 @@ HEADERS += \
         m17codec.h \
         mbedec.h \
         mbeenc.h \
-        mbefec.h \
         mbelib_parms.h \
         nxdnencoder.h \
         p25codec.h \
         pn.h \
-        viterbi.h \
-        viterbi5.h \
         vocoder_tables.h \
-        ysfdec.h \
-        ysfenc.h
+        ysfcodec.h
 
 FORMS += \
     dudestar.ui

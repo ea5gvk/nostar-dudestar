@@ -32,8 +32,7 @@
 #include "httpmanager.h"
 #include "mbedec.h"
 #include "mbeenc.h"
-#include "ysfdec.h"
-#include "ysfenc.h"
+#include "ysfcodec.h"
 #include "dmrencoder.h"
 #include "p25codec.h"
 #include "nxdnencoder.h"
@@ -61,11 +60,8 @@ private:
 	void transmitREF();
 	void transmitDCS();
 	void transmitXRF();
-	void transmitYSF();
 	void transmitDMR();
-	void transmitP25();
 	void transmitNXDN();
-	void transmitM17();
     void calcPFCS(char *d);
     Ui::DudeStar *ui;
 	QSerialPort *serial = nullptr;
@@ -115,8 +111,7 @@ private:
 	QThread *m_modethread;
     MBEDecoder *mbe;
 	MBEEncoder *mbeenc;
-	YSFEncoder *ysf;
-	DSDYSF *ysfdec;
+	YSFCodec *m_ysf;
 	DMREncoder *dmr;
 	P25Codec *m_p25;
 	NXDNEncoder *nxdn;
@@ -176,7 +171,7 @@ private slots:
 	void readyReadREF();
 	void readyReadXRF();
 	void readyReadDCS();
-	void readyReadYSF();
+	void update_ysf_data();
 	void readyReadDMR();
 	void update_p25_data();
 	void readyReadNXDN();
@@ -192,10 +187,7 @@ private slots:
 	void process_input_mute_button();
 	void audioin_data_ready();
 	void process_ping();
-    void press_tx();
-    void release_tx();
     void tx_timer();
-	void process_ysf_data();
 	void process_ref_hosts();
 	void process_dcs_hosts();
 	void process_xrf_hosts();

@@ -18,7 +18,6 @@
 #include <iostream>
 #include <cstring>
 #include "p25codec.h"
-#include "mbefec.h"
 
 #define DEBUG
 
@@ -454,6 +453,7 @@ void P25Codec::transmit()
 		if(m_ttsid == 0){
 			m_audio->stop_capture();
 		}
+		ttscnt = 0;
 		p25step = 0;
 	}
 }

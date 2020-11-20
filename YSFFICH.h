@@ -38,6 +38,7 @@ public:
 	unsigned char getFT() const;
 	unsigned char getDT() const;
 	unsigned char getMR() const;
+	bool getVoIP() const;
 	bool getDev() const;
 	bool getSQL() const;
 	unsigned char getSQ() const;
