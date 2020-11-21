@@ -54,11 +54,12 @@ extern cst_voice * register_cmu_us_rms(const char *);
 }
 #endif
 
-P25Codec::P25Codec(QString callsign, int hostname, QString host, int port) :
+P25Codec::P25Codec(QString callsign, int dmrid, int hostname, QString host, int port) :
 	m_callsign(callsign),
 	m_hostname(hostname),
 	m_host(host),
 	m_port(port),
+	m_dmrid(dmrid),
 	m_srcid(0),
 	m_dstid(0),
 	m_fn(0),
@@ -244,6 +245,7 @@ void P25Codec::start_tx()
 	//std::cerr << "Pressed TX buffersize == " << audioin->bufferSize() << std::endl;
 	qDebug() << "start_tx() " << m_ttsid << " " << m_ttstext;
 	m_tx = true;
+	m_srcid = m_dmrid;
 #ifdef USE_FLITE
 
 	if(m_ttsid == 1){
@@ -464,5 +466,3 @@ void P25Codec::deleteLater()
 	m_cnt = 0;
 	QObject::deleteLater();
 }
-
-

@@ -31,7 +31,7 @@ class P25Codec : public QObject
 {
 	Q_OBJECT
 public:
-	P25Codec(QString callsign, int hostname, QString host, int port);
+	P25Codec(QString callsign, int dmrid, int hostname, QString host, int port);
 	~P25Codec();
 	unsigned char * get_frame(unsigned char *ambe);
 	QString get_callsign() { return m_callsign; }
@@ -72,6 +72,7 @@ private:
 	int m_hostname;
 	QString m_host;
 	int m_port;
+	uint32_t m_dmrid;
 	uint32_t m_srcid;
 	uint32_t m_dstid;
 	uint16_t m_fn;
@@ -95,6 +96,7 @@ private slots:
 
 	void transmit();
 	void hostname_lookup(QHostInfo i);
+	void dmr_tgid_changed(unsigned int id) { m_dstid = id; }
 	void input_src_changed(int id, QString t) { m_ttsid = id; m_ttstext = t; }
 };
 

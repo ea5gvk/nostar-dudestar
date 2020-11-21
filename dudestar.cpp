@@ -1315,16 +1315,16 @@ void DudeStar::process_connect()
 			m_modethread->start();
 		}
 		if(protocol == "P25"){
-			dmrid = m_dmrids.key(callsign);
-			//dmr_destid = ui->hostCombo->currentText().toUInt();
+			dmrid = ui->dmridEdit->text().toUInt();
 			dmr_destid = ui->dmrtgEdit->text().toUInt();
-			m_p25 = new P25Codec(callsign, dmr_destid, host, port);
+			m_p25 = new P25Codec(callsign, dmrid, dmr_destid, host, port);
 			m_modethread = new QThread;
 			m_p25->moveToThread(m_modethread);
 			connect(m_p25, SIGNAL(update()), this, SLOT(update_p25_data()));
 			connect(m_modethread, SIGNAL(started()), m_p25, SLOT(send_connect()));
 			connect(m_modethread, SIGNAL(finished()), m_p25, SLOT(deleteLater()));
 			connect(this, SIGNAL(input_source_changed(int, QString)), m_p25, SLOT(input_src_changed(int, QString)));
+			connect(this, SIGNAL(dmr_tgid_changed(unsigned int)), m_p25, SLOT(dmr_tgid_changed(unsigned int)));
 			connect(ui->txButton, SIGNAL(pressed()), m_p25, SLOT(start_tx()));
 			connect(ui->txButton, SIGNAL(released()), m_p25, SLOT(stop_tx()));
 			emit input_source_changed(tts_voices->checkedId(), ui->TTSEdit->text());
