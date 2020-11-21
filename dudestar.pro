@@ -32,6 +32,7 @@ SOURCES += \
         codec2/qbase.cpp \
         codec2/quantise.cpp \
         crs129.cpp \
+        dcscodec.cpp \
         dmrcodec.cpp \
         dudestar.cpp \
         httpmanager.cpp \
@@ -63,6 +64,8 @@ SOURCES += \
         mbeenc.cc \
         nxdncodec.cpp \
         p25codec.cpp \
+        refcodec.cpp \
+        xrfcodec.cpp \
         ysfcodec.cpp
 
 HEADERS += \
@@ -89,6 +92,7 @@ HEADERS += \
         codec2/qbase.h \
         codec2/quantise.h \
         crs129.h \
+        dcscodec.h \
         dmrcodec.h \
         dudestar.h \
         httpmanager.h \
@@ -124,7 +128,9 @@ HEADERS += \
         mbelib_parms.h \
         nxdncodec.h \
         p25codec.h \
+        refcodec.h \
         vocoder_tables.h \
+        xrfcodec.h \
         ysfcodec.h
 
 FORMS += \

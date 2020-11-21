@@ -32,6 +32,9 @@
 #include "httpmanager.h"
 #include "mbedec.h"
 #include "mbeenc.h"
+#include "refcodec.h"
+#include "dcscodec.h"
+#include "xrfcodec.h"
 #include "ysfcodec.h"
 #include "dmrcodec.h"
 #include "p25codec.h"
@@ -57,11 +60,6 @@ signals:
 	void rate_changed(int);
 private:
     void init_gui();
-    void transmit();
-	void transmitREF();
-	void transmitDCS();
-	void transmitXRF();
-    void calcPFCS(char *d);
     Ui::DudeStar *ui;
 	QSerialPort *serial = nullptr;
     QUdpSocket *udp = nullptr;
@@ -108,26 +106,15 @@ private:
 	QString protocol;
 	uint64_t ping_cnt;
 	QThread *m_modethread;
-    MBEDecoder *mbe;
-	MBEEncoder *mbeenc;
+	REFCodec *m_ref;
+	DCSCodec *m_dcs;
+	XRFCodec *m_xrf;
 	YSFCodec *m_ysf;
 	DMRCodec *m_dmr;
 	P25Codec *m_p25;
 	NXDNCodec *m_nxdn;
 	M17Codec *m_m17;
-    QAudioOutput *audio;
-	QAudioInput *audioin;
-	QBuffer audio_buffer;
-	int audiotx_cnt;
-	QFile audiofile;
-    QIODevice *audiodev;
-	QIODevice *audioindev;
     QByteArray user_data;
-    QTimer *audiotimer;
-    QTimer *txtimer;
-	QTimer *ysftimer;
-	QTimer *ping_timer;
-	QTimer *dmr_header_timer;
 	bool muted;
 	bool input_muted;
 	bool tx;
@@ -135,29 +122,13 @@ private:
 	bool hwrx;
 	bool enable_swtx;
 	bool hw_ambe_present;
-	QQueue<unsigned char> hw_ambe_audio;
-	QQueue<unsigned char> audioinq;
-	QQueue<int16_t> s16_le_audioinq;
-    QQueue<unsigned char> audioq;
-	QQueue<unsigned char> ambeq;
-	QQueue<unsigned char> swambeq;
-	QQueue<unsigned char> ysfq;
 	QMap<uint32_t, QString> m_dmrids;
 	QMap<uint16_t, QString> nxdnids;
     const unsigned char header[5] = {0x80,0x44,0x53,0x56,0x54}; //DVSI packet header
-#ifdef USE_FLITE
-	cst_voice *voice_slt;
-	cst_voice *voice_kal;
-	cst_voice *voice_awb;
-	cst_voice *voice_rms;
-	cst_wave *tts_audio;
-#endif
-	bool text2speech;
 	QButtonGroup *tts_voices;
 private slots:
     void about();
     void process_connect();
-	void process_serial();
 	void process_mode_change(const QString &m);
 	void process_host_change(const QString &);
 	void swrx_state_changed(int);
@@ -166,28 +137,20 @@ private slots:
 	void tts_text_changed(QString);
 	void tgid_text_changed(QString);
 	void discover_vocoders();
-	void connect_to_serial(QString);
-    void readyRead();
-	void readyReadREF();
-	void readyReadXRF();
-	void readyReadDCS();
+	void update_ref_data();
+	void update_dcs_data();
+	void update_xrf_data();
 	void update_ysf_data();
 	void update_dmr_data();
 	void update_p25_data();
 	void update_nxdn_data();
 	void update_m17_data();
 	void m17_rate_changed(int);
-	void disconnect_from_host();
-    void handleStateChanged(QAudio::State);
-    void hostname_lookup(QHostInfo);
-    void process_audio();
+	void handleStateChanged(QAudio::State);
 	void process_mute_button();
 	void process_volume_changed(int);
 	void process_input_volume_changed(int);
 	void process_input_mute_button();
-	void audioin_data_ready();
-	void process_ping();
-    void tx_timer();
 	void process_ref_hosts();
 	void process_dcs_hosts();
 	void process_xrf_hosts();
@@ -206,9 +169,6 @@ private slots:
     void process_settings();
 	void download_file(QString);
 	void file_downloaded(QString);
-	void tx_dmr_header();
-	//void download_dmrid_list();
-	void AppendVoiceLCToBuffer(QByteArray& buffer, uint32_t uiSrcId, uint32_t uiDstId) const;
 };
 
 #endif // DUDESTAR_H

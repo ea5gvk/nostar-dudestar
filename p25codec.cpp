@@ -244,7 +244,6 @@ void P25Codec::start_tx()
 	//std::cerr << "Pressed TX buffersize == " << audioin->bufferSize() << std::endl;
 	qDebug() << "start_tx() " << m_ttsid << " " << m_ttstext;
 	m_tx = true;
-	m_txcnt = 0;
 #ifdef USE_FLITE
 
 	if(m_ttsid == 1){

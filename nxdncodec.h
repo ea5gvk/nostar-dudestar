@@ -90,7 +90,6 @@ private:
 	bool m_hwtx;
 	bool m_eot;
 	uint8_t m_nxdnframe[55];
-	uint32_t m_nxdncnt;
 
 	uint8_t m_lich;
 	uint8_t m_sacch[5];

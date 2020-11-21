@@ -15,8 +15,8 @@
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef P25CODEC_H
-#define P25CODEC_H
+#ifndef REFCODEC_H
+#define REFCODEC_H
 
 #include <QObject>
 #include <QtNetwork>
@@ -27,26 +27,30 @@
 #include <flite/flite.h>
 #endif
 
-class P25Codec : public QObject
+class REFCodec : public QObject
 {
 	Q_OBJECT
 public:
-	P25Codec(QString callsign, int hostname, QString host, int port);
-	~P25Codec();
+	REFCodec(QString callsign, QString hostname, QString host, int port);
+	~REFCodec();
 	unsigned char * get_frame(unsigned char *ambe);
 	QString get_callsign() { return m_callsign; }
+	QString get_mycall() { return m_mycall; }
+	QString get_urcall() { return m_urcall; }
+	QString get_rptr1() { return m_rptr1; }
+	QString get_rptr2() { return m_rptr2; }
+	uint16_t get_streamid() { return m_streamid; }
+	QString get_usertxt() { return m_userdata; }
 	uint8_t get_status(){ return m_status; }
-	uint32_t get_src() { return m_srcid; }
-	uint32_t get_dst() { return m_dstid; }
 	QString get_host() { return m_host; }
 	int get_port() { return m_port; }
-	int get_fn() { return m_fn; }
+	uint8_t get_fn() { return m_fn; }
 	int get_cnt() { return m_cnt; }
 signals:
 	void update();
 private:
-	int m_p25cnt;
 	bool m_tx;
+	uint16_t m_txcnt;
 	uint8_t m_ttsid;
 	QString m_ttstext;
 #ifdef USE_FLITE
@@ -56,7 +60,6 @@ private:
 	cst_voice *voice_rms;
 	cst_wave *tts_audio;
 #endif
-	unsigned char imbe[11U];
 	enum{
 		DISCONNECTED,
 		CONNECTING,
@@ -69,17 +72,26 @@ private:
 	QUdpSocket *m_udp = nullptr;
 	QHostAddress m_address;
 	QString m_callsign;
-	int m_hostname;
+	QString m_mycall;
+	QString m_urcall;
+	QString m_rptr1;
+	QString m_rptr2;
+	QString m_txmycall;
+	QString m_txurcall;
+	QString m_txrptr1;
+	QString m_txrptr2;
+	QString m_userdata;
+	QString m_txusrtxt;
+	QString m_hostname;
+	char m_module;
 	QString m_host;
 	int m_port;
-	uint32_t m_srcid;
-	uint32_t m_dstid;
-	uint16_t m_fn;
+	uint16_t m_streamid;
+	uint8_t m_fn;
 	uint32_t m_cnt;
 	MBEDecoder *m_mbedec;
 	MBEEncoder *m_mbeenc;
 
-	QQueue<unsigned char> m_codecq;
 	QTimer *m_ping_timer;
 	QTimer *m_txtimer;
 	AudioEngine *m_audio;
@@ -96,6 +108,12 @@ private slots:
 	void transmit();
 	void hostname_lookup(QHostInfo i);
 	void input_src_changed(int id, QString t) { m_ttsid = id; m_ttstext = t; }
+	void module_changed(int m) { m_module = 0x41 + m; m_streamid = 0; }
+	void mycall_changed(QString mc) { m_txmycall = mc; }
+	void urcall_changed(QString uc) { m_txurcall = uc; }
+	void rptr1_changed(QString r1) { m_txrptr1 = r1; }
+	void rptr2_changed(QString r2) { m_txrptr2 = r2; }
+	void calcPFCS(char *d);
 };
 
-#endif // P25CODEC_H
+#endif // REFCODEC_H

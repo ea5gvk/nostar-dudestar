@@ -53,7 +53,7 @@ NXDNCodec::NXDNCodec(QString callsign, uint32_t dstid, QString host, int port) :
 	m_hwtx(false),
 	m_cnt(0)
 {
-	m_nxdncnt = 0;
+	m_txcnt = 0;
 	//m_srcid = 12065;
 	//m_dstid = 26000;
 #ifdef USE_FLITE
@@ -246,7 +246,6 @@ void NXDNCodec::start_tx()
 	qDebug() << "start_tx() " << m_ttsid << " " << m_ttstext << " " << m_dstid;
 	m_tx = true;
 	m_txcnt = 0;
-	m_nxdncnt = 0;
 #ifdef USE_FLITE
 
 	if(m_ttsid == 1){
@@ -355,7 +354,7 @@ uint8_t * NXDNCodec::get_frame()
 	m_nxdnframe[8U] = (m_dstid >> 0) & 0xFFU;
 	m_nxdnframe[9U] = 0x01U;
 
-	if(!m_nxdncnt || m_eot){
+	if(!m_txcnt || m_eot){
 		encode_header();
 	}
 	else{
@@ -373,11 +372,11 @@ uint8_t * NXDNCodec::get_frame()
 		}
 	}
 	if(m_eot){
-		m_nxdncnt = 0;
+		m_txcnt = 0;
 		m_eot = false;
 	}
 	else{
-		++m_nxdncnt;
+		++m_txcnt;
 	}
 	return m_nxdnframe;
 }
@@ -432,7 +431,7 @@ void NXDNCodec::encode_data()
 	set_layer3_grp(true);
 	set_layer3_blks(0U);
 
-	switch(m_nxdncnt % 4){
+	switch(m_txcnt % 4){
 	case 0:
 		set_sacch_struct(3);
 		layer3_encode(msg, 18U, 0U);
