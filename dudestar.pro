@@ -61,7 +61,7 @@ SOURCES += \
         main.cpp \
         mbedec.cpp \
         mbeenc.cc \
-        nxdnencoder.cpp \
+        nxdncodec.cpp \
         p25codec.cpp \
         ysfcodec.cpp
 
@@ -122,7 +122,7 @@ HEADERS += \
         mbedec.h \
         mbeenc.h \
         mbelib_parms.h \
-        nxdnencoder.h \
+        nxdncodec.h \
         p25codec.h \
         vocoder_tables.h \
         ysfcodec.h

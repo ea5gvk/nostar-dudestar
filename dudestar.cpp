@@ -1477,6 +1477,17 @@ void DudeStar::process_connect()
 		if(protocol == "NXDN"){
 			dmrid = nxdnids.key(callsign);
 			dmr_destid = ui->hostCombo->currentText().toUInt();
+			m_nxdn = new NXDNCodec(callsign, dmr_destid, host, port);
+			m_modethread = new QThread;
+			m_nxdn->moveToThread(m_modethread);
+			connect(m_nxdn, SIGNAL(update()), this, SLOT(update_nxdn_data()));
+			connect(m_modethread, SIGNAL(started()), m_nxdn, SLOT(send_connect()));
+			connect(m_modethread, SIGNAL(finished()), m_nxdn, SLOT(deleteLater()));
+			connect(this, SIGNAL(input_source_changed(int, QString)), m_nxdn, SLOT(input_src_changed(int, QString)));
+			connect(ui->txButton, SIGNAL(pressed()), m_nxdn, SLOT(start_tx()));
+			connect(ui->txButton, SIGNAL(released()), m_nxdn, SLOT(stop_tx()));
+			emit input_source_changed(tts_voices->checkedId(), ui->TTSEdit->text());
+			m_modethread->start();
 		}
 		if(protocol == "M17"){
 			m_m17 = new M17Codec(callsign, module, hostname, host, port);
@@ -1862,9 +1873,6 @@ void DudeStar::readyRead()
 	else if (protocol == "DCS"){
 		readyReadDCS();
 	}
-	else if (protocol == "NXDN"){
-		readyReadNXDN();
-	}
 }
 
 void DudeStar::process_ping()
@@ -1985,84 +1993,30 @@ void DudeStar::update_ysf_data()
 	ui->usertxt->setText(QString::number(m_ysf->get_fn()) + "/" + QString::number(m_ysf->get_ft()));
 }
 
-void DudeStar::readyReadNXDN()
+void DudeStar::update_nxdn_data()
 {
-	QByteArray buf;
-	QHostAddress sender;
-	quint16 senderPort;
-	static uint8_t cnt = 0;
-
-	buf.resize(udp->pendingDatagramSize());
-	udp->readDatagram(buf.data(), buf.size(), &sender, &senderPort);
-#ifdef DEBUG
-	fprintf(stderr, "RECV: ");
-	for(int i = 0; i < buf.size(); ++i){
-		fprintf(stderr, "%02x ", (unsigned char)buf.data()[i]);
+	if( (connect_status == CONNECTING) && ( m_nxdn->get_status() == CONNECTED_RW)){
+		connect_status = CONNECTED_RW;
+		ui->connectButton->setText("Disconnect");
+		ui->connectButton->setEnabled(true);
+		ui->AmbeCombo->setEnabled(false);
+		ui->AudioOutCombo->setEnabled(false);
+		ui->AudioInCombo->setEnabled(false);
+		ui->modeCombo->setEnabled(false);
+		ui->hostCombo->setEnabled(false);
+		ui->callsignEdit->setEnabled(false);
+		ui->comboMod->setEnabled(false);
+		ui->txButton->setDisabled(false);
 	}
-	fprintf(stderr, "\n");
-	fflush(stderr);
-#endif
-	if(buf.size() == 17){
-		if(connect_status == CONNECTING){
-			nxdn = new NXDNEncoder();
-			mbe = new MBEDecoder();
-			mbe->setAutoGain(true);
-			mbeenc = new MBEEncoder();
-			mbeenc->set_49bit_mode();
-			ui->connectButton->setText("Disconnect");
-			ui->connectButton->setEnabled(true);
-			ui->AmbeCombo->setEnabled(false);
-			ui->AudioOutCombo->setEnabled(false);
-			ui->AudioInCombo->setEnabled(false);
-			ui->modeCombo->setEnabled(false);
-			ui->hostCombo->setEnabled(false);
-			ui->callsignEdit->setEnabled(false);
-			ui->comboMod->setEnabled(false);
-			connect_status = CONNECTED_RW;
-			nxdn->set_srcid(dmrid);
-			nxdn->set_dstid(dmr_destid);
-			if(hw_ambe_present || enable_swtx){
-				if(audioin != nullptr){
-					ui->txButton->setDisabled(false);
-					ui->txButton->setStyleSheet("background-color: rgb(128, 195, 66); color: rgb(0,0,0)");
-				}
-			}
-			audiotimer->start(19);
-			ping_timer->start(1000);
-		}
-		status_txt->setText(" Host: " + host + ":" + QString::number(port) + " Ping: " + QString::number(ping_cnt++));
+	status_txt->setText(" Host: " + m_nxdn->get_host() + ":" + QString::number( m_nxdn->get_port()) + " Ping: " + QString::number(m_nxdn->get_cnt()));
+	if(m_nxdn->get_src()){
+		ui->mycall->setText(m_dmrids[m_nxdn->get_src()]);
+		ui->urcall->setText(QString::number(m_nxdn->get_src()));
 	}
-	if(buf.size() == 43){
-		uint16_t id = (uint16_t)((buf.data()[5] << 8) & 0xff00) | (buf.data()[6] & 0xff);
-		ui->mycall->setText(nxdnids[id]);
-		ui->urcall->setText(QString::number(id));
-		ui->rptr1->setText(QString::number((uint16_t)((buf.data()[7] << 8) & 0xff00) | (buf.data()[8] & 0xff)));
-		ui->streamid->setText(QString::number((cnt++ % 16), 16));
-		for(int i = 0; i < 7; ++i){
-			audioq.enqueue(buf.data()[i+15]);
-		}
-		char t[7];
-		char *d = &(buf.data()[21]);
-		for(int i = 0; i < 6; ++i){
-			t[i] = d[i] << 1;
-			t[i] |= (1 & (d[i+1] >> 7));
-		}
-		t[6] = d[6] << 1;
-		for(int i = 0; i < 7; ++i){
-			audioq.enqueue(t[i]);
-		}
-		for(int i = 0; i < 7; ++i){
-			audioq.enqueue(buf.data()[i+29]);
-		}
-		d = &(buf.data()[35]);
-		for(int i = 0; i < 6; ++i){
-			t[i] = d[i] << 1;
-			t[i] |= (1 & (d[i+1] >> 7));
-		}
-		t[6] = d[6] << 1;
-		for(int i = 0; i < 7; ++i){
-			audioq.enqueue(t[i]);
-		}
+	ui->rptr1->setText(m_nxdn->get_dst() ? QString::number(m_nxdn->get_dst()) : "");
+	if(m_nxdn->get_fn()){
+		QString n = QString("%1").arg(m_nxdn->get_fn(), 2, 16, QChar('0'));
+		ui->streamid->setText(n);
 	}
 }
 
@@ -2695,7 +2649,7 @@ void DudeStar::tx_timer()
 				//ysf->use_hwambe(true);
 			}
 			if(protocol == "NXDN"){
-				nxdn->set_hwtx(true);
+				//nxdn->set_hwtx(true);
 			}
 			serial->write(a);
 		}
@@ -2747,7 +2701,7 @@ void DudeStar::tx_timer()
 								//ysf->use_hwambe(false);
 							}
 							if(protocol == "NXDN"){
-								nxdn->set_hwtx(false);
+								//nxdn->set_hwtx(false);
 							}
 							ambe_bytes[i] |= (ambe_frame[(i*8)+j] << (7-j));
 						}
@@ -2838,75 +2792,6 @@ void DudeStar::transmit()
 	}
 	if(protocol == "XRF"){
 		transmitXRF();
-	}
-	else if (protocol == "NXDN"){
-		transmitNXDN();
-	}
-}
-
-void DudeStar::transmitNXDN()
-{
-	QByteArray ambe;
-	QByteArray txdata;
-	unsigned char *temp_nxdn;
-	if(tx || ambeq.size()){
-
-		ambe.clear();
-		if(ambeq.size() < 55){
-			if(!tx){
-				ambeq.clear();
-				return;
-			}
-			else{
-				std::cerr << "ERROR: NXDN AMBEQ < 55" << std::endl;
-				return;
-			}
-		}
-		while(ambeq.size() && (ambeq[0] != 0x61) && (ambeq[3] != 0x01)){
-			std::cerr << "ERROR: Not an AMBE frame" << std::endl;
-			ambeq.dequeue();
-		}
-		for(int i = 0; i < 5; ++i){
-			if(ambeq.size() < 13){
-				std::cerr << "ERROR: NXDN AMBE Q empty" << std::endl;
-				return;
-			}
-			else{
-				for (int i = 0; i < 6; ++i){
-					ambeq.dequeue();
-				}
-				for (int i = 0; i < 7; ++i){
-					ambe.append(ambeq.dequeue());
-				}
-				//ambe.append('\x00');
-				//ambe.append('\x00');
-			}
-		}
-		temp_nxdn = nxdn->get_frame((unsigned char *)ambe.data());
-
-		txdata.append((char *)temp_nxdn, 43);
-		ui->mycall->setText(callsign);
-		ui->urcall->setText(QString::number(dmrid));
-		ui->rptr1->setText(QString::number(dmr_destid));
-		ui->rptr2->setText(QString::number(dmrid));
-		ui->streamid->setText(QString("TX %1").arg(txdata.data()[4] & 0xff, 4, 16, QChar('0')));
-		udp->writeDatagram(txdata, address, port);
-
-		fprintf(stderr, "SEND:%d: ", ambeq.size());
-		for(int i = 0; i < txdata.size(); ++i){
-			fprintf(stderr, "%02x ", (unsigned char)txdata.data()[i]);
-		}
-		fprintf(stderr, "\n");
-		fflush(stderr);
-	}
-	else{
-		fprintf(stderr, "NXDN TX stopped\n");
-		txtimer->stop();
-		audioindev->disconnect();
-		audioin->stop();
-		temp_nxdn = nxdn->get_eot();
-		txdata.append((char *)temp_nxdn, 43);
-		udp->writeDatagram(txdata, address, port);
 	}
 }
 

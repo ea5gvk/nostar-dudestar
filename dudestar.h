@@ -35,7 +35,7 @@
 #include "ysfcodec.h"
 #include "dmrcodec.h"
 #include "p25codec.h"
-#include "nxdnencoder.h"
+#include "nxdncodec.h"
 #include "m17codec.h"
 
 
@@ -61,7 +61,6 @@ private:
 	void transmitREF();
 	void transmitDCS();
 	void transmitXRF();
-	void transmitNXDN();
     void calcPFCS(char *d);
     Ui::DudeStar *ui;
 	QSerialPort *serial = nullptr;
@@ -114,7 +113,7 @@ private:
 	YSFCodec *m_ysf;
 	DMRCodec *m_dmr;
 	P25Codec *m_p25;
-	NXDNEncoder *nxdn;
+	NXDNCodec *m_nxdn;
 	M17Codec *m_m17;
     QAudioOutput *audio;
 	QAudioInput *audioin;
@@ -175,7 +174,7 @@ private slots:
 	void update_ysf_data();
 	void update_dmr_data();
 	void update_p25_data();
-	void readyReadNXDN();
+	void update_nxdn_data();
 	void update_m17_data();
 	void m17_rate_changed(int);
 	void disconnect_from_host();
