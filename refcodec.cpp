@@ -30,14 +30,19 @@ extern cst_voice * register_cmu_us_rms(const char *);
 }
 #endif
 
-REFCodec::REFCodec(QString callsign, QString hostname, QString host, int port) :
+REFCodec::REFCodec(QString callsign, QString hostname, QString host, int port, QString vocoder) :
+	m_tx(false),
 	m_callsign(callsign),
 	m_hostname(hostname),
 	m_host(host),
 	m_port(port),
 	m_streamid(0),
 	m_fn(0),
-	m_cnt(0)
+	m_cnt(0),
+	m_vocoder(vocoder),
+	m_ambedev(nullptr),
+	m_hwrx(false),
+	m_hwtx(false)
 {
 #ifdef USE_FLITE
 	flite_init();
@@ -108,6 +113,19 @@ void REFCodec::process_udp()
 			m_mbeenc = new MBEEncoder();
 			m_mbeenc->set_dstar_mode();
 			m_mbeenc->set_gain_adjust(3);
+			if(m_vocoder != ""){
+				m_hwrx = true;
+				m_hwtx = true;
+				m_ambedev = new SerialAMBE("REF");
+				m_ambedev->connect_to_serial(m_vocoder);
+				m_hwrxtimer = new QTimer();
+				connect(m_hwrxtimer, SIGNAL(timeout()), this, SLOT(receive_hwrx_data()));
+				connect(m_ambedev, SIGNAL(data_ready()), this, SLOT(get_ambe()));
+			}
+			else{
+				m_hwrx = false;
+				m_hwtx = false;
+			}
 			m_txtimer = new QTimer();
 			connect(m_txtimer, SIGNAL(timeout()), this, SLOT(transmit()));
 			m_ping_timer = new QTimer();
@@ -149,6 +167,9 @@ void REFCodec::process_udp()
 		QString h = m_hostname + " " + m_module;
 		//qDebug() << "h:r1:r2 == " << h.simplified() << ":" << m_rptr1.simplified() << ":" << m_rptr2.simplified();
 		if( (m_rptr2.simplified() == h.simplified()) || (m_rptr1.simplified() == h.simplified()) ){
+			if(m_hwrx && !m_tx && (m_streamid == 0)){
+				m_hwrxtimer->start(20);
+			}
 			m_streamid = (buf.data()[14] << 8) | (buf.data()[15] & 0xff);
 		}
 		else{
@@ -214,10 +235,15 @@ void REFCodec::process_udp()
 		   m_userdata = QString(user_data);
 		   //ui->usertxt->setText(QString::fromUtf8(user_data.data()));
 		}
-		m_mbedec->process_dstar((uint8_t *)(buf.data()+17));
-		audioSamples = m_mbedec->getAudio(nbAudioSamples);
-		m_audio->write(audioSamples, nbAudioSamples);
-		m_mbedec->resetAudio();
+		if(m_hwrx && !m_tx){
+			m_ambedev->decode((uint8_t *)buf.data()+17);
+		}
+		else{
+			m_mbedec->process_dstar((uint8_t *)(buf.data()+17));
+			audioSamples = m_mbedec->getAudio(nbAudioSamples);
+			m_audio->write(audioSamples, nbAudioSamples);
+			m_mbedec->resetAudio();
+		}
 
 		//for(int i = 0; i < 9; ++i){
 			//audioq.enqueue(buf.data()[17+i]);
@@ -225,6 +251,12 @@ void REFCodec::process_udp()
 	}
 	if(buf.size() == 0x20){ //32
 		m_userdata.clear();
+
+		if(m_hwrx){
+			m_hwrxtimer->stop();
+			//m_ambedev->clear_queue();
+		}
+		m_streamid = 0;
 		//ui->streamid->setText("Stream complete");
 		//ui->usertxt->clear();
 	}
@@ -257,7 +289,7 @@ void REFCodec::hostname_lookup(QHostInfo i)
 
 void REFCodec::send_connect()
 {
-	qDebug() << "send connect " << m_hostname << ":" << m_host << ":" << m_port << ":" << m_callsign;
+	//qDebug() << "send connect " << m_hostname << ":" << m_host << ":" << m_port << ":" << m_callsign;
 	m_status = CONNECTING;
 	QHostInfo::lookupHost(m_host, this, SLOT(hostname_lookup(QHostInfo)));
 }
@@ -302,10 +334,18 @@ void REFCodec::start_tx()
 {
 	//std::cerr << "Pressed TX buffersize == " << audioin->bufferSize() << std::endl;
 	qDebug() << "start_tx() " << m_ttsid << " " << m_ttstext;
+	if(m_hwrx){
+		m_hwrxtimer->stop();
+	}
+	if(m_hwtx){
+		m_ambedev->clear_queue();
+	}
+	
 	m_tx = true;
+	m_streamid = 0;
 	m_txcnt = 0;
+	m_ttscnt = 0;
 #ifdef USE_FLITE
-
 	if(m_ttsid == 1){
 		tts_audio = flite_text_to_wave(m_ttstext.toStdString().c_str(), voice_kal);
 	}
@@ -341,45 +381,62 @@ void REFCodec::stop_tx()
 
 void REFCodec::transmit()
 {
-	static QByteArray txdata;
-	//unsigned char *m_p25Frame;
 	unsigned char ambe[9];
 	uint8_t ambe_frame[72];
 	int16_t pcm[160];
-	static uint16_t ttscnt = 0;
-	static uint16_t txstreamid = 0;
-	static bool sendheader = 1;
 	memset(ambe_frame, 0, 72);
 	memset(ambe, 0, 9);
 #ifdef USE_FLITE
 	if(m_ttsid > 0){
 		for(int i = 0; i < 160; ++i){
-			if(ttscnt >= tts_audio->num_samples/2){
+			if(m_ttscnt >= tts_audio->num_samples/2){
 				//audiotx_cnt = 0;
 				pcm[i] = 0;
 			}
 			else{
-				pcm[i] = tts_audio->samples[ttscnt*2] / 2;
-				ttscnt++;
+				pcm[i] = tts_audio->samples[m_ttscnt*2] / 2;
+				m_ttscnt++;
 			}
 		}
-		m_mbeenc->encode(pcm, ambe_frame);
 	}
 #endif
 	if(m_ttsid == 0){
 		if(m_audio->read(pcm, 160)){
-			m_mbeenc->encode(pcm, ambe_frame);
 		}
 		else{
 			return;
 		}
 	}
-	for(int i = 0; i < 9; ++i){
-		for(int j = 0; j < 8; ++j){
-			ambe[i] |= (ambe_frame[(i*8)+j] << j);
+
+	if(m_hwtx){
+		m_ambedev->encode(pcm);
+		if(m_tx && (m_ambeq.size() >= 9)){
+			for(int i = 0; i < 9; ++i){
+				ambe[i] = m_ambeq.dequeue();
+			}
+			send_frame(ambe);
+		}
+		else if(!m_tx){
+			send_frame(ambe);
 		}
 	}
+	else{
+		m_mbeenc->encode(pcm, ambe_frame);
 
+		for(int i = 0; i < 9; ++i){
+			for(int j = 0; j < 8; ++j){
+				ambe[i] |= (ambe_frame[(i*8)+j] << j);
+			}
+		}
+		send_frame(ambe);
+	}
+}
+
+void REFCodec::send_frame(uint8_t *ambe)
+{
+	static QByteArray txdata;
+	static uint16_t txstreamid = 0;
+	static bool sendheader = 1;
 	if(m_tx){
 		if(txstreamid == 0){
 		   txstreamid = static_cast<uint16_t>((::rand() & 0xFFFF));
@@ -509,6 +566,7 @@ void REFCodec::transmit()
 	#endif
 	}
 	else{
+		qDebug() << "TX stopped";
 		txdata.resize(32);
 		txdata[0] = 0x20;
 		txdata[6] = 0x20;
@@ -529,7 +587,27 @@ void REFCodec::transmit()
 		if(m_ttsid == 0){
 			m_audio->stop_capture();
 		}
-		ttscnt = 0;
+		m_ttscnt = 0;
+	}
+}
+
+void REFCodec::get_ambe()
+{
+	uint8_t ambe[9];
+
+	if(m_ambedev->get_ambe(ambe)){
+		for(int i = 0; i < 9; ++i){
+			m_ambeq.append(ambe[i]);
+		}
+	}
+}
+
+void REFCodec::receive_hwrx_data()
+{
+	int16_t audio[160];
+
+	if(m_ambedev->get_audio(audio)){
+		m_audio->write(audio, 160);
 	}
 }
 
@@ -563,7 +641,9 @@ void REFCodec::deleteLater()
 	m_ping_timer->stop();
 	send_disconnect();
 	m_cnt = 0;
+	if(m_ambedev != nullptr){
+		delete m_ambedev;
+	}
 	QObject::deleteLater();
 }
-
 

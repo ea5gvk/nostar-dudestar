@@ -30,14 +30,18 @@ extern cst_voice * register_cmu_us_rms(const char *);
 }
 #endif
 
-XRFCodec::XRFCodec(QString callsign, QString hostname, QString host, int port) :
+XRFCodec::XRFCodec(QString callsign, QString hostname, QString host, int port, QString vocoder) :
 	m_callsign(callsign),
 	m_hostname(hostname),
 	m_host(host),
 	m_port(port),
 	m_streamid(0),
 	m_fn(0),
-	m_cnt(0)
+	m_cnt(0),
+	m_vocoder(vocoder),
+	m_ambedev(nullptr),
+	m_hwrx(false),
+	m_hwtx(false)
 {
 #ifdef USE_FLITE
 	flite_init();
@@ -87,6 +91,15 @@ void XRFCodec::process_udp()
 		m_mbeenc = new MBEEncoder();
 		m_mbeenc->set_dstar_mode();
 		m_mbeenc->set_gain_adjust(3);
+		if(m_vocoder != ""){
+			m_hwrx = true;
+			m_hwtx = true;
+			m_ambedev = new SerialAMBE("XRF");
+			m_ambedev->connect_to_serial(m_vocoder);
+			m_hwrxtimer = new QTimer();
+			connect(m_hwrxtimer, SIGNAL(timeout()), this, SLOT(receive_hwrx_data()));
+			connect(m_ambedev, SIGNAL(data_ready()), this, SLOT(get_ambe()));
+		}
 		m_txtimer = new QTimer();
 		connect(m_txtimer, SIGNAL(timeout()), this, SLOT(transmit()));
 		m_ping_timer = new QTimer();
@@ -97,6 +110,9 @@ void XRFCodec::process_udp()
 	}
 
 	if((buf.size() == 56) && (!memcmp(buf.data(), "DSVT", 4)) ){
+		if(m_hwrx && !m_tx && (m_streamid == 0)){
+			m_hwrxtimer->start(20);
+		}
 		m_streamid = (buf.data()[12] << 8) | (buf.data()[13] & 0xff);
 		char temp[9];
 		memcpy(temp, buf.data() + 18, 8); temp[8] = '\0';
@@ -164,11 +180,20 @@ void XRFCodec::process_udp()
 			sd_seq = 0;
 			m_userdata = QString(user_data);
 		}
-		
-		m_mbedec->process_dstar((uint8_t *)(buf.data()+15));
-		audioSamples = m_mbedec->getAudio(nbAudioSamples);
-		m_audio->write(audioSamples, nbAudioSamples);
-		m_mbedec->resetAudio();
+		if(m_hwrx && !m_tx){
+			m_ambedev->decode((uint8_t *)buf.data()+15);
+			if(buf.data()[14] & 0x40){
+				m_streamid = 0;
+				m_hwrxtimer->stop();
+				//m_ambedev->clear_queue();
+			}
+		}
+		else{
+			m_mbedec->process_dstar((uint8_t *)(buf.data()+15));
+			audioSamples = m_mbedec->getAudio(nbAudioSamples);
+			m_audio->write(audioSamples, nbAudioSamples);
+			m_mbedec->resetAudio();
+		}
 	}
 	emit update();
 }
@@ -248,8 +273,17 @@ void XRFCodec::start_tx()
 {
 	//std::cerr << "Pressed TX buffersize == " << audioin->bufferSize() << std::endl;
 	qDebug() << "start_tx() " << m_ttsid << " " << m_ttstext;
+	if(m_hwrx){
+		m_hwrxtimer->stop();
+	}
+	if(m_hwtx){
+		m_ambedev->clear_queue();
+	}
+
 	m_tx = true;
+	m_streamid = 0;
 	m_txcnt = 0;
+	m_ttscnt = 0;
 #ifdef USE_FLITE
 
 	if(m_ttsid == 1){
@@ -286,46 +320,62 @@ void XRFCodec::stop_tx()
 
 void XRFCodec::transmit()
 {
-	static QByteArray txdata;
-	//unsigned char *m_p25Frame;
 	unsigned char ambe[9];
 	uint8_t ambe_frame[72];
 	int16_t pcm[160];
-	static uint16_t ttscnt = 0;
-	static uint16_t txstreamid = 0;
-	static bool sendheader = 1;
 	memset(ambe_frame, 0, 72);
 	memset(ambe, 0, 9);
 	
 #ifdef USE_FLITE
 	if(m_ttsid > 0){
 		for(int i = 0; i < 160; ++i){
-			if(ttscnt >= tts_audio->num_samples/2){
+			if(m_ttscnt >= tts_audio->num_samples/2){
 				//audiotx_cnt = 0;
 				pcm[i] = 0;
 			}
 			else{
-				pcm[i] = tts_audio->samples[ttscnt*2] / 2;
-				ttscnt++;
+				pcm[i] = tts_audio->samples[m_ttscnt*2] / 2;
+				m_ttscnt++;
 			}
 		}
-		m_mbeenc->encode(pcm, ambe_frame);
 	}
 #endif
 	if(m_ttsid == 0){
 		if(m_audio->read(pcm, 160)){
-			m_mbeenc->encode(pcm, ambe_frame);
 		}
 		else{
 			return;
 		}
 	}
-	for(int i = 0; i < 9; ++i){
-		for(int j = 0; j < 8; ++j){
-			ambe[i] |= (ambe_frame[(i*8)+j] << j);
+	if(m_hwtx){
+		m_ambedev->encode(pcm);
+		if(m_tx && (m_ambeq.size() >= 9)){
+			for(int i = 0; i < 9; ++i){
+				ambe[i] = m_ambeq.dequeue();
+			}
+			send_frame(ambe);
+		}
+		else if(!m_tx){
+			send_frame(ambe);
 		}
 	}
+	else{
+		m_mbeenc->encode(pcm, ambe_frame);
 
+		for(int i = 0; i < 9; ++i){
+			for(int j = 0; j < 8; ++j){
+				ambe[i] |= (ambe_frame[(i*8)+j] << j);
+			}
+		}
+		send_frame(ambe);
+	}
+}
+
+void XRFCodec::send_frame(uint8_t *ambe)
+{
+	static QByteArray txdata;
+	static uint16_t txstreamid = 0;
+	static bool sendheader = 1;
 	if(m_tx){
 		if(txstreamid == 0){
 		   txstreamid = static_cast<uint16_t>((::rand() & 0xFFFF));
@@ -437,7 +487,7 @@ void XRFCodec::transmit()
 		if(m_ttsid == 0){
 			m_audio->stop_capture();
 		}
-		ttscnt = 0;
+		m_ttscnt = 0;
 	}
 #ifdef DEBUG
 			fprintf(stderr, "SEND:%d: ", txdata.size());
@@ -447,6 +497,26 @@ void XRFCodec::transmit()
 			fprintf(stderr, "\n");
 			fflush(stderr);
 #endif
+}
+
+void XRFCodec::get_ambe()
+{
+	uint8_t ambe[9];
+
+	if(m_ambedev->get_ambe(ambe)){
+		for(int i = 0; i < 9; ++i){
+			m_ambeq.append(ambe[i]);
+		}
+	}
+}
+
+void XRFCodec::receive_hwrx_data()
+{
+	int16_t audio[160];
+
+	if(m_ambedev->get_audio(audio)){
+		m_audio->write(audio, 160);
+	}
 }
 
 void XRFCodec::calcPFCS(char *d)
@@ -479,5 +549,8 @@ void XRFCodec::deleteLater()
 	m_ping_timer->stop();
 	send_disconnect();
 	m_cnt = 0;
+	if(m_ambedev != nullptr){
+		delete m_ambedev;
+	}
 	QObject::deleteLater();
 }

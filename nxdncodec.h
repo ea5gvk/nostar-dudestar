@@ -21,6 +21,7 @@
 #include <inttypes.h>
 #include <QtNetwork>
 #include "audioengine.h"
+#include "serialambe.h"
 #include "mbedec.h"
 #include "mbeenc.h"
 #ifdef USE_FLITE
@@ -40,7 +41,7 @@ class NXDNCodec : public QObject
 {
 	Q_OBJECT
 public:
-	NXDNCodec(QString callsign, uint32_t dmr_destid, QString host, int port);
+	NXDNCodec(QString callsign, uint32_t dmr_destid, QString host, int port, QString vocoder);
 	~NXDNCodec();
 	uint8_t get_status(){ return m_status; }
 	unsigned char * get_frame();
@@ -54,6 +55,8 @@ public:
 	int get_port() { return m_port; }
 	int get_fn() { return m_fn; }
 	int get_cnt() { return m_cnt; }
+	bool get_hwrx() { return m_hwrx; }
+	bool get_hwtx() { return m_hwtx; }
 signals:
 	void update();
 private slots:
@@ -61,6 +64,8 @@ private slots:
 	void stop_tx();
 	void deleteLater();
 	void process_udp();
+	void process_hwrx_data();
+	void get_ambe();
 	void send_ping();
 	void send_connect();
 	void send_disconnect();
@@ -69,6 +74,9 @@ private slots:
 	void hostname_lookup(QHostInfo i);
 	void dmr_tgid_changed(unsigned int id) { m_dstid = id; }
 	void input_src_changed(int id, QString t) { m_ttsid = id; m_ttstext = t; }
+	void swrx_state_changed(int s) {m_hwrx = !s; }
+	void swtx_state_changed(int s) {m_hwtx = !s; }
+	void send_frame();
 private:
 	enum{
 		DISCONNECTED,
@@ -87,7 +95,6 @@ private:
 	int m_hostname;
 	QString m_host;
 	int m_port;
-	bool m_hwtx;
 	bool m_eot;
 	uint8_t m_nxdnframe[55];
 
@@ -100,13 +107,24 @@ private:
 	uint8_t m_ttsid;
 	QString m_ttstext;
 	int m_cnt;
-	uint16_t m_fn;
+	uint32_t m_transmitcnt;
+	uint32_t m_fn;
 	uint16_t m_streamid;
 	QTimer *m_ping_timer;
 	QTimer *m_txtimer;
 	AudioEngine *m_audio;
 	MBEDecoder *m_mbedec;
 	MBEEncoder *m_mbeenc;
+	QString m_vocoder;
+	SerialAMBE *m_ambedev;
+	QTimer *m_hwrxtimer;
+	bool m_hwrx;
+	bool m_hwtx;
+	uint8_t packet_size;
+	uint16_t m_ttscnt;
+	QQueue<char> m_rxambeq;
+	QQueue<char> m_ambeq;
+
 #ifdef USE_FLITE
 	cst_voice *voice_slt;
 	cst_voice *voice_kal;
@@ -134,6 +152,7 @@ private:
 	void get_sacch(uint8_t *);
 	void encode_crc6(uint8_t *, uint8_t);
 	void deinterleave_ambe(uint8_t *);
+	void interleave(uint8_t *ambe);
 };
 
 #endif // NXDNCODEC_H

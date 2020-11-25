@@ -21,6 +21,7 @@
 #include <QObject>
 #include <QtNetwork>
 #include "audioengine.h"
+#include "serialambe.h"
 #include "mbedec.h"
 #include "mbeenc.h"
 #ifdef USE_FLITE
@@ -31,7 +32,7 @@ class XRFCodec : public QObject
 {
 	Q_OBJECT
 public:
-	XRFCodec(QString callsign, QString hostname, QString host, int port);
+	XRFCodec(QString callsign, QString hostname, QString host, int port, QString vocoder);
 	~XRFCodec();
 	unsigned char * get_frame(unsigned char *ambe);
 	QString get_callsign() { return m_callsign; }
@@ -46,6 +47,8 @@ public:
 	int get_port() { return m_port; }
 	uint8_t get_fn() { return m_fn; }
 	int get_cnt() { return m_cnt; }
+	bool get_hwrx() { return m_hwrx; }
+	bool get_hwtx() { return m_hwtx; }
 signals:
 	void update();
 private:
@@ -95,12 +98,22 @@ private:
 	QTimer *m_ping_timer;
 	QTimer *m_txtimer;
 	AudioEngine *m_audio;
+	QString m_vocoder;
+	SerialAMBE *m_ambedev;
+	QTimer *m_hwrxtimer;
+	bool m_hwrx;
+	bool m_hwtx;
+	uint8_t packet_size;
+	uint16_t m_ttscnt;
+	QQueue<char> m_ambeq;
 
 private slots:
 	void start_tx();
 	void stop_tx();
 	void deleteLater();
 	void process_udp();
+	void receive_hwrx_data();
+	void get_ambe();
 	void send_ping();
 	void send_connect();
 	void send_disconnect();
@@ -113,6 +126,9 @@ private slots:
 	void urcall_changed(QString uc) { m_txurcall = uc; }
 	void rptr1_changed(QString r1) { m_txrptr1 = r1; }
 	void rptr2_changed(QString r2) { m_txrptr2 = r2; }
+	void swrx_state_changed(int s) {m_hwrx = !s; }
+	void swtx_state_changed(int s) {m_hwtx = !s; }
+	void send_frame(uint8_t *);
 	void calcPFCS(char *d);
 };
 

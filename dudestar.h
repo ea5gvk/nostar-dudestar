@@ -19,12 +19,7 @@
 #define DUDESTAR_H
 
 #include <QMainWindow>
-#include <QSerialPort>
-#include <QtNetwork>
-#include <QAudioOutput>
-#include <QAudioInput>
 #include <QButtonGroup>
-#include <QTimer>
 #include <QLabel>
 #ifdef USE_FLITE
 #include <flite/flite.h>
@@ -40,7 +35,6 @@
 #include "p25codec.h"
 #include "nxdncodec.h"
 #include "m17codec.h"
-
 
 namespace Ui {
 class DudeStar;
@@ -61,8 +55,6 @@ signals:
 private:
     void init_gui();
     Ui::DudeStar *ui;
-	QSerialPort *serial = nullptr;
-    QUdpSocket *udp = nullptr;
 	QButtonGroup *m17rates;
 
 	enum{
@@ -120,7 +112,6 @@ private:
 	bool tx;
 	bool hwtx;
 	bool hwrx;
-	bool enable_swtx;
 	bool hw_ambe_present;
 	QMap<uint32_t, QString> m_dmrids;
 	QMap<uint16_t, QString> nxdnids;

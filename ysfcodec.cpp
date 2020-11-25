@@ -26,16 +26,10 @@
 
 #define DEBUG
 
-const int vd2DVSIInterleave[49] = {
+const int dvsi_interleave[49] = {
 		0, 3, 6,  9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 41, 43, 45, 47,
 		1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34, 37, 40, 42, 44, 46, 48,
 		2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35, 38
-};
-
-const int vd2DVSIDEInterleave[49] = {
-		0, 18, 36,  1, 19, 37, 2, 20, 38, 3, 21, 39, 4, 22, 40, 5, 23, 41,
-		6, 24, 42, 7, 25, 43, 8, 26, 44, 9, 27, 45, 10, 28, 46, 11, 29, 47,
-		12, 30, 48, 13, 31, 14, 32, 15, 33, 16, 34, 17, 35
 };
 
 const char ysf_radioid[] = {'H', '5', '0', '0', '0'};
@@ -49,18 +43,23 @@ extern cst_voice * register_cmu_us_rms(const char *);
 }
 #endif
 
-YSFCodec::YSFCodec(QString callsign, QString hostname, QString host, int port) :
+YSFCodec::YSFCodec(QString callsign, QString hostname, QString host, int port, QString vocoder) :
 	m_callsign(callsign),
 	m_hostname(hostname),
 	m_host(host),
 	m_port(port),
 	m_tx(false),
 	m_txcnt(0),
+	m_rxcnt(0),
 	m_ttsid(0),
 	m_cnt(0),
+	m_transmitcnt(0),
 	m_fn(0),
 	m_streamid(0),
-	m_hwvocoder(false),
+	m_vocoder(vocoder),
+	m_ambedev(nullptr),
+	m_hwrx(false),
+	m_hwtx(false),
 	m_fcs(false)
 {
 #ifdef USE_FLITE
@@ -108,6 +107,20 @@ void YSFCodec::process_udp()
 			m_mbeenc->set_49bit_mode();
 			//m_mbeenc->set_gain_adjust(2.5);
 			//m_mbeenc->set_gain_adjust(1.0);
+			if(m_vocoder != ""){
+				m_hwrx = true;
+				m_hwtx = true;
+				m_ambedev = new SerialAMBE("YSF");
+				m_ambedev->connect_to_serial(m_vocoder);
+				m_hwrxtimer = new QTimer();
+				connect(m_hwrxtimer, SIGNAL(timeout()), this, SLOT(process_hwrx_data()));
+				connect(m_ambedev, SIGNAL(data_ready()), this, SLOT(get_ambe()));
+				//m_hwrxtimer->start(20);
+			}
+			else{
+				m_hwrx = false;
+				m_hwtx = false;
+			}
 			m_audio = new AudioEngine();
 			m_audio->init();
 
@@ -121,7 +134,7 @@ void YSFCodec::process_udp()
 				set_fcs_mode(true, m_hostname.left(8).toStdString());
 			}
 			m_ping_timer->start(p);
-
+			m_rxcnt = 0;
 		}
 		m_cnt++;
 	}
@@ -133,19 +146,17 @@ void YSFCodec::process_udp()
 		memcpy(ysftag, buf.data() + 4, 10);ysftag[10] = '\0';
 		m_gateway = QString(ysftag);
 		p_data = (uint8_t *)buf.data() + 35;
-		//decode((uint8_t *)buf.data() + 35);
-		//for(int i = 0; i < 115; ++i){
-			//ysfq.enqueue(buf.data()[40+i]);
-		//}
+		if(m_rxcnt++ == 0){
+			m_hwrxtimer->start(20);
+		}
 	}
 	else if(buf.size() == 130){
 		memcpy(ysftag, buf.data() + 0x79, 8);ysftag[8] = '\0';
 		m_gateway = QString(ysftag);
 		p_data = (uint8_t *)buf.data();
-		//decode((uint8_t *)buf.data());
-		//for(int i = 0; i < 115; ++i){
-			//ysfq.enqueue(buf.data()[5+i]);
-		//}
+		if(m_rxcnt++ == 0){
+			m_hwrxtimer->start(20);
+		}
 	}
 
 	if(p_data != nullptr){
@@ -422,13 +433,39 @@ void YSFCodec::decode(uint8_t* data)
 			bool s = (dat_c << (i + 7U)) & 0x80000000;
 			WRITE_BIT(v_tmp, i + 24U, s);
 		}
-
-		m_mbedec->process_nxdn(v_tmp);
-		audioSamples = m_mbedec->getAudio(nbAudioSamples);
-		fprintf(stderr, "audio sample size == %d\n", nbAudioSamples);
-		m_audio->write(audioSamples, nbAudioSamples);
-		m_mbedec->resetAudio();
+		if(m_hwrx){
+			interleave(v_tmp);
+			for(int i = 0; i < 7; ++i){
+				m_rxambeq.append(v_tmp[i]);
+			}
+		}
+		else{
+			m_mbedec->process_nxdn(v_tmp);
+			audioSamples = m_mbedec->getAudio(nbAudioSamples);
+			//fprintf(stderr, "audio sample size == %d\n", nbAudioSamples);
+			m_audio->write(audioSamples, nbAudioSamples);
+			m_mbedec->resetAudio();
+		}
 	}
+}
+
+void YSFCodec::interleave(uint8_t *ambe)
+{
+	char ambe_data[49];
+	char dvsi_data[7];
+	memset(dvsi_data, 0, 7);
+
+	for(int i = 0; i < 6; ++i){
+		for(int j = 0; j < 8; j++){
+			ambe_data[j+(8*i)] = (1 & (ambe[i] >> (7 - j)));
+		}
+	}
+	ambe_data[48] = (1 & (ambe[6] >> 7));
+	for(int i = 0, j; i < 49; ++i){
+		j = dvsi_interleave[i];
+		dvsi_data[j/8] += (ambe_data[i])<<(7-(j%8));
+	}
+	memcpy(ambe, dvsi_data, 7);
 }
 
 void YSFCodec::start_tx()
@@ -437,6 +474,10 @@ void YSFCodec::start_tx()
 	qDebug() << "start_tx() " << m_ttsid << " " << m_ttstext;
 	m_tx = true;
 	m_txcnt = 0;
+	m_hwrxtimer->stop();
+	m_rxcnt = 0;
+	m_ttscnt = 0;
+	m_transmitcnt = 0;
 #ifdef USE_FLITE
 
 	if(m_ttsid == 1){
@@ -462,7 +503,7 @@ void YSFCodec::start_tx()
 			m_audio->start_capture();
 			//audioin->start(&audio_buffer);
 		}
-		m_txtimer->start(100);
+		m_txtimer->start(20);
 	}
 }
 
@@ -473,66 +514,71 @@ void YSFCodec::stop_tx()
 
 void YSFCodec::transmit()
 {
-	//QByteArray ambe;
-	QByteArray txdata;
-	uint8_t *temp_ysf;
 	uint8_t ambe_frame[49];
 	uint8_t ambe[9];
 	int16_t pcm[160];
-	int frame_size;
-	static uint16_t ttscnt = 0;
 
-	for(int h = 0; h < 5; ++h){
 	memset(ambe, 0, 9);
 #ifdef USE_FLITE
 	if(m_ttsid > 0){
 		for(int i = 0; i < 160; ++i){
-			if(ttscnt >= tts_audio->num_samples/2){
-				//audiotx_cnt = 0;
+			if(m_ttscnt >= tts_audio->num_samples/2){
 				pcm[i] = 0;
 			}
 			else{
-				pcm[i] = tts_audio->samples[ttscnt*2] / 2;
-				ttscnt++;
+				pcm[i] = tts_audio->samples[m_ttscnt*2] / 2;
+				m_ttscnt++;
 			}
 		}
-		m_mbeenc->encode(pcm, ambe_frame);
 	}
 #endif
 	if(m_ttsid == 0){
 		if(m_audio->read(pcm, 160)){
-			m_mbeenc->encode(pcm, ambe_frame);
 		}
 		else{
 			return;
 		}
 	}
-	for(int i = 0; i < 7; ++i){
-		for(int j = 0; j < 8; ++j){
-			ambe[i] |= (ambe_frame[(i*8)+j] << (7-j));
+	if(m_hwtx){
+		m_ambedev->encode(pcm);
+		if(m_tx && (m_ambeq.size() >= 35)){
+			for(int i = 0; i < 35; ++i){
+				m_ambe[i] = m_ambeq.dequeue();
+			}
+			send_frame();
+		}
+		else if(m_tx == false){
+			send_frame();
 		}
 	}
-	memcpy(m_ambe + (9*h), ambe, 9);
+	else{
+		m_mbeenc->encode(pcm, ambe_frame);
+		for(int i = 0; i < 7; ++i){
+			for(int j = 0; j < 8; ++j){
+				ambe[i] |= (ambe_frame[(i*8)+j] << (7-j));
+			}
+		}
+		memcpy(m_ambe + (9*(m_transmitcnt % 5)), ambe, 9);
+		if(m_transmitcnt++ % 5 == 0){
+			send_frame();
+		}
 	}
+}
+
+void YSFCodec::send_frame()
+{
+	QByteArray txdata;
+	int frame_size;
+
 	if(m_tx){
 		if(!m_txcnt){
 			encode_header();
 		}
 		else{
-			//m_ambe = ambe;
 			encode_dv2();
 		}
 		++m_txcnt;
-
-		//temp_ysf = get_frame(ambe);
 		frame_size = ::memcmp(m_ysfFrame, "YSFD", 4) ? 130 : 155;
-/*
-		temp_ysf = ysftxdata + txcnt;
-		txcnt += 155;
-		if(txcnt >= sizeof(ysftxdata))
-			txcnt = 0;
-
-*/
 		txdata.append((char *)m_ysfFrame, frame_size);
 		m_udp->writeDatagram(txdata, m_address, m_port);
 #ifdef DEBUG
@@ -552,9 +598,9 @@ void YSFCodec::transmit()
 		}
 		encode_header(1);
 		m_txcnt = 0;
-		ttscnt = 0;
+		m_ttscnt = 0;
 		frame_size = ::memcmp(m_ysfFrame, "YSFD", 4) ? 130 : 155;
-		txdata.append((char *)temp_ysf, frame_size);
+		txdata.append((char *)m_ysfFrame, frame_size);
 		m_udp->writeDatagram(txdata, m_address, m_port);
 	}
 }
@@ -872,7 +918,7 @@ void YSFCodec::writeVDMode2Data(uint8_t* data, const uint8_t* dt)
 
 	uint8_t* p1 = data;
 	uint8_t* p2 = bytes;
-#ifdef DEBUG
+#ifdef SWDEBUG
 	fprintf(stderr, "AMBE: ");
 	for(int i = 0; i < 45; ++i){
 		fprintf(stderr, "%02x ", m_ambe[i]);
@@ -882,27 +928,27 @@ void YSFCodec::writeVDMode2Data(uint8_t* data, const uint8_t* dt)
 #endif
 	for (uint32_t i = 0U; i < 5U; i++) {
 		::memcpy(p1, p2, 5U);
-		if(m_hwvocoder){
+		if(m_hwtx){
 			char ambe_bits[56];
 			uint8_t di_bits[56];
-			uint8_t *d = &m_ambe[9*i];
-			for(int ii = 0; ii < 7; ++ii){
+			uint8_t *d = &m_ambe[7*i];
+			for(int k = 0; k < 7; ++k){
 				for(int j = 0; j < 8; j++){
-					ambe_bits[j+(8*ii)] = (1 & (d[ii] >> (7 - j)));
+					ambe_bits[j+(8*k)] = (1 & (d[k] >> (7 - j)));
 					//ambe_bits[j+(8*ii)] = (1 & (d[ii] >> j));
 				}
 			}
-			for(int ii = 0; ii < 49; ++ii){
-				di_bits[ii] = ambe_bits[vd2DVSIInterleave[ii]];
+			for(int k = 0; k < 49; ++k){
+				di_bits[k] = ambe_bits[dvsi_interleave[k]];
 			}
 			generate_vch_vd2(di_bits);
 		}
 		else{
 			uint8_t a[56];
 			uint8_t *d = &m_ambe[9*i];
-			for(int ii = 0; ii < 7; ++ii){
+			for(int k = 0; k < 7; ++k){
 				for(int j = 0; j < 8; ++j){
-					a[(8*ii)+j] = (1 & (d[ii] >> (7-j)));
+					a[(8*k)+j] = (1 & (d[k] >> (7-j)));
 					//a[((8*i)+j)+1] = (1 & (data[5-i] >> j));
 				}
 			}
@@ -913,10 +959,41 @@ void YSFCodec::writeVDMode2Data(uint8_t* data, const uint8_t* dt)
 	}
 }
 
+void YSFCodec::get_ambe()
+{
+	uint8_t ambe[7];
+
+	if(m_ambedev->get_ambe(ambe)){
+		for(int i = 0; i < 7; ++i){
+			m_ambeq.append(ambe[i]);
+		}
+	}
+}
+
+void YSFCodec::process_hwrx_data()
+{
+	int16_t audio[160];
+	uint8_t ambe[7];
+
+	if((!m_tx) && (m_rxambeq.size() > 6) ){
+		for(int i = 0; i < 7; ++i){
+			ambe[i] = m_rxambeq.dequeue();
+		}
+		m_ambedev->decode(ambe);
+	}
+
+	if(m_ambedev->get_audio(audio)){
+		m_audio->write(audio, 160);
+	}
+}
+
 void YSFCodec::deleteLater()
 {
 	m_ping_timer->stop();
 	send_disconnect();
 	m_cnt = 0;
+	if(m_ambedev != nullptr){
+		delete m_ambedev;
+	}
 	QObject::deleteLater();
 }

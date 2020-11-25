@@ -17,6 +17,7 @@
 
 #include "dudestar.h"
 #include "audioengine.h"
+#include "serialambe.h"
 #include "ui_dudestar.h"
 #include "SHA256.h"
 #include "crs129.h"
@@ -43,8 +44,7 @@
 DudeStar::DudeStar(QWidget *parent) :
     QMainWindow(parent),
 	ui(new Ui::DudeStar),
-	m_update_host_files(false),
-	enable_swtx(false)
+	m_update_host_files(false)
 {
 	dmrslot = 2;
 	dmrcc = 1;
@@ -56,7 +56,6 @@ DudeStar::DudeStar(QWidget *parent) :
 #endif
     ui->setupUi(this);
     init_gui();
-    udp = new QUdpSocket(this);
     connect_status = DISCONNECTED;
 	user_data.resize(21);
 	check_host_files();
@@ -171,7 +170,7 @@ void DudeStar::init_gui()
 	connect(ui->actionUpdate_host_files, SIGNAL(triggered()), this, SLOT(update_host_files()));
     connect(ui->connectButton, SIGNAL(clicked()), this, SLOT(process_connect()));
 	ui->statusBar->insertPermanentWidget(0, status_txt, 1);
-	connect(ui->checkBoxSWRX, SIGNAL(stateChanged(int)), this, SLOT(swrx_state_changed(int)));
+	//connect(ui->checkBoxSWRX, SIGNAL(stateChanged(int)), this, SLOT(swrx_state_changed(int)));
 	connect(ui->checkBoxSWTX, SIGNAL(stateChanged(int)), this, SLOT(swtx_state_changed(int)));
     ui->rptr1->setTextInteractionFlags(Qt::TextSelectableByMouse);
     ui->rptr2->setTextInteractionFlags(Qt::TextSelectableByMouse);
@@ -199,9 +198,6 @@ void DudeStar::init_gui()
 	ui->hostCombo->setEditable(true);
 	ui->dmrtgEdit->setEnabled(false);
 
-	if(!enable_swtx){
-		ui->checkBoxSWTX->hide();
-	}
 	discover_vocoders();
 	ui->AudioOutCombo->addItem("OS Default");
 	ui->AudioOutCombo->addItems(AudioEngine::discover_audio_devices(AUDIO_OUT));
@@ -1131,13 +1127,6 @@ void DudeStar::process_settings()
 				if(sl.at(0) == "USRTXT"){
 					ui->usertxtEdit->setText(sl.at(1).simplified());
 				}
-				if(sl.at(0) == "SWTX"){
-					if(sl.at(1).simplified() == "enabled"){
-						enable_swtx = true;
-						ui->checkBoxSWTX->show();
-					}
-				}
-
 				ui->hostCombo->blockSignals(false);
 			}
 		}
@@ -1149,32 +1138,18 @@ void DudeStar::process_settings()
 
 void DudeStar::discover_vocoders()
 {
-	const QString blankString = "N/A";
-	QString out;
-	const auto serialPortInfos = QSerialPortInfo::availablePorts();
+	QMap<QString, QString> l = SerialAMBE::discover_devices();
+	QMap<QString, QString>::const_iterator i = l.constBegin();
 	ui->AmbeCombo->addItem("Software vocoder", "");
-	if(serialPortInfos.count()){
-		for(const QSerialPortInfo &serialPortInfo : serialPortInfos) {
-			out = "Port: " + serialPortInfo.portName() + ENDLINE
-				+ "Location: " + serialPortInfo.systemLocation() + ENDLINE
-				+ "Description: " + (!serialPortInfo.description().isEmpty() ? serialPortInfo.description() : blankString) + ENDLINE
-				+ "Manufacturer: " + (!serialPortInfo.manufacturer().isEmpty() ? serialPortInfo.manufacturer() : blankString) + ENDLINE
-				+ "Serial number: " + (!serialPortInfo.serialNumber().isEmpty() ? serialPortInfo.serialNumber() : blankString) + ENDLINE
-				+ "Vendor Identifier: " + (serialPortInfo.hasVendorIdentifier() ? QByteArray::number(serialPortInfo.vendorIdentifier(), 16) : blankString) + ENDLINE
-				+ "Product Identifier: " + (serialPortInfo.hasProductIdentifier() ? QByteArray::number(serialPortInfo.productIdentifier(), 16) : blankString) + ENDLINE
-				+ "Busy: " + (serialPortInfo.isBusy() ? "Yes" : "No") + ENDLINE;
-			fprintf(stderr, "%s", out.toStdString().c_str());fflush(stderr);
-			if((!serialPortInfo.description().isEmpty()) && (!serialPortInfo.isBusy())){
-				ui->AmbeCombo->addItem(serialPortInfo.portName() + " - " + serialPortInfo.manufacturer() + " " + serialPortInfo.description() + " - " + serialPortInfo.serialNumber(), serialPortInfo.systemLocation());
-			}
-		}
+	while (i != l.constEnd()) {
+		ui->AmbeCombo->addItem(i.value(), i.key());
+		++i;
 	}
 }
 
-
 void DudeStar::process_connect()
 {
-	fprintf(stderr, "process_connect() called connect_status == %d\n", connect_status);fflush(stderr);
+	//fprintf(stderr, "process_connect() called connect_status == %d\n", connect_status);fflush(stderr);
     if(connect_status != DISCONNECTED){
 		m_modethread->quit();
         connect_status = DISCONNECTED;
@@ -1214,7 +1189,7 @@ void DudeStar::process_connect()
 		hostname = ui->hostCombo->currentText().simplified();
 
 		if(protocol == "REF"){
-			m_ref = new REFCodec(callsign, hostname, host, port);
+			m_ref = new REFCodec(callsign, hostname, host, port, ui->AmbeCombo->currentData().toString().simplified());
 			m_modethread = new QThread;
 			m_ref->moveToThread(m_modethread);
 			connect(m_ref, SIGNAL(update()), this, SLOT(update_ref_data()));
@@ -1226,6 +1201,7 @@ void DudeStar::process_connect()
 			connect(ui->urcallEdit, SIGNAL(textChanged(QString)), m_ref, SLOT(urcall_changed(QString)));
 			connect(ui->rptr1Edit, SIGNAL(textChanged(QString)), m_ref, SLOT(rptr1_changed(QString)));
 			connect(ui->rptr2Edit, SIGNAL(textChanged(QString)), m_ref, SLOT(rptr2_changed(QString)));
+			connect(ui->checkBoxSWRX, SIGNAL(stateChanged(int)), m_ref, SLOT(swrx_state_changed(int)));
 			connect(ui->txButton, SIGNAL(pressed()), m_ref, SLOT(start_tx()));
 			connect(ui->txButton, SIGNAL(released()), m_ref, SLOT(stop_tx()));
 			emit input_source_changed(tts_voices->checkedId(), ui->TTSEdit->text());
@@ -1237,7 +1213,7 @@ void DudeStar::process_connect()
 			m_modethread->start();
 		}
 		if(protocol == "DCS"){
-			m_dcs = new DCSCodec(callsign, hostname, host, port);
+			m_dcs = new DCSCodec(callsign, hostname, host, port, ui->AmbeCombo->currentData().toString().simplified());
 			m_modethread = new QThread;
 			m_dcs->moveToThread(m_modethread);
 			connect(m_dcs, SIGNAL(update()), this, SLOT(update_dcs_data()));
@@ -1249,6 +1225,7 @@ void DudeStar::process_connect()
 			connect(ui->urcallEdit, SIGNAL(textChanged(QString)), m_dcs, SLOT(urcall_changed(QString)));
 			connect(ui->rptr1Edit, SIGNAL(textChanged(QString)), m_dcs, SLOT(rptr1_changed(QString)));
 			connect(ui->rptr2Edit, SIGNAL(textChanged(QString)), m_dcs, SLOT(rptr2_changed(QString)));
+			connect(ui->checkBoxSWRX, SIGNAL(stateChanged(int)), m_dcs, SLOT(swrx_state_changed(int)));
 			connect(ui->txButton, SIGNAL(pressed()), m_dcs, SLOT(start_tx()));
 			connect(ui->txButton, SIGNAL(released()), m_dcs, SLOT(stop_tx()));
 			emit input_source_changed(tts_voices->checkedId(), ui->TTSEdit->text());
@@ -1260,7 +1237,7 @@ void DudeStar::process_connect()
 			m_modethread->start();
 		}
 		if(protocol == "XRF"){
-			m_xrf = new XRFCodec(callsign, hostname, host, port);
+			m_xrf = new XRFCodec(callsign, hostname, host, port, ui->AmbeCombo->currentData().toString().simplified());
 			m_modethread = new QThread;
 			m_xrf->moveToThread(m_modethread);
 			connect(m_xrf, SIGNAL(update()), this, SLOT(update_xrf_data()));
@@ -1272,6 +1249,7 @@ void DudeStar::process_connect()
 			connect(ui->urcallEdit, SIGNAL(textChanged(QString)), m_xrf, SLOT(urcall_changed(QString)));
 			connect(ui->rptr1Edit, SIGNAL(textChanged(QString)), m_xrf, SLOT(rptr1_changed(QString)));
 			connect(ui->rptr2Edit, SIGNAL(textChanged(QString)), m_xrf, SLOT(rptr2_changed(QString)));
+			connect(ui->checkBoxSWRX, SIGNAL(stateChanged(int)), m_xrf, SLOT(swrx_state_changed(int)));
 			connect(ui->txButton, SIGNAL(pressed()), m_xrf, SLOT(start_tx()));
 			connect(ui->txButton, SIGNAL(released()), m_xrf, SLOT(stop_tx()));
 			emit input_source_changed(tts_voices->checkedId(), ui->TTSEdit->text());
@@ -1283,13 +1261,14 @@ void DudeStar::process_connect()
 			m_modethread->start();
 		}
 		if(protocol == "YSF"){
-			m_ysf = new YSFCodec(callsign, hostname, host, port);
+			m_ysf = new YSFCodec(callsign, hostname, host, port, ui->AmbeCombo->currentData().toString().simplified());
 			m_modethread = new QThread;
 			m_ysf->moveToThread(m_modethread);
 			connect(m_ysf, SIGNAL(update()), this, SLOT(update_ysf_data()));
 			connect(m_modethread, SIGNAL(started()), m_ysf, SLOT(send_connect()));
 			connect(m_modethread, SIGNAL(finished()), m_ysf, SLOT(deleteLater()));
 			connect(this, SIGNAL(input_source_changed(int, QString)), m_ysf, SLOT(input_src_changed(int, QString)));
+			connect(ui->checkBoxSWRX, SIGNAL(stateChanged(int)), m_ysf, SLOT(swrx_state_changed(int)));
 			connect(ui->txButton, SIGNAL(pressed()), m_ysf, SLOT(start_tx()));
 			connect(ui->txButton, SIGNAL(released()), m_ysf, SLOT(stop_tx()));
 			emit input_source_changed(tts_voices->checkedId(), ui->TTSEdit->text());
@@ -1301,7 +1280,7 @@ void DudeStar::process_connect()
 			dmrid = ui->dmridEdit->text().toUInt();
 			dmr_password = (ui->dmrpwEdit->text().isEmpty()) ? sl.at(2).simplified() : ui->dmrpwEdit->text();
 			dmr_destid = ui->dmrtgEdit->text().toUInt();
-			m_dmr = new DMRCodec(callsign, dmrid, dmr_password, dmr_destid, host, port);
+			m_dmr = new DMRCodec(callsign, dmrid, dmr_password, dmr_destid, host, port, ui->AmbeCombo->currentData().toString().simplified());
 			m_modethread = new QThread;
 			m_dmr->moveToThread(m_modethread);
 			connect(m_dmr, SIGNAL(update()), this, SLOT(update_dmr_data()));
@@ -1309,6 +1288,7 @@ void DudeStar::process_connect()
 			connect(m_modethread, SIGNAL(finished()), m_dmr, SLOT(deleteLater()));
 			connect(this, SIGNAL(input_source_changed(int, QString)), m_dmr, SLOT(input_src_changed(int, QString)));
 			connect(this, SIGNAL(dmr_tgid_changed(unsigned int)), m_dmr, SLOT(dmr_tgid_changed(unsigned int)));
+			connect(ui->checkBoxSWRX, SIGNAL(stateChanged(int)), m_dmr, SLOT(swrx_state_changed(int)));
 			connect(ui->txButton, SIGNAL(pressed()), m_dmr, SLOT(start_tx()));
 			connect(ui->txButton, SIGNAL(released()), m_dmr, SLOT(stop_tx()));
 			emit input_source_changed(tts_voices->checkedId(), ui->TTSEdit->text());
@@ -1333,13 +1313,14 @@ void DudeStar::process_connect()
 		if(protocol == "NXDN"){
 			dmrid = nxdnids.key(callsign);
 			dmr_destid = ui->hostCombo->currentText().toUInt();
-			m_nxdn = new NXDNCodec(callsign, dmr_destid, host, port);
+			m_nxdn = new NXDNCodec(callsign, dmr_destid, host, port, ui->AmbeCombo->currentData().toString().simplified());
 			m_modethread = new QThread;
 			m_nxdn->moveToThread(m_modethread);
 			connect(m_nxdn, SIGNAL(update()), this, SLOT(update_nxdn_data()));
 			connect(m_modethread, SIGNAL(started()), m_nxdn, SLOT(send_connect()));
 			connect(m_modethread, SIGNAL(finished()), m_nxdn, SLOT(deleteLater()));
 			connect(this, SIGNAL(input_source_changed(int, QString)), m_nxdn, SLOT(input_src_changed(int, QString)));
+			connect(ui->checkBoxSWRX, SIGNAL(stateChanged(int)), m_nxdn, SLOT(swrx_state_changed(int)));
 			connect(ui->txButton, SIGNAL(pressed()), m_nxdn, SLOT(start_tx()));
 			connect(ui->txButton, SIGNAL(released()), m_nxdn, SLOT(stop_tx()));
 			emit input_source_changed(tts_voices->checkedId(), ui->TTSEdit->text());
@@ -1585,6 +1566,8 @@ void DudeStar::update_ref_data()
 		ui->dmrpwEdit->setEnabled(false);
 		ui->txButton->setDisabled(false);
 		//ui->dmrtgEdit->setEnabled(false);
+		ui->checkBoxSWRX->setChecked(!(m_ref->get_hwrx()));
+		ui->checkBoxSWTX->setChecked(!(m_ref->get_hwtx()));
 
 	}
 	ui->mycall->setText(m_ref->get_mycall());

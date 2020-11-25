@@ -65,6 +65,7 @@ SOURCES += \
         nxdncodec.cpp \
         p25codec.cpp \
         refcodec.cpp \
+        serialambe.cpp \
         xrfcodec.cpp \
         ysfcodec.cpp
 
@@ -129,6 +130,7 @@ HEADERS += \
         nxdncodec.h \
         p25codec.h \
         refcodec.h \
+        serialambe.h \
         vocoder_tables.h \
         xrfcodec.h \
         ysfcodec.h

@@ -12,7 +12,7 @@ QStringList AudioEngine::discover_audio_devices(uint8_t d)
 	QList<QAudioDeviceInfo> devices = QAudioDeviceInfo::availableDevices(m);
 
 	for (QList<QAudioDeviceInfo>::ConstIterator it = devices.constBegin(); it != devices.constEnd(); ++it ) {
-		fprintf(stderr, "Playback device name = %s\n", (*it).deviceName().toStdString().c_str());fflush(stderr);
+		//fprintf(stderr, "Playback device name = %s\n", (*it).deviceName().toStdString().c_str());fflush(stderr);
 		list.append((*it).deviceName());
 	}
 	return list;
@@ -37,7 +37,7 @@ void AudioEngine::init()
 	else{
 		QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
 		for (QList<QAudioDeviceInfo>::ConstIterator it = devices.constBegin(); it != devices.constEnd(); ++it ) {
-			qDebug() << "Device name = " << (*it).deviceName();
+			//qDebug() << "Device name = " << (*it).deviceName();
 			if((*it).deviceName() == m_outputdevice){
 				info = *it;
 			}
@@ -50,12 +50,12 @@ void AudioEngine::init()
 		else{
 			tempformat = format;
 		}
-		fprintf(stderr, "Using playback device %s\n", info.deviceName().toStdString().c_str());fflush(stderr);
+		//fprintf(stderr, "Using playback device %s\n", info.deviceName().toStdString().c_str());fflush(stderr);
 
 		m_out = new QAudioOutput(info, tempformat, this);
 		m_out->setBufferSize(6400);
 		m_outdev = m_out->start();
-		qDebug() << "Audio output Using endian " << m_out->format().byteOrder();
+		//qDebug() << "Audio output Using endian " << m_out->format().byteOrder();
 		//connect(ui->muteButton, SIGNAL(clicked()), this, SLOT(process_mute_button()));
 		//connect(ui->volumeSlider, SIGNAL(valueChanged(int)), this, SLOT(process_volume_changed(int)));
 		//connect(audio, SIGNAL(stateChanged(QAudio::State)), this, SLOT(handleStateChanged(QAudio::State)));
@@ -82,9 +82,8 @@ void AudioEngine::init()
 		else{
 			tempformat = format;
 		}
-		fprintf(stderr, "Using recording device %s\n", info.deviceName().toStdString().c_str());fflush(stderr);
+		//fprintf(stderr, "Using recording device %s\n", info.deviceName().toStdString().c_str());fflush(stderr);
 		m_in = new QAudioInput(info, format, this);
-		qDebug() << "Audio input Using endian " << m_in->format().byteOrder();
 		//connect(ui->inmuteButton, SIGNAL(clicked()), this, SLOT(process_input_mute_button()));
 		//connect(ui->involSlider, SIGNAL(valueChanged(int)), this, SLOT(process_input_volume_changed(int)));
 	}

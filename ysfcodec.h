@@ -50,6 +50,7 @@ const unsigned char YSF_MR_BUSY     = 0x02U;
 #include <QObject>
 #include <QtNetwork>
 #include "audioengine.h"
+#include "serialambe.h"
 #include "mbedec.h"
 #include "mbeenc.h"
 #ifdef USE_FLITE
@@ -63,7 +64,7 @@ class YSFCodec : public QObject
 {
 	Q_OBJECT
 public:
-	YSFCodec(QString callsign, QString hostname, QString host, int port);
+	YSFCodec(QString callsign, QString hostname, QString host, int port, QString vocoder);
 	~YSFCodec();
 	uint8_t get_status(){ return m_status; }
 	QString get_callsign() { return m_callsign; }
@@ -78,9 +79,8 @@ public:
 	int get_ft() { return m_ft; }
 	int get_cnt() { return m_cnt; }
 	int get_streamid() { return m_streamid; }
-	//unsigned char * get_frame(unsigned char *ambe);
-	//unsigned char * get_eot();
-	//void use_hwambe(bool y){ use_hw = y; }
+	bool get_hwrx() { return m_hwrx; }
+	bool get_hwtx() { return m_hwtx; }
 	void set_callsign(const char *);
 	void set_fcs_mode(bool y, std::string f = "        "){ m_fcs = y; m_fcsname = f; }
 signals:
@@ -90,6 +90,8 @@ private slots:
 	void stop_tx();
 	void deleteLater();
 	void process_udp();
+	void process_hwrx_data();
+	void get_ambe();
 	void send_ping();
 	void send_connect();
 	void send_disconnect();
@@ -97,6 +99,9 @@ private slots:
 	void transmit();
 	void hostname_lookup(QHostInfo i);
 	void input_src_changed(int id, QString t) { m_ttsid = id; m_ttstext = t; }
+	void swrx_state_changed(int s) {m_hwrx = !s; }
+	void swtx_state_changed(int s) {m_hwtx = !s; }
+	void send_frame();
 private:
 	void decode(uint8_t* data);
 	void encode_header(bool eot = 0);
@@ -108,6 +113,7 @@ private:
 	void writeDataFRModeData1(const unsigned char* dt, unsigned char* data);
 	void writeDataFRModeData2(const unsigned char* dt, unsigned char* data);
 	void writeVDMode2Data(unsigned char* data, const unsigned char* dt);
+	void interleave(uint8_t *ambe);
 	enum{
 		DISCONNECTED,
 		CONNECTING,
@@ -125,9 +131,11 @@ private:
 	int m_port;
 	bool m_tx;
 	uint32_t m_txcnt;
+	uint32_t m_rxcnt;
 	uint8_t m_ttsid;
 	QString m_ttstext;
 	int m_cnt;
+	uint32_t m_transmitcnt;
 #ifdef USE_FLITE
 	cst_voice *voice_slt;
 	cst_voice *voice_kal;
@@ -148,6 +156,15 @@ private:
 	AudioEngine *m_audio;
 	MBEDecoder *m_mbedec;
 	MBEEncoder *m_mbeenc;
+	QString m_vocoder;
+	SerialAMBE *m_ambedev;
+	QTimer *m_hwrxtimer;
+	bool m_hwrx;
+	bool m_hwtx;
+	uint8_t packet_size;
+	uint16_t m_ttscnt;
+	QQueue<char> m_rxambeq;
+	QQueue<char> m_ambeq;
 
 	unsigned char gateway[12];
 	unsigned char m_ysfFrame[200];
@@ -158,7 +175,6 @@ private:
 	unsigned int ambe_a;
 	unsigned int ambe_b;
 	unsigned int ambe_c;
-	bool m_hwvocoder;
 	bool m_fcs;
 	std::string m_fcsname;
 };

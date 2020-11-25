@@ -21,6 +21,7 @@
 #include <QObject>
 #include <QtNetwork>
 #include "audioengine.h"
+#include "serialambe.h"
 #include "mbedec.h"
 #include "mbeenc.h"
 #ifdef USE_FLITE
@@ -34,7 +35,7 @@ class DMRCodec : public QObject
 {
 	Q_OBJECT
 public:
-	DMRCodec(QString callsign, uint32_t dmrid, QString password, uint32_t dstid, QString host, uint32_t port);
+	DMRCodec(QString callsign, uint32_t dmrid, QString password, uint32_t dstid, QString host, uint32_t port, QString vocoder);
 	~DMRCodec();
 	unsigned char * get_eot();
 	uint8_t get_status(){ return m_status; }
@@ -50,6 +51,8 @@ public:
 	int get_port() { return m_port; }
 	int get_fn() { return m_fn; }
 	int get_cnt() { return m_cnt; }
+	bool get_hwrx() { return m_hwrx; }
+	bool get_hwtx() { return m_hwtx; }
 signals:
 	void update();
 private slots:
@@ -57,6 +60,8 @@ private slots:
 	void stop_tx();
 	void deleteLater();
 	void process_udp();
+	void process_hwrx_data();
+	void get_ambe();
 	void send_ping();
 	void send_connect();
 	void send_disconnect();
@@ -65,6 +70,9 @@ private slots:
 	void hostname_lookup(QHostInfo i);
 	void dmr_tgid_changed(unsigned int id) { m_dstid = id; }
 	void input_src_changed(int id, QString t) { m_ttsid = id; m_ttstext = t; }
+	void swrx_state_changed(int s) {m_hwrx = !s; }
+	void swtx_state_changed(int s) {m_hwtx = !s; }
+	void send_frame();
 private:
 	enum{
 		DISCONNECTED,
@@ -86,11 +94,25 @@ private:
 	QString m_hostname;
 	QString m_host;
 	int m_port;
+	uint16_t m_fn;
 	bool m_tx;
 	uint16_t m_txcnt;
+	uint32_t m_rxcnt;
 	uint8_t m_ttsid;
 	QString m_ttstext;
 	int m_cnt;
+	uint32_t m_transmitcnt;
+	QString m_vocoder;
+	SerialAMBE *m_ambedev;
+	QTimer *m_hwrxtimer;
+	bool m_hwrx;
+	bool m_hwtx;
+	uint8_t packet_size;
+	uint16_t m_ttscnt;
+	uint8_t m_ambe[27];
+	QQueue<char> m_rxambeq;
+	QQueue<char> m_ambeq;
+
 #ifdef USE_FLITE
 	cst_voice *voice_slt;
 	cst_voice *voice_kal;
@@ -100,7 +122,7 @@ private:
 #endif
 	uint32_t m_defsrcid;
 	QString m_type;
-	uint16_t m_fn;
+
 	uint16_t m_streamid;
 	QTimer *m_ping_timer;
 	QTimer *m_txtimer;
