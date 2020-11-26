@@ -51,7 +51,7 @@ DMRCodec::DMRCodec(QString callsign, uint32_t dmrid, QString password, uint32_t 
 	m_dmrid(dmrid),
 	m_password(password),
 	m_srcid(0),
-	m_dstid(dstid),
+	m_txdstid(dstid),
 	m_gwid(0),
 	m_host(host),
 	m_port(port),
@@ -159,6 +159,8 @@ void DMRCodec::process_udp()
 			m_mbeenc->set_gain_adjust(2.5);
 			m_txtimer = new QTimer();
 			connect(m_txtimer, SIGNAL(timeout()), this, SLOT(transmit()));
+			m_rxtimer = new QTimer();
+			connect(m_rxtimer, SIGNAL(timeout()), this, SLOT(process_rx_data()));
 			m_ping_timer = new QTimer();
 			connect(m_ping_timer, SIGNAL(timeout()), this, SLOT(send_ping()));
 			m_ping_timer->start(5000);
@@ -167,8 +169,6 @@ void DMRCodec::process_udp()
 				m_hwtx = true;
 				m_ambedev = new SerialAMBE("DMR");
 				m_ambedev->connect_to_serial(m_vocoder);
-				m_rxtimer = new QTimer();
-				connect(m_rxtimer, SIGNAL(timeout()), this, SLOT(process_rx_data()));
 				connect(m_ambedev, SIGNAL(data_ready()), this, SLOT(get_ambe()));
 				//m_hwrxtimer->start(20);
 			}
@@ -314,7 +314,7 @@ void DMRCodec::send_disconnect()
 void DMRCodec::start_tx()
 {
 	//std::cerr << "Pressed TX buffersize == " << audioin->bufferSize() << std::endl;
-	qDebug() << "start_tx() " << m_ttsid << " " << m_ttstext << " " << m_dstid;
+	qDebug() << "start_tx() " << m_ttsid << " " << m_ttstext << " " << m_txdstid;
 	m_tx = true;
 	m_txcnt = 0;
 	m_rxtimer->stop();
@@ -481,9 +481,9 @@ void DMRCodec::build_frame()
 	m_dmrFrame[5U]  = m_srcid >> 16;
 	m_dmrFrame[6U]  = m_srcid >> 8;
 	m_dmrFrame[7U]  = m_srcid >> 0;
-	m_dmrFrame[8U]  = m_dstid >> 16;
-	m_dmrFrame[9U]  = m_dstid >> 8;
-	m_dmrFrame[10U] = m_dstid >> 0;
+	m_dmrFrame[8U]  = m_txdstid >> 16;
+	m_dmrFrame[9U]  = m_txdstid >> 8;
+	m_dmrFrame[10U] = m_txdstid >> 0;
 	m_dmrFrame[11U]  = m_srcid >> 24;
 	m_dmrFrame[12U]  = m_srcid >> 16;
 	m_dmrFrame[13U]  = m_srcid >> 8;
@@ -717,9 +717,9 @@ void DMRCodec::lc_get_data(uint8_t *bytes)
 
 	bytes[1U] = fid;
 	bytes[2U] = options;
-	bytes[3U] = m_dstid >> 16;
-	bytes[4U] = m_dstid >> 8;
-	bytes[5U] = m_dstid >> 0;
+	bytes[3U] = m_txdstid >> 16;
+	bytes[4U] = m_txdstid >> 8;
+	bytes[5U] = m_txdstid >> 0;
 	bytes[6U] = m_srcid >> 16;
 	bytes[7U] = m_srcid >> 8;
 	bytes[8U] = m_srcid >> 0;

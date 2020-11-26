@@ -68,7 +68,7 @@ private slots:
 
 	void transmit();
 	void hostname_lookup(QHostInfo i);
-	void dmr_tgid_changed(unsigned int id) { m_dstid = id; }
+	void dmr_tgid_changed(unsigned int id) { m_txdstid = id; }
 	void input_src_changed(int id, QString t) { m_ttsid = id; m_ttstext = t; }
 	void swrx_state_changed(int s) {m_hwrx = !s; }
 	void swtx_state_changed(int s) {m_hwtx = !s; }
@@ -90,6 +90,7 @@ private:
 	QString m_password;
 	uint32_t m_srcid;
 	uint32_t m_dstid;
+	uint32_t m_txdstid;
 	uint32_t m_gwid;
 	QString m_hostname;
 	QString m_host;

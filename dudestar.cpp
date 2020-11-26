@@ -1161,6 +1161,8 @@ void DudeStar::process_connect()
 		ui->streamid->clear();
 		ui->usertxt->clear();
 		ui->AmbeCombo->setEnabled(true);
+		ui->checkBoxSWRX->setEnabled(true);
+		ui->checkBoxSWTX->setEnabled(true);
 		ui->AudioOutCombo->setEnabled(true);
 		ui->AudioInCombo->setEnabled(true);
 		ui->modeCombo->setEnabled(true);
@@ -1202,6 +1204,7 @@ void DudeStar::process_connect()
 			connect(ui->rptr1Edit, SIGNAL(textChanged(QString)), m_ref, SLOT(rptr1_changed(QString)));
 			connect(ui->rptr2Edit, SIGNAL(textChanged(QString)), m_ref, SLOT(rptr2_changed(QString)));
 			connect(ui->checkBoxSWRX, SIGNAL(stateChanged(int)), m_ref, SLOT(swrx_state_changed(int)));
+			connect(ui->checkBoxSWTX, SIGNAL(stateChanged(int)), m_ref, SLOT(swtx_state_changed(int)));
 			connect(ui->txButton, SIGNAL(pressed()), m_ref, SLOT(start_tx()));
 			connect(ui->txButton, SIGNAL(released()), m_ref, SLOT(stop_tx()));
 			emit input_source_changed(tts_voices->checkedId(), ui->TTSEdit->text());
@@ -1226,6 +1229,7 @@ void DudeStar::process_connect()
 			connect(ui->rptr1Edit, SIGNAL(textChanged(QString)), m_dcs, SLOT(rptr1_changed(QString)));
 			connect(ui->rptr2Edit, SIGNAL(textChanged(QString)), m_dcs, SLOT(rptr2_changed(QString)));
 			connect(ui->checkBoxSWRX, SIGNAL(stateChanged(int)), m_dcs, SLOT(swrx_state_changed(int)));
+			connect(ui->checkBoxSWTX, SIGNAL(stateChanged(int)), m_dcs, SLOT(swtx_state_changed(int)));
 			connect(ui->txButton, SIGNAL(pressed()), m_dcs, SLOT(start_tx()));
 			connect(ui->txButton, SIGNAL(released()), m_dcs, SLOT(stop_tx()));
 			emit input_source_changed(tts_voices->checkedId(), ui->TTSEdit->text());
@@ -1250,6 +1254,7 @@ void DudeStar::process_connect()
 			connect(ui->rptr1Edit, SIGNAL(textChanged(QString)), m_xrf, SLOT(rptr1_changed(QString)));
 			connect(ui->rptr2Edit, SIGNAL(textChanged(QString)), m_xrf, SLOT(rptr2_changed(QString)));
 			connect(ui->checkBoxSWRX, SIGNAL(stateChanged(int)), m_xrf, SLOT(swrx_state_changed(int)));
+			connect(ui->checkBoxSWTX, SIGNAL(stateChanged(int)), m_xrf, SLOT(swtx_state_changed(int)));
 			connect(ui->txButton, SIGNAL(pressed()), m_xrf, SLOT(start_tx()));
 			connect(ui->txButton, SIGNAL(released()), m_xrf, SLOT(stop_tx()));
 			emit input_source_changed(tts_voices->checkedId(), ui->TTSEdit->text());
@@ -1269,6 +1274,7 @@ void DudeStar::process_connect()
 			connect(m_modethread, SIGNAL(finished()), m_ysf, SLOT(deleteLater()));
 			connect(this, SIGNAL(input_source_changed(int, QString)), m_ysf, SLOT(input_src_changed(int, QString)));
 			connect(ui->checkBoxSWRX, SIGNAL(stateChanged(int)), m_ysf, SLOT(swrx_state_changed(int)));
+			connect(ui->checkBoxSWTX, SIGNAL(stateChanged(int)), m_ysf, SLOT(swtx_state_changed(int)));
 			connect(ui->txButton, SIGNAL(pressed()), m_ysf, SLOT(start_tx()));
 			connect(ui->txButton, SIGNAL(released()), m_ysf, SLOT(stop_tx()));
 			emit input_source_changed(tts_voices->checkedId(), ui->TTSEdit->text());
@@ -1289,6 +1295,7 @@ void DudeStar::process_connect()
 			connect(this, SIGNAL(input_source_changed(int, QString)), m_dmr, SLOT(input_src_changed(int, QString)));
 			connect(this, SIGNAL(dmr_tgid_changed(unsigned int)), m_dmr, SLOT(dmr_tgid_changed(unsigned int)));
 			connect(ui->checkBoxSWRX, SIGNAL(stateChanged(int)), m_dmr, SLOT(swrx_state_changed(int)));
+			connect(ui->checkBoxSWTX, SIGNAL(stateChanged(int)), m_dmr, SLOT(swtx_state_changed(int)));
 			connect(ui->txButton, SIGNAL(pressed()), m_dmr, SLOT(start_tx()));
 			connect(ui->txButton, SIGNAL(released()), m_dmr, SLOT(stop_tx()));
 			emit input_source_changed(tts_voices->checkedId(), ui->TTSEdit->text());
@@ -1321,6 +1328,7 @@ void DudeStar::process_connect()
 			connect(m_modethread, SIGNAL(finished()), m_nxdn, SLOT(deleteLater()));
 			connect(this, SIGNAL(input_source_changed(int, QString)), m_nxdn, SLOT(input_src_changed(int, QString)));
 			connect(ui->checkBoxSWRX, SIGNAL(stateChanged(int)), m_nxdn, SLOT(swrx_state_changed(int)));
+			connect(ui->checkBoxSWTX, SIGNAL(stateChanged(int)), m_nxdn, SLOT(swtx_state_changed(int)));
 			connect(ui->txButton, SIGNAL(pressed()), m_nxdn, SLOT(start_tx()));
 			connect(ui->txButton, SIGNAL(released()), m_nxdn, SLOT(stop_tx()));
 			emit input_source_changed(tts_voices->checkedId(), ui->TTSEdit->text());
@@ -1340,11 +1348,6 @@ void DudeStar::process_connect()
 			emit input_source_changed(tts_voices->checkedId(), ui->TTSEdit->text());
 			m_modethread->start();
 		}
-
-		//connect_to_serial(ui->AmbeCombo->currentData().toString().simplified());
-		//QHostInfo::lookupHost(host, this, SLOT(hostname_lookup(QHostInfo)));
-		//setup_audio();
-		//audiodev = audio->start();
     }
 }
 
@@ -1412,6 +1415,8 @@ void DudeStar::update_m17_data()
 		ui->callsignEdit->setEnabled(false);
 		ui->comboMod->setEnabled(false);
 		ui->txButton->setDisabled(false);
+		ui->checkBoxSWRX->setEnabled(false);
+		ui->checkBoxSWTX->setEnabled(false);
 	}
 
 	status_txt->setText(" Host: " + m_m17->get_host() + ":" + QString::number( m_m17->get_port()) + " Ping: " + QString::number(m_m17->get_cnt()));
@@ -1441,6 +1446,13 @@ void DudeStar::update_ysf_data()
 		ui->callsignEdit->setEnabled(false);
 		ui->comboMod->setEnabled(false);
 		ui->txButton->setDisabled(false);
+		if(!(m_ysf->get_hwrx())){
+			ui->checkBoxSWRX->setEnabled(false);
+		}
+		ui->checkBoxSWTX->setChecked(!(m_ysf->get_hwtx()));
+		if(!(m_ysf->get_hwtx())){
+			ui->checkBoxSWTX->setEnabled(false);
+		}
 	}
 
 	status_txt->setText(" Host: " + m_ysf->get_host() + ":" + QString::number( m_ysf->get_port()) + " Ping: " + QString::number(m_ysf->get_cnt()));
@@ -1480,6 +1492,13 @@ void DudeStar::update_nxdn_data()
 		ui->callsignEdit->setEnabled(false);
 		ui->comboMod->setEnabled(false);
 		ui->txButton->setDisabled(false);
+		if(!(m_nxdn->get_hwrx())){
+			ui->checkBoxSWRX->setEnabled(false);
+		}
+		ui->checkBoxSWTX->setChecked(!(m_nxdn->get_hwtx()));
+		if(!(m_nxdn->get_hwtx())){
+			ui->checkBoxSWTX->setEnabled(false);
+		}
 	}
 	status_txt->setText(" Host: " + m_nxdn->get_host() + ":" + QString::number( m_nxdn->get_port()) + " Ping: " + QString::number(m_nxdn->get_cnt()));
 	if(m_nxdn->get_src()){
@@ -1496,6 +1515,7 @@ void DudeStar::update_nxdn_data()
 void DudeStar::update_p25_data()
 {
 	if( (connect_status == CONNECTING) && ( m_p25->get_status() == CONNECTED_RW)){
+		connect_status = CONNECTED_RW;
 		ui->connectButton->setText("Disconnect");
 		ui->connectButton->setEnabled(true);
 		ui->AmbeCombo->setEnabled(false);
@@ -1506,8 +1526,10 @@ void DudeStar::update_p25_data()
 		ui->callsignEdit->setEnabled(false);
 		ui->dmridEdit->setEnabled(false);
 		ui->comboMod->setEnabled(false);
-		connect_status = CONNECTED_RW;
 		ui->txButton->setDisabled(false);
+		ui->checkBoxSWRX->setEnabled(false);
+		ui->checkBoxSWTX->setEnabled(false);
+
 	}
 	status_txt->setText(" Host: " + m_p25->get_host() + ":" + QString::number( m_p25->get_port()) + " Ping: " + QString::number(m_p25->get_cnt()));
 	if(m_p25->get_src()){
@@ -1524,6 +1546,7 @@ void DudeStar::update_p25_data()
 void DudeStar::update_dmr_data()
 {
 	if((connect_status == CONNECTING) && (m_dmr->get_status() == CONNECTED_RW)){
+		connect_status = CONNECTED_RW;
 		ui->connectButton->setText("Disconnect");
 		ui->connectButton->setEnabled(true);
 		ui->AmbeCombo->setEnabled(false);
@@ -1536,6 +1559,14 @@ void DudeStar::update_dmr_data()
 		ui->dmrpwEdit->setEnabled(false);
 		ui->txButton->setDisabled(false);
 		//ui->dmrtgEdit->setEnabled(false);
+		ui->checkBoxSWRX->setChecked(!(m_dmr->get_hwrx()));
+		if(!(m_dmr->get_hwrx())){
+			ui->checkBoxSWRX->setEnabled(false);
+		}
+		ui->checkBoxSWTX->setChecked(!(m_dmr->get_hwtx()));
+		if(!(m_dmr->get_hwtx())){
+			ui->checkBoxSWTX->setEnabled(false);
+		}
 
 	}
 	status_txt->setText(" Host: " + m_dmr->get_host() + ":" + QString::number( m_dmr->get_port()) + " Ping: " + QString::number(m_dmr->get_cnt()));
@@ -1554,6 +1585,7 @@ void DudeStar::update_dmr_data()
 void DudeStar::update_ref_data()
 {
 	if((connect_status == CONNECTING) && (m_ref->get_status() == CONNECTED_RW)){
+		connect_status = CONNECTED_RW;
 		ui->connectButton->setText("Disconnect");
 		ui->connectButton->setEnabled(true);
 		ui->AmbeCombo->setEnabled(false);
@@ -1567,7 +1599,13 @@ void DudeStar::update_ref_data()
 		ui->txButton->setDisabled(false);
 		//ui->dmrtgEdit->setEnabled(false);
 		ui->checkBoxSWRX->setChecked(!(m_ref->get_hwrx()));
+		if(!(m_ref->get_hwrx())){
+			ui->checkBoxSWRX->setEnabled(false);
+		}
 		ui->checkBoxSWTX->setChecked(!(m_ref->get_hwtx()));
+		if(!(m_ref->get_hwtx())){
+			ui->checkBoxSWTX->setEnabled(false);
+		}
 
 	}
 	ui->mycall->setText(m_ref->get_mycall());
@@ -1582,6 +1620,7 @@ void DudeStar::update_ref_data()
 void DudeStar::update_dcs_data()
 {
 	if((connect_status == CONNECTING) && (m_dcs->get_status() == CONNECTED_RW)){
+		connect_status = CONNECTED_RW;
 		ui->connectButton->setText("Disconnect");
 		ui->connectButton->setEnabled(true);
 		ui->AmbeCombo->setEnabled(false);
@@ -1593,7 +1632,14 @@ void DudeStar::update_dcs_data()
 		ui->dmridEdit->setEnabled(false);
 		ui->dmrpwEdit->setEnabled(false);
 		ui->txButton->setDisabled(false);
-		//ui->dmrtgEdit->setEnabled(false);
+		ui->checkBoxSWRX->setChecked(!(m_dcs->get_hwrx()));
+		if(!(m_dcs->get_hwrx())){
+			ui->checkBoxSWRX->setEnabled(false);
+		}
+		ui->checkBoxSWTX->setChecked(!(m_dcs->get_hwtx()));
+		if(!(m_dcs->get_hwtx())){
+			ui->checkBoxSWTX->setEnabled(false);
+		}
 
 	}
 	ui->mycall->setText(m_dcs->get_mycall());
@@ -1608,6 +1654,7 @@ void DudeStar::update_dcs_data()
 void DudeStar::update_xrf_data()
 {
 	if((connect_status == CONNECTING) && (m_xrf->get_status() == CONNECTED_RW)){
+		connect_status = CONNECTED_RW;
 		ui->connectButton->setText("Disconnect");
 		ui->connectButton->setEnabled(true);
 		ui->AmbeCombo->setEnabled(false);
@@ -1619,8 +1666,14 @@ void DudeStar::update_xrf_data()
 		ui->dmridEdit->setEnabled(false);
 		ui->dmrpwEdit->setEnabled(false);
 		ui->txButton->setDisabled(false);
-		//ui->dmrtgEdit->setEnabled(false);
-
+		ui->checkBoxSWRX->setChecked(!(m_xrf->get_hwrx()));
+		if(!(m_xrf->get_hwrx())){
+			ui->checkBoxSWRX->setEnabled(false);
+		}
+		ui->checkBoxSWTX->setChecked(!(m_xrf->get_hwtx()));
+		if(!(m_xrf->get_hwtx())){
+			ui->checkBoxSWTX->setEnabled(false);
+		}
 	}
 	ui->mycall->setText(m_xrf->get_mycall());
 	ui->urcall->setText(m_xrf->get_urcall());

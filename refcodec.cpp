@@ -376,7 +376,6 @@ void REFCodec::start_tx()
 void REFCodec::stop_tx()
 {
 	m_tx = false;
-
 }
 
 void REFCodec::transmit()
