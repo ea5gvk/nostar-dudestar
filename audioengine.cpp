@@ -91,6 +91,7 @@ void AudioEngine::init()
 
 void AudioEngine::start_capture()
 {
+	m_audioinq.clear();
 	m_indev = m_in->start();
 	connect(m_indev, SIGNAL(readyRead()), SLOT(input_data_received()));
 }

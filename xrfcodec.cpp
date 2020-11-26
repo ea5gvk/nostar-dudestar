@@ -111,7 +111,7 @@ void XRFCodec::process_udp()
 
 	if((buf.size() == 56) && (!memcmp(buf.data(), "DSVT", 4)) ){
 		if(m_hwrx && !m_tx && (m_streamid == 0)){
-			m_hwrxtimer->start(20);
+			m_hwrxtimer->start(19);
 		}
 		m_streamid = (buf.data()[12] << 8) | (buf.data()[13] & 0xff);
 		char temp[9];
@@ -233,12 +233,8 @@ void XRFCodec::send_ping()
 {
 	QByteArray out;
 	out.append(m_callsign.toUtf8());
-	out.append(7 - m_callsign.size(), ' ');
-	out.append(m_module);
+	out.append(8 - m_callsign.size(), ' ');
 	out.append('\x00');
-	out.append(m_hostname.toUtf8());
-	out.append('\x00');
-	out.append(m_module);
 	m_udp->writeDatagram(out, m_address, m_port);
 #ifdef DEBUG
 	fprintf(stderr, "PING: ");
@@ -276,6 +272,7 @@ void XRFCodec::start_tx()
 	if(m_hwrx){
 		m_hwrxtimer->stop();
 	}
+
 	if(m_hwtx){
 		m_ambedev->clear_queue();
 	}
@@ -309,7 +306,7 @@ void XRFCodec::start_tx()
 			m_audio->start_capture();
 			//audioin->start(&audio_buffer);
 		}
-		m_txtimer->start(20);
+		m_txtimer->start(19);
 	}
 }
 

@@ -17,7 +17,7 @@ public:
 	bool get_ambe(uint8_t *ambe);
 	void decode(uint8_t *);
 	void encode(int16_t *);
-	void clear_queue(){ m_serialdata.clear(); }
+	void clear_queue();//{ m_serialdata.clear(); }
 private slots:
 	void process_serial();
 private:

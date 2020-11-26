@@ -63,7 +63,8 @@ P25Codec::P25Codec(QString callsign, int dmrid, int hostname, QString host, int 
 	m_srcid(0),
 	m_dstid(0),
 	m_fn(0),
-	m_cnt(0)
+	m_cnt(0),
+	m_rxcnt(0)
 {
 	m_p25cnt = 0;
 #ifdef USE_FLITE
@@ -84,8 +85,6 @@ void P25Codec::process_udp()
 	QByteArray buf;
 	QHostAddress sender;
 	quint16 senderPort;
-	int nbAudioSamples = 0;
-	int16_t *audioSamples;
 
 	buf.resize(m_udp->pendingDatagramSize());
 	m_udp->readDatagram(buf.data(), buf.size(), &sender, &senderPort);
@@ -106,6 +105,8 @@ void P25Codec::process_udp()
 			m_mbeenc->set_88bit_mode();
 			m_status = CONNECTED_RW;
 			m_txtimer = new QTimer();
+			m_rxtimer = new QTimer();
+			connect(m_rxtimer, SIGNAL(timeout()), this, SLOT(process_rx_data()));
 			connect(m_txtimer, SIGNAL(timeout()), this, SLOT(transmit()));
 			m_ping_timer = new QTimer();
 			connect(m_ping_timer, SIGNAL(timeout()), this, SLOT(send_ping()));
@@ -117,6 +118,9 @@ void P25Codec::process_udp()
 		emit update();
 	}
 	if(buf.size() > 11){
+		if(!m_tx && (m_rxcnt++ == 0)){
+			m_rxtimer->start(19);
+		}
 		int offset = 0;
 		m_fn = buf.data()[0U];
 		switch (buf.data()[0U]) {
@@ -163,17 +167,18 @@ void P25Codec::process_udp()
 		case 0x73U:
 			offset = 4U;
 			break;
+		case 0x80U:
+			m_rxtimer->stop();
+			m_rxcnt = 0;
 		default:
 			break;
 		}
 		//for(int i = 0; i < 11; ++i){
 			//m_codecq.enqueue(buf.data()[i + offset]);
 		//}
-		m_mbedec->process_p25((uint8_t *)&buf.data()[offset]);
-		audioSamples = m_mbedec->getAudio(nbAudioSamples);
-		fprintf(stderr, "audio sample size == %d\n", nbAudioSamples);
-		m_audio->write(audioSamples, nbAudioSamples);
-		m_mbedec->resetAudio();
+		for (int i = 0; i < 11; ++i){
+			m_rximbeq.append(buf.data()[offset+i]);
+		}
 		emit update();
 	}
 }
@@ -245,7 +250,10 @@ void P25Codec::start_tx()
 	//std::cerr << "Pressed TX buffersize == " << audioin->bufferSize() << std::endl;
 	qDebug() << "start_tx() " << m_ttsid << " " << m_ttstext;
 	m_tx = true;
+	m_rxtimer->stop();
+	m_rxcnt = 0;
 	m_srcid = m_dmrid;
+
 #ifdef USE_FLITE
 
 	if(m_ttsid == 1){
@@ -271,14 +279,13 @@ void P25Codec::start_tx()
 			m_audio->start_capture();
 			//audioin->start(&audio_buffer);
 		}
-		m_txtimer->start(20);
+		m_txtimer->start(19);
 	}
 }
 
 void P25Codec::stop_tx()
 {
 	m_tx = false;
-
 }
 
 void P25Codec::transmit()
@@ -456,6 +463,32 @@ void P25Codec::transmit()
 		}
 		ttscnt = 0;
 		p25step = 0;
+	}
+#ifdef DEBUG
+		fprintf(stderr, "SEND: ");
+		for(int i = 0; i < txdata.size(); ++i){
+			fprintf(stderr, "%02x ", (unsigned char)txdata.data()[i]);
+		}
+		fprintf(stderr, "\n");
+		fflush(stderr);
+#endif
+}
+
+void P25Codec::process_rx_data()
+{
+	int nbAudioSamples = 0;
+	int16_t *audioSamples;
+
+	char imbe[11];
+	if(m_rximbeq.size() > 10){
+		for(int i = 0; i < 11; ++i){
+			imbe[i] = m_rximbeq.dequeue();
+		}
+		m_mbedec->process_p25((uint8_t *)&imbe);
+		audioSamples = m_mbedec->getAudio(nbAudioSamples);
+		//fprintf(stderr, "audio sample size == %d\n", nbAudioSamples);
+		m_audio->write(audioSamples, nbAudioSamples);
+		m_mbedec->resetAudio();
 	}
 }
 

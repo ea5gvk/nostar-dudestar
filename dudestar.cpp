@@ -130,13 +130,13 @@ void DudeStar::init_gui()
 	palette.setColor(QPalette::HighlightedText, Qt::black);
 	qApp->setPalette(palette);
 	status_txt = new QLabel("Not connected");
-#ifdef USE_FLITE
 	tts_voices = new QButtonGroup();
 	tts_voices->addButton(ui->checkBoxTTSOff, 0);
 	tts_voices->addButton(ui->checkBoxKal, 1);
 	tts_voices->addButton(ui->checkBoxRms, 2);
 	tts_voices->addButton(ui->checkBoxAwb, 3);
 	tts_voices->addButton(ui->checkBoxSlt, 4);
+#ifdef USE_FLITE
 	connect(tts_voices, SIGNAL(buttonClicked(int)), this, SLOT(tts_changed(int)));
 	connect(ui->TTSEdit, SIGNAL(textChanged(QString)), this, SLOT(tts_text_changed(QString)));
 	connect(ui->dmrtgEdit, SIGNAL(textChanged(QString)), this, SLOT(tgid_text_changed(QString)));

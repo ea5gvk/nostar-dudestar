@@ -90,8 +90,6 @@ void DMRCodec::process_udp()
 	quint16 senderPort;
 	CSHA256 sha256;
 	char buffer[400U];
-	int nbAudioSamples = 0;
-	int16_t *audioSamples;
 
 	buf.resize(m_udp->pendingDatagramSize());
 	m_udp->readDatagram(buf.data(), buf.size(), &sender, &senderPort);
@@ -169,8 +167,8 @@ void DMRCodec::process_udp()
 				m_hwtx = true;
 				m_ambedev = new SerialAMBE("DMR");
 				m_ambedev->connect_to_serial(m_vocoder);
-				m_hwrxtimer = new QTimer();
-				connect(m_hwrxtimer, SIGNAL(timeout()), this, SLOT(process_hwrx_data()));
+				m_rxtimer = new QTimer();
+				connect(m_rxtimer, SIGNAL(timeout()), this, SLOT(process_rx_data()));
 				connect(m_ambedev, SIGNAL(data_ready()), this, SLOT(get_ambe()));
 				//m_hwrxtimer->start(20);
 			}
@@ -214,21 +212,12 @@ void DMRCodec::process_udp()
 		m_dstid = (uint32_t)((buf.data()[8] << 16) | ((buf.data()[9] << 8) & 0xff00) | (buf.data()[10] & 0xff));
 		m_gwid = (uint32_t)((buf.data()[11] << 24) | ((buf.data()[12] << 16) & 0xff0000) | ((buf.data()[13] << 8) & 0xff00) | (buf.data()[14] & 0xff));
 		m_fn = buf.data()[4];
-		if(m_rxcnt++ == 0){
-			m_hwrxtimer->start(20);
+		if(!m_tx && (m_rxcnt++ == 0)){
+			m_rxtimer->start(19);
 		}
 		for(int i = 0; i < 3; ++i){
-			if(m_hwrx){
-				for(int j = 0; j < 9; ++j){
-					m_rxambeq.append(dmr3ambe[j + (9*i)]);
-				}
-			}
-			else{
-			//audioq.enqueue(dmr3ambe[i]);
-				m_mbedec->process_dmr(dmr3ambe + (9*i));
-				audioSamples = m_mbedec->getAudio(nbAudioSamples);
-				m_audio->write(audioSamples, nbAudioSamples);
-				m_mbedec->resetAudio();
+			for(int j = 0; j < 9; ++j){
+				m_rxambeq.append(dmr3ambe[j + (9*i)]);
 			}
 		}
 		//uint32_t id = (uint32_t)((buf.data()[5] << 16) | ((buf.data()[6] << 8) & 0xff00) | (buf.data()[7] & 0xff));
@@ -328,7 +317,10 @@ void DMRCodec::start_tx()
 	qDebug() << "start_tx() " << m_ttsid << " " << m_ttstext << " " << m_dstid;
 	m_tx = true;
 	m_txcnt = 0;
-	m_hwrxtimer->stop();
+	m_rxtimer->stop();
+	if(m_hwtx){
+		m_ambedev->clear_queue();
+	}
 	m_rxcnt = 0;
 	m_ttscnt = 0;
 	m_transmitcnt = 0;
@@ -358,7 +350,7 @@ void DMRCodec::start_tx()
 			m_audio->start_capture();
 			//audioin->start(&audio_buffer);
 		}
-		m_txtimer->start(20);
+		m_txtimer->start(19);
 	}
 }
 
@@ -812,8 +804,10 @@ void DMRCodec::get_ambe()
 	}
 }
 
-void DMRCodec::process_hwrx_data()
+void DMRCodec::process_rx_data()
 {
+	int nbAudioSamples = 0;
+	int16_t *audioSamples;
 	int16_t audio[160];
 	uint8_t ambe[9];
 
@@ -821,11 +815,22 @@ void DMRCodec::process_hwrx_data()
 		for(int i = 0; i < 9; ++i){
 			ambe[i] = m_rxambeq.dequeue();
 		}
-		m_ambedev->decode(ambe);
 	}
+	else{
+		return;
+	}
+	if(m_hwrx){
+		m_ambedev->decode(ambe);
 
-	if(m_ambedev->get_audio(audio)){
-		m_audio->write(audio, 160);
+		if(m_ambedev->get_audio(audio)){
+			m_audio->write(audio, 160);
+		}
+	}
+	else{
+		m_mbedec->process_dmr(ambe);
+		audioSamples = m_mbedec->getAudio(nbAudioSamples);
+		m_audio->write(audioSamples, nbAudioSamples);
+		m_mbedec->resetAudio();
 	}
 }
 

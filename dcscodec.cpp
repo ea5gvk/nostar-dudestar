@@ -117,7 +117,7 @@ void DCSCodec::process_udp()
 		qDebug() << "m_streamid == " << m_streamid << ":" << m_hwrx << ":" << m_tx;
 		if(m_hwrx && !m_tx && (m_streamid == 0)){
 			if(!(m_hwrxtimer->isActive())){
-				m_hwrxtimer->start(20);
+				m_hwrxtimer->start(19);
 				qDebug() << "started rxtimer ";
 			}
 		}
@@ -318,7 +318,7 @@ void DCSCodec::start_tx()
 			m_audio->start_capture();
 			//audioin->start(&audio_buffer);
 		}
-		m_txtimer->start(20);
+		m_txtimer->start(19);
 	}
 }
 
@@ -502,9 +502,9 @@ void DCSCodec::get_ambe()
 void DCSCodec::receive_hwrx_data()
 {
 	int16_t audio[160];
-	qDebug() << "called receive";
+	//qDebug() << "called receive";
 	if(m_ambedev->get_audio(audio)){
-		qDebug() << "received something";
+		//qDebug() << "received something";
 		m_audio->write(audio, 160);
 	}
 }

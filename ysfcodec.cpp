@@ -146,8 +146,8 @@ void YSFCodec::process_udp()
 		memcpy(ysftag, buf.data() + 4, 10);ysftag[10] = '\0';
 		m_gateway = QString(ysftag);
 		p_data = (uint8_t *)buf.data() + 35;
-		if(m_rxcnt++ == 0){
-			m_hwrxtimer->start(20);
+		if(m_hwrx && (m_rxcnt++ == 0)){
+			m_hwrxtimer->start(19);
 		}
 	}
 	else if(buf.size() == 130){
@@ -155,7 +155,7 @@ void YSFCodec::process_udp()
 		m_gateway = QString(ysftag);
 		p_data = (uint8_t *)buf.data();
 		if(m_rxcnt++ == 0){
-			m_hwrxtimer->start(20);
+			m_hwrxtimer->start(19);
 		}
 	}
 
@@ -503,7 +503,7 @@ void YSFCodec::start_tx()
 			m_audio->start_capture();
 			//audioin->start(&audio_buffer);
 		}
-		m_txtimer->start(20);
+		m_txtimer->start(19);
 	}
 }
 

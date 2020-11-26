@@ -168,7 +168,7 @@ void REFCodec::process_udp()
 		//qDebug() << "h:r1:r2 == " << h.simplified() << ":" << m_rptr1.simplified() << ":" << m_rptr2.simplified();
 		if( (m_rptr2.simplified() == h.simplified()) || (m_rptr1.simplified() == h.simplified()) ){
 			if(m_hwrx && !m_tx && (m_streamid == 0)){
-				m_hwrxtimer->start(20);
+				m_hwrxtimer->start(19);
 			}
 			m_streamid = (buf.data()[14] << 8) | (buf.data()[15] & 0xff);
 		}
@@ -369,7 +369,7 @@ void REFCodec::start_tx()
 			m_audio->start_capture();
 			//audioin->start(&audio_buffer);
 		}
-		m_txtimer->start(20);
+		m_txtimer->start(19);
 	}
 }
 

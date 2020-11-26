@@ -77,19 +77,23 @@ private:
 	uint32_t m_dstid;
 	uint16_t m_fn;
 	uint32_t m_cnt;
+	uint32_t m_rxcnt;
 	MBEDecoder *m_mbedec;
 	MBEEncoder *m_mbeenc;
 
 	QQueue<unsigned char> m_codecq;
 	QTimer *m_ping_timer;
 	QTimer *m_txtimer;
+	QTimer *m_rxtimer;
 	AudioEngine *m_audio;
+	QQueue<char> m_rximbeq;
 
 private slots:
 	void start_tx();
 	void stop_tx();
 	void deleteLater();
 	void process_udp();
+	void process_rx_data();
 	void send_ping();
 	void send_connect();
 	void send_disconnect();

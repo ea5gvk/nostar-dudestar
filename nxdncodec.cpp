@@ -131,8 +131,8 @@ void NXDNCodec::process_udp()
 	if(buf.size() == 43){
 		m_srcid = (uint16_t)((buf.data()[5] << 8) & 0xff00) | (buf.data()[6] & 0xff);
 		m_dstid = (uint16_t)((buf.data()[7] << 8) & 0xff00) | (buf.data()[8] & 0xff);
-		if(m_fn++ == 0){
-			m_hwrxtimer->start(20);
+		if(m_hwrx && (m_fn++ == 0)){
+			m_hwrxtimer->start(19);
 		}
 
 		if(m_hwrx){
@@ -357,7 +357,7 @@ void NXDNCodec::start_tx()
 			m_audio->start_capture();
 			//audioin->start(&audio_buffer);
 		}
-		m_txtimer->start(20);
+		m_txtimer->start(19);
 	}
 }
 

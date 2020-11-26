@@ -187,6 +187,17 @@ bool SerialAMBE::get_ambe(uint8_t *ambe)
 		return r;
 	}
 
+	if( (m_serialdata.size() > 3) &&
+		(m_serialdata[0] == 0x61) &&
+		(m_serialdata[3] != 0x01)
+		)
+	{
+		do {
+			m_serialdata.dequeue();
+		}
+		while(m_serialdata.size() && m_serialdata[0] != 0x61);
+	}
+
 	if( (m_serialdata.size() >= (6 + packet_size)) &&
 		(m_serialdata[0] == 0x61) &&
 		(m_serialdata[3] == 0x01)
@@ -236,4 +247,9 @@ bool SerialAMBE::get_audio(int16_t *audio)
 		r = true;
 	}
 	return r;
+}
+
+void SerialAMBE::clear_queue()
+{
+	m_serialdata.clear();
 }
