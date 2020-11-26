@@ -52,6 +52,8 @@ signals:
 	void input_source_changed(int, QString);
 	void dmr_tgid_changed(unsigned int);
 	void rate_changed(int);
+	void out_audio_vol_changed(qreal);
+	void in_audio_vol_changed(qreal);
 private:
     void init_gui();
     Ui::DudeStar *ui;

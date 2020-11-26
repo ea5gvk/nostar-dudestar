@@ -441,6 +441,7 @@ void M17Codec::deleteLater()
 {
 	m_ping_timer->stop();
 	send_disconnect();
+	delete m_audio;
 	m_cnt = 0;
 	QObject::deleteLater();
 }

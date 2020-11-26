@@ -839,6 +839,7 @@ void DMRCodec::deleteLater()
 	m_ping_timer->stop();
 	send_disconnect();
 	m_cnt = 0;
+	delete m_audio;
 	if(m_ambedev != nullptr){
 			delete m_ambedev;
 		}

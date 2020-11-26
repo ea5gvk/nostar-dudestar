@@ -5,6 +5,16 @@ AudioEngine::AudioEngine(QObject *parent) : QObject(parent)
 
 }
 
+AudioEngine::~AudioEngine()
+{
+	//m_indev->disconnect();
+	//m_in->stop();
+	//m_outdev->disconnect();
+	//m_out->stop();
+	//delete m_in;
+	//delete m_out;
+}
+
 QStringList AudioEngine::discover_audio_devices(uint8_t d)
 {
 	QStringList list;

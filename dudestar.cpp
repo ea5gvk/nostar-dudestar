@@ -1152,6 +1152,7 @@ void DudeStar::process_connect()
 	//fprintf(stderr, "process_connect() called connect_status == %d\n", connect_status);fflush(stderr);
     if(connect_status != DISCONNECTED){
 		m_modethread->quit();
+		//delete m_modethread;
         connect_status = DISCONNECTED;
         ui->connectButton->setText("Connect");
         ui->mycall->clear();
@@ -1197,6 +1198,7 @@ void DudeStar::process_connect()
 			connect(m_ref, SIGNAL(update()), this, SLOT(update_ref_data()));
 			connect(m_modethread, SIGNAL(started()), m_ref, SLOT(send_connect()));
 			connect(m_modethread, SIGNAL(finished()), m_ref, SLOT(deleteLater()));
+			//connect(m_modethread, SIGNAL(finished()), m_modethread, SLOT(deleteLater()));
 			connect(this, SIGNAL(input_source_changed(int, QString)), m_ref, SLOT(input_src_changed(int, QString)));
 			connect(ui->comboMod, SIGNAL(currentIndexChanged(int)), m_ref, SLOT(module_changed(int)));
 			connect(ui->mycallEdit, SIGNAL(textChanged(QString)), m_ref, SLOT(mycall_changed(QString)));
@@ -1355,6 +1357,7 @@ void DudeStar::process_volume_changed(int v)
 {
 	qreal linear_vol = QAudio::convertVolume(v / qreal(100.0),QAudio::LogarithmicVolumeScale,QAudio::LinearVolumeScale);
 	if(!muted){
+		emit out_audio_vol_changed(linear_vol);
 		//audio->setVolume(linear_vol);
 	}
 	//qDebug("volume == %d : %4.2f", v, linear_vol);
@@ -1367,11 +1370,13 @@ void DudeStar::process_mute_button()
 	if(muted){
 		muted = false;
 		ui->muteButton->setText("Mute");
+		emit out_audio_vol_changed(linear_vol);
 		//audio->setVolume(linear_vol);
 	}
 	else{
 		muted = true;
 		ui->muteButton->setText("Unmute");
+		emit out_audio_vol_changed(0.0);
 		//audio->setVolume(0.0);
 	}
 }
@@ -1380,6 +1385,7 @@ void DudeStar::process_input_volume_changed(int v)
 {
 	qreal linear_vol = QAudio::convertVolume(v / qreal(100.0),QAudio::LogarithmicVolumeScale,QAudio::LinearVolumeScale);
 	if(!input_muted){
+		emit in_audio_vol_changed(linear_vol);
 		//audioin->setVolume(linear_vol);
 	}
 	//qDebug("volume == %d : %4.2f", v, linear_vol);
@@ -1392,11 +1398,13 @@ void DudeStar::process_input_mute_button()
 	if(input_muted){
 		input_muted = false;
 		ui->inmuteButton->setText("Mute");
+		emit in_audio_vol_changed(linear_vol);
 		//audioin->setVolume(linear_vol);
 	}
 	else{
 		input_muted = true;
 		ui->inmuteButton->setText("Unmute");
+		emit in_audio_vol_changed(linear_vol);
 		//audioin->setVolume(0.0);
 	}
 }

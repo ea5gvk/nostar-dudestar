@@ -14,6 +14,7 @@ class AudioEngine : public QObject
 	Q_OBJECT
 public:
 	explicit AudioEngine(QObject *parent = nullptr);
+	~AudioEngine();
 	static QStringList discover_audio_devices(uint8_t d);
 	void init();
 	void start_capture();

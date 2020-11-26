@@ -497,5 +497,6 @@ void P25Codec::deleteLater()
 	m_ping_timer->stop();
 	send_disconnect();
 	m_cnt = 0;
+	delete m_audio;
 	QObject::deleteLater();
 }

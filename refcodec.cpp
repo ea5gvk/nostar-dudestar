@@ -55,6 +55,7 @@ REFCodec::REFCodec(QString callsign, QString hostname, QString host, int port, Q
 
 REFCodec::~REFCodec()
 {
+	qDebug() << "REFCodec() destroyed";
 }
 
 void REFCodec::process_udp()
@@ -640,6 +641,7 @@ void REFCodec::deleteLater()
 	m_ping_timer->stop();
 	send_disconnect();
 	m_cnt = 0;
+	delete m_audio;
 	if(m_ambedev != nullptr){
 		delete m_ambedev;
 	}
