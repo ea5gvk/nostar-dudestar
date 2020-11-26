@@ -276,7 +276,7 @@ void M17Codec::start_tx()
 			m_audio->start_capture();
 			//audioin->start(&audio_buffer);
 		}
-		m_txtimer->start(36);
+		m_txtimer->start(30);
 	}
 }
 
