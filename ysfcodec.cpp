@@ -154,7 +154,7 @@ void YSFCodec::process_udp()
 		memcpy(ysftag, buf.data() + 0x79, 8);ysftag[8] = '\0';
 		m_gateway = QString(ysftag);
 		p_data = (uint8_t *)buf.data();
-		if(m_rxcnt++ == 0){
+		if(m_hwrx && (m_rxcnt++ == 0)){
 			m_hwrxtimer->start(19);
 		}
 	}
@@ -474,7 +474,9 @@ void YSFCodec::start_tx()
 	qDebug() << "start_tx() " << m_ttsid << " " << m_ttstext;
 	m_tx = true;
 	m_txcnt = 0;
-	m_hwrxtimer->stop();
+	if(m_hwrx){
+		m_hwrxtimer->stop();
+	}
 	m_rxcnt = 0;
 	m_ttscnt = 0;
 	m_transmitcnt = 0;

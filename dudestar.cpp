@@ -1415,6 +1415,8 @@ void DudeStar::update_m17_data()
 		ui->callsignEdit->setEnabled(false);
 		ui->comboMod->setEnabled(false);
 		ui->txButton->setDisabled(false);
+		ui->checkBoxSWRX->setChecked(true);
+		ui->checkBoxSWTX->setChecked(true);
 		ui->checkBoxSWRX->setEnabled(false);
 		ui->checkBoxSWTX->setEnabled(false);
 	}
@@ -1446,6 +1448,8 @@ void DudeStar::update_ysf_data()
 		ui->callsignEdit->setEnabled(false);
 		ui->comboMod->setEnabled(false);
 		ui->txButton->setDisabled(false);
+
+		ui->checkBoxSWRX->setChecked(!(m_ysf->get_hwrx()));
 		if(!(m_ysf->get_hwrx())){
 			ui->checkBoxSWRX->setEnabled(false);
 		}
@@ -1492,6 +1496,8 @@ void DudeStar::update_nxdn_data()
 		ui->callsignEdit->setEnabled(false);
 		ui->comboMod->setEnabled(false);
 		ui->txButton->setDisabled(false);
+
+		ui->checkBoxSWRX->setChecked(!(m_nxdn->get_hwrx()));
 		if(!(m_nxdn->get_hwrx())){
 			ui->checkBoxSWRX->setEnabled(false);
 		}
@@ -1527,6 +1533,8 @@ void DudeStar::update_p25_data()
 		ui->dmridEdit->setEnabled(false);
 		ui->comboMod->setEnabled(false);
 		ui->txButton->setDisabled(false);
+		ui->checkBoxSWRX->setChecked(true);
+		ui->checkBoxSWTX->setChecked(true);
 		ui->checkBoxSWRX->setEnabled(false);
 		ui->checkBoxSWTX->setEnabled(false);
 

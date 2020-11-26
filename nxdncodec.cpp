@@ -328,7 +328,9 @@ void NXDNCodec::start_tx()
 	qDebug() << "start_tx() " << m_ttsid << " " << m_ttstext << " " << m_dstid;
 	m_tx = true;
 	m_txcnt = 0;
-	m_hwrxtimer->stop();
+	if(m_hwrx){
+		m_hwrxtimer->stop();
+	}
 	m_fn = 0;
 	m_ttscnt = 0;
 	m_transmitcnt = 0;
@@ -373,7 +375,6 @@ void NXDNCodec::transmit()
 	uint8_t ambe_frame[49];
 	uint8_t ambe[7];
 	int16_t pcm[160];
-
 
 	memset(ambe, 0, 7);
 #ifdef USE_FLITE
