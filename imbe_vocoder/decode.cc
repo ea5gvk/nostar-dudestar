@@ -35,8 +35,6 @@
 
 #include <string.h>
 
-
-
 void imbe_vocoder::decode_init(IMBE_PARAM *imbe_param)
 {
 	v_synt_init();
@@ -50,7 +48,6 @@ void imbe_vocoder::decode_init(IMBE_PARAM *imbe_param)
 	imbe_param->num_bands = 3;
 
 }
-
 
 void imbe_vocoder::decode(IMBE_PARAM *imbe_param, Word16 *frame_vector, Word16 *snd)
 {

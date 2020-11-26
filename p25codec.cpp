@@ -55,6 +55,7 @@ extern cst_voice * register_cmu_us_rms(const char *);
 #endif
 
 P25Codec::P25Codec(QString callsign, int dmrid, int hostname, QString host, int port) :
+	m_tx(false),
 	m_callsign(callsign),
 	m_hostname(hostname),
 	m_host(host),

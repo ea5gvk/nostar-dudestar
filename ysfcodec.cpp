@@ -105,6 +105,8 @@ void YSFCodec::process_udp()
 			m_mbedec->setAutoGain(true);
 			m_mbeenc = new MBEEncoder();
 			m_mbeenc->set_49bit_mode();
+			m_rxtimer = new QTimer();
+			connect(m_rxtimer, SIGNAL(timeout()), this, SLOT(process_rx_data()));
 			//m_mbeenc->set_gain_adjust(2.5);
 			//m_mbeenc->set_gain_adjust(1.0);
 			if(m_vocoder != ""){
@@ -112,8 +114,6 @@ void YSFCodec::process_udp()
 				m_hwtx = true;
 				m_ambedev = new SerialAMBE("YSF");
 				m_ambedev->connect_to_serial(m_vocoder);
-				m_hwrxtimer = new QTimer();
-				connect(m_hwrxtimer, SIGNAL(timeout()), this, SLOT(process_hwrx_data()));
 				connect(m_ambedev, SIGNAL(data_ready()), this, SLOT(get_ambe()));
 				//m_hwrxtimer->start(20);
 			}
@@ -146,16 +146,16 @@ void YSFCodec::process_udp()
 		memcpy(ysftag, buf.data() + 4, 10);ysftag[10] = '\0';
 		m_gateway = QString(ysftag);
 		p_data = (uint8_t *)buf.data() + 35;
-		if(m_hwrx && (m_rxcnt++ == 0)){
-			m_hwrxtimer->start(19);
+		if(!m_tx && (m_rxcnt++ == 0)){
+			m_rxtimer->start(19);
 		}
 	}
 	else if(buf.size() == 130){
 		memcpy(ysftag, buf.data() + 0x79, 8);ysftag[8] = '\0';
 		m_gateway = QString(ysftag);
 		p_data = (uint8_t *)buf.data();
-		if(m_hwrx && (m_rxcnt++ == 0)){
-			m_hwrxtimer->start(19);
+		if(!m_tx && (m_rxcnt++ == 0)){
+			m_rxtimer->start(19);
 		}
 	}
 
@@ -351,8 +351,6 @@ void YSFCodec::decode_vd2(uint8_t* data, uint8_t *dt)
 
 void YSFCodec::decode(uint8_t* data)
 {
-	int nbAudioSamples = 0;
-	int16_t *audioSamples;
 	uint8_t v_tmp[7U];
 	uint8_t dt[20];
 	::memset(v_tmp, 0, 7U);
@@ -435,16 +433,9 @@ void YSFCodec::decode(uint8_t* data)
 		}
 		if(m_hwrx){
 			interleave(v_tmp);
-			for(int i = 0; i < 7; ++i){
-				m_rxambeq.append(v_tmp[i]);
-			}
 		}
-		else{
-			m_mbedec->process_nxdn(v_tmp);
-			audioSamples = m_mbedec->getAudio(nbAudioSamples);
-			//fprintf(stderr, "audio sample size == %d\n", nbAudioSamples);
-			m_audio->write(audioSamples, nbAudioSamples);
-			m_mbedec->resetAudio();
+		for(int i = 0; i < 7; ++i){
+			m_rxambeq.append(v_tmp[i]);
 		}
 	}
 }
@@ -474,9 +465,7 @@ void YSFCodec::start_tx()
 	qDebug() << "start_tx() " << m_ttsid << " " << m_ttstext;
 	m_tx = true;
 	m_txcnt = 0;
-	if(m_hwrx){
-		m_hwrxtimer->stop();
-	}
+	m_rxtimer->stop();
 	m_rxcnt = 0;
 	m_ttscnt = 0;
 	m_transmitcnt = 0;
@@ -972,8 +961,10 @@ void YSFCodec::get_ambe()
 	}
 }
 
-void YSFCodec::process_hwrx_data()
+void YSFCodec::process_rx_data()
 {
+	int nbAudioSamples = 0;
+	int16_t *audioSamples;
 	int16_t audio[160];
 	uint8_t ambe[7];
 
@@ -981,11 +972,23 @@ void YSFCodec::process_hwrx_data()
 		for(int i = 0; i < 7; ++i){
 			ambe[i] = m_rxambeq.dequeue();
 		}
-		m_ambedev->decode(ambe);
+	}
+	else{
+		return;
 	}
 
-	if(m_ambedev->get_audio(audio)){
-		m_audio->write(audio, 160);
+	if(m_hwrx){
+		m_ambedev->decode(ambe);
+
+		if(m_ambedev->get_audio(audio)){
+			m_audio->write(audio, 160);
+		}
+	}
+	else{
+		m_mbedec->process_nxdn(ambe);
+		audioSamples = m_mbedec->getAudio(nbAudioSamples);
+		m_audio->write(audioSamples, nbAudioSamples);
+		m_mbedec->resetAudio();
 	}
 }
 

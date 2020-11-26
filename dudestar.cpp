@@ -1434,8 +1434,8 @@ void DudeStar::update_m17_data()
 	ui->urcall->setText(m_m17->get_dst());
 	ui->rptr1->setText(m_m17->get_type());
 	if(m_m17->get_fn()){
-			QString n = QString("%1").arg(m_m17->get_fn(), 4, 16, QChar('0'));
-			ui->rptr2->setText(n);
+		QString n = QString("%1").arg(m_m17->get_fn(), 4, 16, QChar('0'));
+		ui->rptr2->setText(n);
 	}
 	if(m_m17->get_streamid()){
 		ui->streamid->setText(QString::number(m_m17->get_streamid(), 16));
@@ -1472,7 +1472,7 @@ void DudeStar::update_ysf_data()
 	ui->urcall->setText(m_ysf->get_src());
 	ui->rptr1->setText(m_ysf->get_dst());
 	if(m_ysf->get_type() == 0){
-			ui->rptr2->setText("V/D mode 1");
+		ui->rptr2->setText("V/D mode 1");
 	}
 	else if(m_ysf->get_type() == 1){
 		ui->rptr2->setText("Data Full Rate");
@@ -1583,7 +1583,6 @@ void DudeStar::update_dmr_data()
 		if(!(m_dmr->get_hwtx())){
 			ui->checkBoxSWTX->setEnabled(false);
 		}
-
 	}
 	status_txt->setText(" Host: " + m_dmr->get_host() + ":" + QString::number( m_dmr->get_port()) + " Ping: " + QString::number(m_dmr->get_cnt()));
 	if(m_dmr->get_src()){
@@ -1622,7 +1621,6 @@ void DudeStar::update_ref_data()
 		if(!(m_ref->get_hwtx())){
 			ui->checkBoxSWTX->setEnabled(false);
 		}
-
 	}
 	ui->mycall->setText(m_ref->get_mycall());
 	ui->urcall->setText(m_ref->get_urcall());

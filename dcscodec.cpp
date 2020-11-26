@@ -114,7 +114,7 @@ void DCSCodec::process_udp()
 	}
 
 	if((buf.size() == 100) && (!memcmp(buf.data(), "0001", 4)) ){
-		qDebug() << "m_streamid == " << m_streamid << ":" << m_hwrx << ":" << m_tx;
+		//qDebug() << "m_streamid == " << m_streamid << ":" << m_hwrx << ":" << m_tx;
 		if(m_hwrx && !m_tx && (m_streamid == 0)){
 			if(!(m_hwrxtimer->isActive())){
 				m_hwrxtimer->start(19);
@@ -189,7 +189,7 @@ void DCSCodec::process_udp()
 		}
 		if(m_hwrx && !m_tx){
 			m_ambedev->decode((uint8_t *)buf.data()+46);
-			qDebug() << "called decode()";
+			//qDebug() << "called decode()";
 			if(buf.data()[45] & 0x40){
 				m_streamid = 0;
 				qDebug() << "Stopping hwrx timer";
@@ -520,5 +520,3 @@ void DCSCodec::deleteLater()
 	}
 	QObject::deleteLater();
 }
-
-
