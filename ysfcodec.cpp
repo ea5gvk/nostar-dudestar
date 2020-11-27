@@ -469,6 +469,9 @@ void YSFCodec::start_tx()
 	m_tx = true;
 	m_txcnt = 0;
 	m_rxtimer->stop();
+	if(m_hwtx){
+		m_ambedev->clear_queue();
+	}
 	m_rxcnt = 0;
 	m_ttscnt = 0;
 	m_transmitcnt = 0;
@@ -509,10 +512,10 @@ void YSFCodec::stop_tx()
 void YSFCodec::transmit()
 {
 	uint8_t ambe_frame[49];
-	uint8_t ambe[9];
+	uint8_t ambe[7];
 	int16_t pcm[160];
 
-	memset(ambe, 0, 9);
+	memset(ambe, 0, 7);
 #ifdef USE_FLITE
 	if(m_ttsid > 0){
 		for(int i = 0; i < 160; ++i){
@@ -535,15 +538,6 @@ void YSFCodec::transmit()
 	}
 	if(m_hwtx){
 		m_ambedev->encode(pcm);
-		if(m_tx && (m_ambeq.size() >= 35)){
-			for(int i = 0; i < 35; ++i){
-				m_ambe[i] = m_ambeq.dequeue();
-			}
-			send_frame();
-		}
-		else if(m_tx == false){
-			send_frame();
-		}
 	}
 	else{
 		m_mbeenc->encode(pcm, ambe_frame);
@@ -552,10 +546,18 @@ void YSFCodec::transmit()
 				ambe[i] |= (ambe_frame[(i*8)+j] << (7-j));
 			}
 		}
-		memcpy(m_ambe + (9*(m_transmitcnt % 5)), ambe, 9);
-		if(m_transmitcnt++ % 5 == 0){
-			send_frame();
+		for(int i = 0; i < 7; ++i){
+			m_ambeq.append(ambe[i]);
 		}
+	}
+	if(m_tx && (m_ambeq.size() >= 35)){
+		for(int i = 0; i < 35; ++i){
+			m_ambe[i] = m_ambeq.dequeue();
+		}
+		send_frame();
+	}
+	else if(m_tx == false){
+		send_frame();
 	}
 }
 
@@ -939,7 +941,7 @@ void YSFCodec::writeVDMode2Data(uint8_t* data, const uint8_t* dt)
 		}
 		else{
 			uint8_t a[56];
-			uint8_t *d = &m_ambe[9*i];
+			uint8_t *d = &m_ambe[7*i];
 			for(int k = 0; k < 7; ++k){
 				for(int j = 0; j < 8; ++j){
 					a[(8*k)+j] = (1 & (d[k] >> (7-j)));

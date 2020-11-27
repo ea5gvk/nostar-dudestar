@@ -79,7 +79,6 @@ void DCSCodec::process_udp()
 	fprintf(stderr, "\n");
 	fflush(stderr);
 #endif
-	
 	if(buf.size() == 22){ //2 way keep alive ping
 		m_cnt++;
 	}
@@ -111,6 +110,7 @@ void DCSCodec::process_udp()
 		m_ping_timer->start(2000);
 		m_audio = new AudioEngine();
 		m_audio->init();
+		fprintf(stderr, "m_vocoder == %s m_hwtx:m_hwrx == %d:%d\n", m_vocoder.toStdString().c_str(), m_hwtx, m_hwrx);fflush(stderr);
 	}
 
 	if((buf.size() == 100) && (!memcmp(buf.data(), "0001", 4)) ){

@@ -82,6 +82,7 @@ void REFCodec::process_udp()
 	fprintf(stderr, "\n");
 	fflush(stderr);
 #endif
+	fprintf(stderr, "m_ststus == %d\n", m_status);
 	if ((buf.size() == 5) && (buf.data()[0] == 5)){
 		int x = (::rand() % (999999 - 7245 + 1)) + 7245;
 		QString serial = "HS" + QString("%1").arg(x, 6, 10, QChar('0'));

@@ -370,8 +370,6 @@ void NXDNCodec::stop_tx()
 
 void NXDNCodec::transmit()
 {
-	//QByteArray ambe;
-
 	uint8_t ambe_frame[49];
 	uint8_t ambe[7];
 	int16_t pcm[160];
@@ -399,15 +397,6 @@ void NXDNCodec::transmit()
 	}
 	if(m_hwtx){
 		m_ambedev->encode(pcm);
-		if(m_tx && (m_ambeq.size() >= 28)){
-			for(int i = 0; i < 28; ++i){
-				m_ambe[i] = m_ambeq.dequeue();
-			}
-			send_frame();
-		}
-		else if(m_tx == false){
-			send_frame();
-		}
 	}
 	else{
 		m_mbeenc->encode(pcm, ambe_frame);
@@ -416,11 +405,18 @@ void NXDNCodec::transmit()
 				ambe[i] |= (ambe_frame[(i*8)+j] << (7-j));
 			}
 		}
-		//memcpy(m_ambe + (7*h), ambe, 7);
-		memcpy(m_ambe + (7*(m_transmitcnt % 4)), ambe, 7);
-		if(m_transmitcnt++ % 4 == 0){
-			send_frame();
+		for(int i = 0; i < 7; ++i){
+			m_ambeq.append(ambe[i]);
 		}
+	}
+	if(m_tx && (m_ambeq.size() >= 28)){
+		for(int i = 0; i < 28; ++i){
+			m_ambe[i] = m_ambeq.dequeue();
+		}
+		send_frame();
+	}
+	else if(m_tx == false){
+		send_frame();
 	}
 }
 

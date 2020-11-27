@@ -62,7 +62,8 @@ DMRCodec::DMRCodec(QString callsign, uint32_t dmrid, QString password, uint32_t 
 	m_vocoder(vocoder),
 	m_ambedev(nullptr),
 	m_hwrx(false),
-	m_hwtx(false)
+	m_hwtx(false),
+	m_pc(false)
 {
 	m_dmrcnt = 0;
 	m_colorcode = 1;
@@ -381,31 +382,31 @@ void DMRCodec::transmit()
 			return;
 		}
 	}
+
 	if(m_hwtx){
 		m_ambedev->encode(pcm);
-		if(m_tx && (m_ambeq.size() >= 27)){
-			for(int i = 0; i < 27; ++i){
-				m_ambe[i] = m_ambeq.dequeue();
-			}
-			send_frame();
-		}
-		else if(m_tx == false){
-			send_frame();
-		}
 	}
 	else{
 		m_mbeenc->encode(pcm, ambe);
-		memcpy(m_ambe + (9*(m_transmitcnt % 3)), ambe, 9);
-		if(m_transmitcnt++ % 3 == 0){
-			send_frame();
+		for(int i = 0; i < 9; ++i){
+			m_ambeq.append(ambe[i]);
 		}
+	}
+
+	if(m_tx && (m_ambeq.size() >= 27)){
+		for(int i = 0; i < 27; ++i){
+			m_ambe[i] = m_ambeq.dequeue();
+		}
+		send_frame();
+	}
+	else if(m_tx == false){
+		send_frame();
 	}
 }
 
 void DMRCodec::send_frame()
 {
 	QByteArray txdata;
-
 	if(m_pc){
 		set_calltype(3);
 	}
@@ -442,7 +443,7 @@ void DMRCodec::send_frame()
 		}
 	}
 #ifdef DEBUG
-	fprintf(stderr, "SEND:%d: ", txdata.size());
+	fprintf(stderr, "SEND:%d:%d: ", txdata.size(), m_transmitcnt);
 	for(int i = 0; i < txdata.size(); ++i){
 		fprintf(stderr, "%02x ", (unsigned char)txdata.data()[i]);
 	}
@@ -827,9 +828,10 @@ void DMRCodec::deleteLater()
 	send_disconnect();
 	m_cnt = 0;
 	delete m_audio;
+
 	if(m_ambedev != nullptr){
-			delete m_ambedev;
-		}
+		delete m_ambedev;
+	}
 	QObject::deleteLater();
 }
 

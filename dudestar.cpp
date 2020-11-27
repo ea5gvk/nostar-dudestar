@@ -139,7 +139,6 @@ void DudeStar::init_gui()
 #ifdef USE_FLITE
 	connect(tts_voices, SIGNAL(buttonClicked(int)), this, SLOT(tts_changed(int)));
 	connect(ui->TTSEdit, SIGNAL(textChanged(QString)), this, SLOT(tts_text_changed(QString)));
-	connect(ui->dmrtgEdit, SIGNAL(textChanged(QString)), this, SLOT(tgid_text_changed(QString)));
 #endif
 #ifndef USE_FLITE
 	ui->checkBoxTTSOff->hide();
@@ -164,6 +163,7 @@ void DudeStar::init_gui()
 	ui->m17VoiceFull->setChecked(true);
 	connect(m17rates, SIGNAL(buttonClicked(int)), this, SLOT(m17_rate_changed(int)));
 	//ui->m17VoiceData->setEnabled(false);
+	connect(ui->dmrtgEdit, SIGNAL(textChanged(QString)), this, SLOT(tgid_text_changed(QString)));
     connect(ui->actionAbout, SIGNAL(triggered()), this, SLOT(about()));
     connect(ui->actionQuit, SIGNAL(triggered()), this, SLOT(close()));
 	connect(ui->actionUpdate_DMR_IDs, SIGNAL(triggered()), this, SLOT(update_dmr_ids()));
@@ -1296,6 +1296,7 @@ void DudeStar::process_connect()
 			connect(m_modethread, SIGNAL(finished()), m_dmr, SLOT(deleteLater()));
 			connect(this, SIGNAL(input_source_changed(int, QString)), m_dmr, SLOT(input_src_changed(int, QString)));
 			connect(this, SIGNAL(dmr_tgid_changed(unsigned int)), m_dmr, SLOT(dmr_tgid_changed(unsigned int)));
+			connect(ui->checkBoxDMRPC, SIGNAL(stateChanged(int)), m_dmr, SLOT(dmrpc_state_changed(int)));
 			connect(ui->checkBoxSWRX, SIGNAL(stateChanged(int)), m_dmr, SLOT(swrx_state_changed(int)));
 			connect(ui->checkBoxSWTX, SIGNAL(stateChanged(int)), m_dmr, SLOT(swtx_state_changed(int)));
 			connect(ui->txButton, SIGNAL(pressed()), m_dmr, SLOT(start_tx()));
@@ -1545,7 +1546,6 @@ void DudeStar::update_p25_data()
 		ui->checkBoxSWTX->setChecked(true);
 		ui->checkBoxSWRX->setEnabled(false);
 		ui->checkBoxSWTX->setEnabled(false);
-
 	}
 	status_txt->setText(" Host: " + m_p25->get_host() + ":" + QString::number( m_p25->get_port()) + " Ping: " + QString::number(m_p25->get_cnt()));
 	if(m_p25->get_src()){
@@ -1646,6 +1646,7 @@ void DudeStar::update_dcs_data()
 		ui->dmridEdit->setEnabled(false);
 		ui->dmrpwEdit->setEnabled(false);
 		ui->txButton->setDisabled(false);
+
 		ui->checkBoxSWRX->setChecked(!(m_dcs->get_hwrx()));
 		if(!(m_dcs->get_hwrx())){
 			ui->checkBoxSWRX->setEnabled(false);
@@ -1654,7 +1655,6 @@ void DudeStar::update_dcs_data()
 		if(!(m_dcs->get_hwtx())){
 			ui->checkBoxSWTX->setEnabled(false);
 		}
-
 	}
 	ui->mycall->setText(m_dcs->get_mycall());
 	ui->urcall->setText(m_dcs->get_urcall());
