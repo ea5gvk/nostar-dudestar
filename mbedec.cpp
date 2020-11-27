@@ -94,7 +94,7 @@ MBEDecoder::MBEDecoder() :
 
 	m_aout_gain = 25;
     m_volume = 1.0f;
-	m_hwrx = true;
+	m_hwrx = false;
 	m_auto_gain = false;
     m_stereo = false;
     m_channels = 3; // both channels by default if stereo is set

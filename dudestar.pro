@@ -19,6 +19,7 @@ SOURCES += \
         YSFConvolution.cpp \
         YSFFICH.cpp \
         ambe.c \
+        audioengine.cpp \
         cbptc19696.cpp \
         cgolay2087.cpp \
         chamming.cpp \
@@ -30,11 +31,10 @@ SOURCES += \
         codec2/pack.cpp \
         codec2/qbase.cpp \
         codec2/quantise.cpp \
-        crc.cpp \
         crs129.cpp \
-        dmrencoder.cpp \
+        dcscodec.cpp \
+        dmrcodec.cpp \
         dudestar.cpp \
-        fec.cpp \
         httpmanager.cpp \
         imbe_vocoder/aux_sub.cc \
         imbe_vocoder/basicop2.cc \
@@ -62,14 +62,12 @@ SOURCES += \
         main.cpp \
         mbedec.cpp \
         mbeenc.cc \
-        mbefec.cpp \
-        nxdnencoder.cpp \
-        p25encoder.cpp \
-        pn.cpp \
-        viterbi.cpp \
-        viterbi5.cpp \
-        ysfdec.cpp \
-        ysfenc.cpp
+        nxdncodec.cpp \
+        p25codec.cpp \
+        refcodec.cpp \
+        serialambe.cpp \
+        xrfcodec.cpp \
+        ysfcodec.cpp
 
 HEADERS += \
         CRCenc.h \
@@ -82,6 +80,7 @@ HEADERS += \
         ambe.h \
         ambe3600x2250_const.h \
         ambe3600x2400_const.h \
+        audioengine.h \
         cbptc19696.h \
         cgolay2087.h \
         chamming.h \
@@ -93,11 +92,10 @@ HEADERS += \
         codec2/nlp.h \
         codec2/qbase.h \
         codec2/quantise.h \
-        crc.h \
         crs129.h \
-        dmrencoder.h \
+        dcscodec.h \
+        dmrcodec.h \
         dudestar.h \
-        fec.h \
         httpmanager.h \
         imbe_vocoder/aux_sub.h \
         imbe_vocoder/basic_op.h \
@@ -128,16 +126,14 @@ HEADERS += \
         m17codec.h \
         mbedec.h \
         mbeenc.h \
-        mbefec.h \
         mbelib_parms.h \
-        nxdnencoder.h \
-        p25encoder.h \
-        pn.h \
-        viterbi.h \
-        viterbi5.h \
+        nxdncodec.h \
+        p25codec.h \
+        refcodec.h \
+        serialambe.h \
         vocoder_tables.h \
-        ysfdec.h \
-        ysfenc.h
+        xrfcodec.h \
+        ysfcodec.h
 
 FORMS += \
     dudestar.ui

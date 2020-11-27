@@ -209,6 +209,11 @@ unsigned char CYSFFICH::getMR() const
 	return (m_fich[2U] >> 3) & 0x03U;
 }
 
+bool CYSFFICH::getVoIP() const
+{
+	return (m_fich[2U] & 0x04U) == 0x04U;
+}
+
 bool CYSFFICH::getDev() const
 {
 	return (m_fich[2U] & 0x40U) == 0x40U;

@@ -2,8 +2,8 @@
 
 HttpManager::HttpManager(QString f) : QObject(nullptr)
 {
-	qnam = new QNetworkAccessManager(this);
-	QObject::connect(qnam, SIGNAL(finished(QNetworkReply*)), this, SLOT(http_finished(QNetworkReply*)));
+	m_qnam = new QNetworkAccessManager(this);
+	QObject::connect(m_qnam, SIGNAL(finished(QNetworkReply*)), this, SLOT(http_finished(QNetworkReply*)));
 	m_config_path = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation);
 	m_filename = f;
 #ifndef Q_OS_WIN
@@ -20,7 +20,7 @@ void HttpManager::process()
 
 void HttpManager::doRequest()
 {
-	qnam->get(QNetworkRequest(QUrl("http://www.dudetronics.com/ar-dns" + m_filename)));
+	m_qnam->get(QNetworkRequest(QUrl("http://www.dudetronics.com/ar-dns" + m_filename)));
 	qDebug() << "doRequest() called m_filename == " << m_filename;
 }
 

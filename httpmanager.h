@@ -17,7 +17,7 @@ signals:
 private:
 	QString m_filename;
 	QString m_config_path;
-	QNetworkAccessManager *qnam;
+	QNetworkAccessManager *m_qnam;
 
 private slots:
 	void process();
