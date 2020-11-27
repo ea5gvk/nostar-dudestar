@@ -170,7 +170,6 @@ void DMRCodec::process_udp()
 				m_ambedev = new SerialAMBE("DMR");
 				m_ambedev->connect_to_serial(m_vocoder);
 				connect(m_ambedev, SIGNAL(data_ready()), this, SLOT(get_ambe()));
-				//m_hwrxtimer->start(20);
 			}
 			else{
 				m_hwrx = false;
@@ -178,7 +177,6 @@ void DMRCodec::process_udp()
 			}
 			m_audio = new AudioEngine();
 			m_audio->init();
-			//status_txt->setText(" Host: " + host + ":" + QString::number(port) + " Ping: " + QString::number(ping_cnt));
 			break;
 		default:
 			break;
@@ -187,7 +185,6 @@ void DMRCodec::process_udp()
 	}
 	if((buf.size() == 11) && (::memcmp(buf.data(), "MSTPONG", 7U) == 0)){
 		m_cnt++;
-		//status_txt->setText(" Host: " + host + ":" + QString::number(port) + " Ping: " + QString::number(ping_cnt++));
 	}
 	if((buf.size() == 55) &&
 		(::memcmp(buf.data(), "DMRD", 4U) == 0) &&
@@ -212,6 +209,7 @@ void DMRCodec::process_udp()
 		m_dstid = (uint32_t)((buf.data()[8] << 16) | ((buf.data()[9] << 8) & 0xff00) | (buf.data()[10] & 0xff));
 		m_gwid = (uint32_t)((buf.data()[11] << 24) | ((buf.data()[12] << 16) & 0xff0000) | ((buf.data()[13] << 8) & 0xff00) | (buf.data()[14] & 0xff));
 		m_fn = buf.data()[4];
+
 		if(!m_tx && (m_rxcnt++ == 0)){
 			m_rxtimer->start(19);
 		}
@@ -313,7 +311,6 @@ void DMRCodec::send_disconnect()
 
 void DMRCodec::start_tx()
 {
-	//std::cerr << "Pressed TX buffersize == " << audioin->bufferSize() << std::endl;
 	qDebug() << "start_tx() " << m_ttsid << " " << m_ttstext << " " << m_txdstid;
 	m_tx = true;
 	m_txcnt = 0;
@@ -363,56 +360,46 @@ void DMRCodec::transmit()
 {
 	uint8_t ambe[72];
 	int16_t pcm[160];
-	//static uint16_t txcnt = 0;
-	//dmr->set_dstid(dmr_destid);
-	//dmr->set_cc(ui->dmrccEdit->text().toUInt());
-	//dmr->set_slot(ui->dmrslotEdit->text().toUInt());
 
-	//for(int h = 0; h < 3; ++h){
 #ifdef USE_FLITE
-		if(m_ttsid > 0){
-			for(int i = 0; i < 160; ++i){
-				if(m_ttscnt >= tts_audio->num_samples/2){
-					//audiotx_cnt = 0;
-					pcm[i] = 0;
-				}
-				else{
-					pcm[i] = tts_audio->samples[m_ttscnt*2] / 2;
-					m_ttscnt++;
-				}
-			}
-			//m_mbeenc->encode(pcm, &ambe[(9*h)]);
-		}
-#endif
-		if(m_ttsid == 0){
-			if(m_audio->read(pcm, 160)){
-				//m_mbeenc->encode(pcm, ambe + (9*h));
+	if(m_ttsid > 0){
+		for(int i = 0; i < 160; ++i){
+			if(m_ttscnt >= tts_audio->num_samples/2){
+				pcm[i] = 0;
 			}
 			else{
-				return;
+				pcm[i] = tts_audio->samples[m_ttscnt*2] / 2;
+				m_ttscnt++;
 			}
 		}
-		if(m_hwtx){
-			m_ambedev->encode(pcm);
-			if(m_tx && (m_ambeq.size() >= 27)){
-				for(int i = 0; i < 27; ++i){
-					m_ambe[i] = m_ambeq.dequeue();
-				}
-				send_frame();
-			}
-			else if(m_tx == false){
-				send_frame();
-			}
+	}
+#endif
+	if(m_ttsid == 0){
+		if(m_audio->read(pcm, 160)){
 		}
 		else{
-			m_mbeenc->encode(pcm, ambe);
-			memcpy(m_ambe + (9*(m_transmitcnt % 3)), ambe, 9);
-			if(m_transmitcnt++ % 3 == 0){
-				send_frame();
-			}
+			return;
 		}
-		//memcpy(m_ambe + (9*h), ambe, 9);
-	//}
+	}
+	if(m_hwtx){
+		m_ambedev->encode(pcm);
+		if(m_tx && (m_ambeq.size() >= 27)){
+			for(int i = 0; i < 27; ++i){
+				m_ambe[i] = m_ambeq.dequeue();
+			}
+			send_frame();
+		}
+		else if(m_tx == false){
+			send_frame();
+		}
+	}
+	else{
+		m_mbeenc->encode(pcm, ambe);
+		memcpy(m_ambe + (9*(m_transmitcnt % 3)), ambe, 9);
+		if(m_transmitcnt++ % 3 == 0){
+			send_frame();
+		}
+	}
 }
 
 void DMRCodec::send_frame()

@@ -162,6 +162,7 @@ void YSFCodec::process_udp()
 	if(p_data != nullptr){
 		CYSFFICH fich;
 		if(fich.decode(p_data)){
+			m_fi = fich.getFI();
 			m_fn = fich.getFN();
 			m_ft = fich.getFT();
 			m_path = fich.getVoIP();
@@ -368,7 +369,9 @@ void YSFCodec::decode(uint8_t* data)
 
 	switch (m_fn) {
 	case 0:
-		m_dst = QString((char *)dt);
+		if(m_fi == YSF_FI_COMMUNICATIONS){
+			m_dst = QString((char *)dt);
+		}
 		break;
 	case 1:
 		m_src = QString((char *)dt);

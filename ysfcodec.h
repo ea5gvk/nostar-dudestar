@@ -148,6 +148,7 @@ private:
 	QString m_dst;
 	bool m_path;
 	int m_type;
+	uint8_t m_fi;
 	uint16_t m_fn;
 	uint16_t m_ft;
 	uint16_t m_streamid;
