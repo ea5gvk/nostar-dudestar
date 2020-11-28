@@ -1412,6 +1412,11 @@ void DudeStar::process_input_mute_button()
 
 void DudeStar::update_m17_data()
 {
+	if((connect_status == CONNECTING) && (m_m17->get_status() == DISCONNECTED)){
+		process_connect();
+		QMessageBox::warning(this, tr("Connection refused"), tr("M17 connection refused.  Check callsign and confirm this callsign is not already connected to this reflector"));
+		return;
+	}
 	if( (connect_status == CONNECTING) && ( m_m17->get_status() == CONNECTED_RW)){
 		connect_status = CONNECTED_RW;
 		ui->connectButton->setText("Disconnect");
@@ -1561,6 +1566,11 @@ void DudeStar::update_p25_data()
 
 void DudeStar::update_dmr_data()
 {
+	if((connect_status == CONNECTING) && (m_dmr->get_status() == DISCONNECTED)){
+		process_connect();
+		QMessageBox::warning(this, tr("Connection refused"), tr("DMR connection refused.  Check callsign, DMR ID, or password"));
+		return;
+	}
 	if((connect_status == CONNECTING) && (m_dmr->get_status() == CONNECTED_RW)){
 		connect_status = CONNECTED_RW;
 		ui->connectButton->setText("Disconnect");

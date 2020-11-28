@@ -63,15 +63,11 @@ void AudioEngine::init()
 		else{
 			tempformat = format;
 		}
-		fprintf(stderr, "Using playback device %s\n", info.deviceName().toStdString().c_str());fflush(stderr);
+		//fprintf(stderr, "Using playback device %s\n", info.deviceName().toStdString().c_str());fflush(stderr);
 
 		m_out = new QAudioOutput(info, tempformat, this);
 		m_out->setBufferSize(6400);
 		m_outdev = m_out->start();
-		//qDebug() << "Audio output Using endian " << m_out->format().byteOrder();
-		//connect(ui->muteButton, SIGNAL(clicked()), this, SLOT(process_mute_button()));
-		//connect(ui->volumeSlider, SIGNAL(valueChanged(int)), this, SLOT(process_volume_changed(int)));
-		//connect(audio, SIGNAL(stateChanged(QAudio::State)), this, SLOT(handleStateChanged(QAudio::State)));
 	}
 
 	devices = QAudioDeviceInfo::availableDevices(QAudio::AudioInput);
@@ -95,10 +91,8 @@ void AudioEngine::init()
 		else{
 			tempformat = format;
 		}
-		fprintf(stderr, "Using recording device %s\n", info.deviceName().toStdString().c_str());fflush(stderr);
+		//fprintf(stderr, "Using recording device %s\n", info.deviceName().toStdString().c_str());fflush(stderr);
 		m_in = new QAudioInput(info, format, this);
-		//connect(ui->inmuteButton, SIGNAL(clicked()), this, SLOT(process_input_mute_button()));
-		//connect(ui->involSlider, SIGNAL(valueChanged(int)), this, SLOT(process_input_volume_changed(int)));
 	}
 }
 
@@ -151,7 +145,7 @@ uint16_t AudioEngine::read(int16_t *pcm, size_t s)
 		return 1;
 	}
 	else{
-		fprintf(stderr, "audio frame not avail size == %d\n", m_audioinq.size());
+		//fprintf(stderr, "audio frame not avail size == %d\n", m_audioinq.size());
 		return 0;
 	}
 }

@@ -111,6 +111,12 @@ void M17Codec::process_udp()
 	fprintf(stderr, "\n");
 	fflush(stderr);
 #endif
+	if((m_status != CONNECTED_RW) && (buf.size() == 4) && (::memcmp(buf.data(), "NACK", 4U) == 0)){
+		//m_udp->disconnect();
+		//m_udp->close();
+		//delete m_udp;
+		m_status = DISCONNECTED;
+	}
 	if((buf.size() == 4) && (::memcmp(buf.data(), "ACKN", 4U) == 0)){
 		if(m_status == CONNECTING){
 			m_status = CONNECTED_RW;
@@ -442,9 +448,11 @@ void M17Codec::transmit()
 
 void M17Codec::deleteLater()
 {
-	m_ping_timer->stop();
-	send_disconnect();
-	delete m_audio;
+	if(m_status == CONNECTED_RW){
+		m_ping_timer->stop();
+		send_disconnect();
+		delete m_audio;
+	}
 	m_cnt = 0;
 	QObject::deleteLater();
 }

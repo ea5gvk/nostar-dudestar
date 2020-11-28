@@ -105,9 +105,9 @@ void DMRCodec::process_udp()
 	fflush(stderr);
 #endif
 	if((m_status != CONNECTED_RW) && (::memcmp(buf.data() + 3, "NAK", 3U) == 0)){
-		m_udp->disconnect();
-		m_udp->close();
-		delete m_udp;
+		//m_udp->disconnect();
+		//m_udp->close();
+		//delete m_udp;
 		m_status = DISCONNECTED;
 	}
 	if((m_status != CONNECTED_RW) && (::memcmp(buf.data(), "RPTACK", 6U) == 0)){
@@ -145,12 +145,12 @@ void DMRCodec::process_udp()
 
 			m_status = DMR_CONF;
 			char latitude[20U];
-			::sprintf(latitude, "50.00000");
+			::sprintf(latitude, "00.00000");
 
 			char longitude[20U];
-			::sprintf(longitude, "03.000000");
+			::sprintf(longitude, "00.000000");
 			::sprintf(buffer + 8U, "%-8.8s%09u%09u%02u%02u%8.8s%9.9s%03d%-20.20s%-19.19s%c%-124.124s%-40.40s%-40.40s", m_callsign.toStdString().c_str(),
-					438800000, 438800000, 1, 1, latitude, longitude, 0, "Detroit","USA", '2', "www.dudetronics.com", "20190131", "MMDVM");
+					438800000, 438800000, 1, 1, latitude, longitude, 0, "Nowhere","ABC", '2', "www.qrz.com", "20200101", "MMDVM");
 			out.append(buffer, 302);
 			break;
 		case DMR_CONF:
@@ -314,7 +314,7 @@ void DMRCodec::send_disconnect()
 
 void DMRCodec::start_tx()
 {
-	qDebug() << "start_tx() " << m_ttsid << " " << m_ttstext << " " << m_txdstid;
+	//qDebug() << "start_tx() " << m_ttsid << " " << m_ttstext << " " << m_txdstid;
 	m_tx = true;
 	m_txcnt = 0;
 	m_rxtimer->stop();
@@ -826,14 +826,15 @@ void DMRCodec::process_rx_data()
 
 void DMRCodec::deleteLater()
 {
-	m_ping_timer->stop();
-	send_disconnect();
-	m_cnt = 0;
-	delete m_audio;
-
-	if(m_ambedev != nullptr){
-		delete m_ambedev;
+	if(m_status == CONNECTED_RW){
+		m_ping_timer->stop();
+		send_disconnect();
+		delete m_audio;
+		if(m_ambedev != nullptr){
+			delete m_ambedev;
+		}
 	}
+
+	m_cnt = 0;
 	QObject::deleteLater();
 }
-

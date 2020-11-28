@@ -57,7 +57,6 @@ REFCodec::REFCodec(QString callsign, QString hostname, QString host, int port, Q
 
 REFCodec::~REFCodec()
 {
-	qDebug() << "REFCodec() destroyed";
 }
 
 void REFCodec::process_udp()
@@ -84,7 +83,6 @@ void REFCodec::process_udp()
 	fprintf(stderr, "\n");
 	fflush(stderr);
 #endif
-	fprintf(stderr, "m_ststus == %d\n", m_status);
 	if ((buf.size() == 5) && (buf.data()[0] == 5)){
 		int x = (::rand() % (999999 - 7245 + 1)) + 7245;
 		QString serial = "HS" + QString("%1").arg(x, 6, 10, QChar('0'));
@@ -337,7 +335,7 @@ void REFCodec::send_disconnect()
 void REFCodec::start_tx()
 {
 	//std::cerr << "Pressed TX buffersize == " << audioin->bufferSize() << std::endl;
-	qDebug() << "start_tx() " << m_ttsid << " " << m_ttstext;
+	//qDebug() << "start_tx() " << m_ttsid << " " << m_ttstext;
 	if(m_hwrx){
 		m_hwrxtimer->stop();
 	}
@@ -569,7 +567,7 @@ void REFCodec::send_frame(uint8_t *ambe)
 	#endif
 	}
 	else{
-		qDebug() << "TX stopped";
+		//qDebug() << "TX stopped";
 		txdata.resize(32);
 		txdata[0] = 0x20;
 		txdata[6] = 0x20;
@@ -641,13 +639,15 @@ void REFCodec::calcPFCS(char *d)
 
 void REFCodec::deleteLater()
 {
-	m_ping_timer->stop();
-	send_disconnect();
-	m_cnt = 0;
-	delete m_audio;
-	if(m_ambedev != nullptr){
-		delete m_ambedev;
+	if(m_status == CONNECTED_RW){
+		m_ping_timer->stop();
+		send_disconnect();
+		delete m_audio;
+		if(m_ambedev != nullptr){
+			delete m_ambedev;
+		}
 	}
+	m_cnt = 0;
 	QObject::deleteLater();
 }
 

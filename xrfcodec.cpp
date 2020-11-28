@@ -545,12 +545,14 @@ void XRFCodec::calcPFCS(char *d)
 
 void XRFCodec::deleteLater()
 {
-	m_ping_timer->stop();
-	send_disconnect();
-	m_cnt = 0;
-	delete m_audio;
-	if(m_ambedev != nullptr){
-		delete m_ambedev;
+	if(m_status == CONNECTED_RW){
+		m_ping_timer->stop();
+		send_disconnect();
+		delete m_audio;
+		if(m_ambedev != nullptr){
+			delete m_ambedev;
+		}
 	}
+	m_cnt = 0;
 	QObject::deleteLater();
 }

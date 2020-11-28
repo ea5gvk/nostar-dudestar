@@ -497,9 +497,11 @@ void P25Codec::process_rx_data()
 
 void P25Codec::deleteLater()
 {
-	m_ping_timer->stop();
-	send_disconnect();
+	if(m_status == CONNECTED_RW){
+		m_ping_timer->stop();
+		send_disconnect();
+		delete m_audio;
+	}
 	m_cnt = 0;
-	delete m_audio;
 	QObject::deleteLater();
 }
