@@ -96,6 +96,18 @@ void AudioEngine::init()
 	}
 }
 
+void AudioEngine::set_output_volume(qreal v)
+{
+	qDebug() << "set_output_volume() v == " << v;
+	m_out->setVolume(v);
+}
+
+void AudioEngine::set_input_volume(qreal v)
+{
+	qDebug() << "set_input_volume() v == " << v;
+	m_in->setVolume(v);
+}
+
 void AudioEngine::start_capture()
 {
 	m_audioinq.clear();

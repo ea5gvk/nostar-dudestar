@@ -84,6 +84,14 @@ DMRCodec::~DMRCodec()
 {
 }
 
+void DMRCodec::in_audio_vol_changed(qreal v){
+	m_audio->set_input_volume(v);
+}
+
+void DMRCodec::out_audio_vol_changed(qreal v){
+	m_audio->set_output_volume(v);
+}
+
 void DMRCodec::process_udp()
 {
 	QByteArray buf;

@@ -169,6 +169,10 @@ void DudeStar::init_gui()
 	connect(ui->actionUpdate_DMR_IDs, SIGNAL(triggered()), this, SLOT(update_dmr_ids()));
 	connect(ui->actionUpdate_host_files, SIGNAL(triggered()), this, SLOT(update_host_files()));
     connect(ui->connectButton, SIGNAL(clicked()), this, SLOT(process_connect()));
+	connect(ui->muteButton, SIGNAL(clicked()), this, SLOT(process_mute_button()));
+	connect(ui->volumeSlider, SIGNAL(valueChanged(int)), this, SLOT(process_volume_changed(int)));
+	connect(ui->inmuteButton, SIGNAL(clicked()), this, SLOT(process_input_mute_button()));
+	connect(ui->involSlider, SIGNAL(valueChanged(int)), this, SLOT(process_input_volume_changed(int)));
 	ui->statusBar->insertPermanentWidget(0, status_txt, 1);
 	//connect(ui->checkBoxSWRX, SIGNAL(stateChanged(int)), this, SLOT(swrx_state_changed(int)));
 	connect(ui->checkBoxSWTX, SIGNAL(stateChanged(int)), this, SLOT(swtx_state_changed(int)));
@@ -1209,6 +1213,8 @@ void DudeStar::process_connect()
 			connect(ui->checkBoxSWTX, SIGNAL(stateChanged(int)), m_ref, SLOT(swtx_state_changed(int)));
 			connect(ui->txButton, SIGNAL(pressed()), m_ref, SLOT(start_tx()));
 			connect(ui->txButton, SIGNAL(released()), m_ref, SLOT(stop_tx()));
+			connect(this, SIGNAL(out_audio_vol_changed(qreal)), m_ref, SLOT(out_audio_vol_changed(qreal)));
+			connect(this, SIGNAL(in_audio_vol_changed(qreal)), m_ref, SLOT(in_audio_vol_changed(qreal)));
 			emit input_source_changed(tts_voices->checkedId(), ui->TTSEdit->text());
 			emit ui->comboMod->currentIndexChanged(ui->comboMod->currentIndex());
 			emit ui->mycallEdit->textChanged(ui->mycallEdit->text());
@@ -1234,6 +1240,8 @@ void DudeStar::process_connect()
 			connect(ui->checkBoxSWTX, SIGNAL(stateChanged(int)), m_dcs, SLOT(swtx_state_changed(int)));
 			connect(ui->txButton, SIGNAL(pressed()), m_dcs, SLOT(start_tx()));
 			connect(ui->txButton, SIGNAL(released()), m_dcs, SLOT(stop_tx()));
+			connect(this, SIGNAL(out_audio_vol_changed(qreal)), m_dcs, SLOT(out_audio_vol_changed(qreal)));
+			connect(this, SIGNAL(in_audio_vol_changed(qreal)), m_dcs, SLOT(in_audio_vol_changed(qreal)));
 			emit input_source_changed(tts_voices->checkedId(), ui->TTSEdit->text());
 			emit ui->comboMod->currentIndexChanged(ui->comboMod->currentIndex());
 			emit ui->mycallEdit->textChanged(ui->mycallEdit->text());
@@ -1259,6 +1267,8 @@ void DudeStar::process_connect()
 			connect(ui->checkBoxSWTX, SIGNAL(stateChanged(int)), m_xrf, SLOT(swtx_state_changed(int)));
 			connect(ui->txButton, SIGNAL(pressed()), m_xrf, SLOT(start_tx()));
 			connect(ui->txButton, SIGNAL(released()), m_xrf, SLOT(stop_tx()));
+			connect(this, SIGNAL(out_audio_vol_changed(qreal)), m_xrf, SLOT(out_audio_vol_changed(qreal)));
+			connect(this, SIGNAL(in_audio_vol_changed(qreal)), m_xrf, SLOT(in_audio_vol_changed(qreal)));
 			emit input_source_changed(tts_voices->checkedId(), ui->TTSEdit->text());
 			emit ui->comboMod->currentIndexChanged(ui->comboMod->currentIndex());
 			emit ui->mycallEdit->textChanged(ui->mycallEdit->text());
@@ -1279,6 +1289,8 @@ void DudeStar::process_connect()
 			connect(ui->checkBoxSWTX, SIGNAL(stateChanged(int)), m_ysf, SLOT(swtx_state_changed(int)));
 			connect(ui->txButton, SIGNAL(pressed()), m_ysf, SLOT(start_tx()));
 			connect(ui->txButton, SIGNAL(released()), m_ysf, SLOT(stop_tx()));
+			connect(this, SIGNAL(out_audio_vol_changed(qreal)), m_ysf, SLOT(out_audio_vol_changed(qreal)));
+			connect(this, SIGNAL(in_audio_vol_changed(qreal)), m_ysf, SLOT(in_audio_vol_changed(qreal)));
 			emit input_source_changed(tts_voices->checkedId(), ui->TTSEdit->text());
 			m_modethread->start();
 		}
@@ -1301,6 +1313,8 @@ void DudeStar::process_connect()
 			connect(ui->checkBoxSWTX, SIGNAL(stateChanged(int)), m_dmr, SLOT(swtx_state_changed(int)));
 			connect(ui->txButton, SIGNAL(pressed()), m_dmr, SLOT(start_tx()));
 			connect(ui->txButton, SIGNAL(released()), m_dmr, SLOT(stop_tx()));
+			connect(this, SIGNAL(out_audio_vol_changed(qreal)), m_dmr, SLOT(out_audio_vol_changed(qreal)));
+			connect(this, SIGNAL(in_audio_vol_changed(qreal)), m_dmr, SLOT(in_audio_vol_changed(qreal)));
 			emit input_source_changed(tts_voices->checkedId(), ui->TTSEdit->text());
 			m_modethread->start();
 		}
@@ -1317,6 +1331,8 @@ void DudeStar::process_connect()
 			connect(this, SIGNAL(dmr_tgid_changed(unsigned int)), m_p25, SLOT(dmr_tgid_changed(unsigned int)));
 			connect(ui->txButton, SIGNAL(pressed()), m_p25, SLOT(start_tx()));
 			connect(ui->txButton, SIGNAL(released()), m_p25, SLOT(stop_tx()));
+			connect(this, SIGNAL(out_audio_vol_changed(qreal)), m_p25, SLOT(out_audio_vol_changed(qreal)));
+			connect(this, SIGNAL(in_audio_vol_changed(qreal)), m_p25, SLOT(in_audio_vol_changed(qreal)));
 			emit input_source_changed(tts_voices->checkedId(), ui->TTSEdit->text());
 			m_modethread->start();
 		}
@@ -1334,6 +1350,8 @@ void DudeStar::process_connect()
 			connect(ui->checkBoxSWTX, SIGNAL(stateChanged(int)), m_nxdn, SLOT(swtx_state_changed(int)));
 			connect(ui->txButton, SIGNAL(pressed()), m_nxdn, SLOT(start_tx()));
 			connect(ui->txButton, SIGNAL(released()), m_nxdn, SLOT(stop_tx()));
+			connect(this, SIGNAL(out_audio_vol_changed(qreal)), m_nxdn, SLOT(out_audio_vol_changed(qreal)));
+			connect(this, SIGNAL(in_audio_vol_changed(qreal)), m_nxdn, SLOT(in_audio_vol_changed(qreal)));
 			emit input_source_changed(tts_voices->checkedId(), ui->TTSEdit->text());
 			m_modethread->start();
 		}
@@ -1348,6 +1366,8 @@ void DudeStar::process_connect()
 			connect(this, SIGNAL(input_source_changed(int, QString)), m_m17, SLOT(input_src_changed(int, QString)));
 			connect(ui->txButton, SIGNAL(pressed()), m_m17, SLOT(start_tx()));
 			connect(ui->txButton, SIGNAL(released()), m_m17, SLOT(stop_tx()));
+			connect(this, SIGNAL(out_audio_vol_changed(qreal)), m_m17, SLOT(out_audio_vol_changed(qreal)));
+			connect(this, SIGNAL(in_audio_vol_changed(qreal)), m_m17, SLOT(in_audio_vol_changed(qreal)));
 			emit input_source_changed(tts_voices->checkedId(), ui->TTSEdit->text());
 			m_modethread->start();
 		}
@@ -1359,7 +1379,6 @@ void DudeStar::process_volume_changed(int v)
 	qreal linear_vol = QAudio::convertVolume(v / qreal(100.0),QAudio::LogarithmicVolumeScale,QAudio::LinearVolumeScale);
 	if(!muted){
 		emit out_audio_vol_changed(linear_vol);
-		//audio->setVolume(linear_vol);
 	}
 	//qDebug("volume == %d : %4.2f", v, linear_vol);
 }
@@ -1387,7 +1406,6 @@ void DudeStar::process_input_volume_changed(int v)
 	qreal linear_vol = QAudio::convertVolume(v / qreal(100.0),QAudio::LogarithmicVolumeScale,QAudio::LinearVolumeScale);
 	if(!input_muted){
 		emit in_audio_vol_changed(linear_vol);
-		//audioin->setVolume(linear_vol);
 	}
 	//qDebug("volume == %d : %4.2f", v, linear_vol);
 }

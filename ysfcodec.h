@@ -102,6 +102,8 @@ private slots:
 	void swrx_state_changed(int s) {m_hwrx = !s; }
 	void swtx_state_changed(int s) {m_hwtx = !s; }
 	void send_frame();
+	void in_audio_vol_changed(qreal);
+	void out_audio_vol_changed(qreal);
 private:
 	void decode(uint8_t* data);
 	void encode_header(bool eot = 0);

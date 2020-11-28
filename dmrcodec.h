@@ -74,6 +74,8 @@ private slots:
 	void swrx_state_changed(int s) {m_hwrx = !s; }
 	void swtx_state_changed(int s) {m_hwtx = !s; }
 	void send_frame();
+	void in_audio_vol_changed(qreal);
+	void out_audio_vol_changed(qreal);
 private:
 	enum{
 		DISCONNECTED,

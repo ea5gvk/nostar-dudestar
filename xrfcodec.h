@@ -131,6 +131,8 @@ private slots:
 	void swrx_state_changed(int s) {m_hwrx = !s; }
 	void swtx_state_changed(int s) {m_hwtx = !s; }
 	void send_frame(uint8_t *);
+	void in_audio_vol_changed(qreal);
+	void out_audio_vol_changed(qreal);
 	void calcPFCS(char *d);
 };
 

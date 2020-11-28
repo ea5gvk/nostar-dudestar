@@ -59,6 +59,14 @@ REFCodec::~REFCodec()
 {
 }
 
+void REFCodec::in_audio_vol_changed(qreal v){
+	m_audio->set_input_volume(v);
+}
+
+void REFCodec::out_audio_vol_changed(qreal v){
+	m_audio->set_output_volume(v);
+}
+
 void REFCodec::process_udp()
 {
 	QByteArray buf;

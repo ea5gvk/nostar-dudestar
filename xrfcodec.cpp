@@ -58,6 +58,14 @@ XRFCodec::~XRFCodec()
 {
 }
 
+void XRFCodec::in_audio_vol_changed(qreal v){
+	m_audio->set_input_volume(v);
+}
+
+void XRFCodec::out_audio_vol_changed(qreal v){
+	m_audio->set_output_volume(v);
+}
+
 void XRFCodec::process_udp()
 {
 	QByteArray buf;

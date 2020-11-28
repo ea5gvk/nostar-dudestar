@@ -83,6 +83,14 @@ P25Codec::~P25Codec()
 {
 }
 
+void P25Codec::in_audio_vol_changed(qreal v){
+	m_audio->set_input_volume(v);
+}
+
+void P25Codec::out_audio_vol_changed(qreal v){
+	m_audio->set_output_volume(v);
+}
+
 void P25Codec::process_udp()
 {
 	QByteArray buf;

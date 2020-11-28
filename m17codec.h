@@ -50,7 +50,9 @@ private slots:
 	void transmit();
 	void hostname_lookup(QHostInfo i);
 	void input_src_changed(int id, QString t) { m_ttsid = id; m_ttstext = t; }
-	void rate_changed(int r) { m_txrate = r; /* m_c2->codec2_set_mode(r); */ }
+	void rate_changed(int r) { m_txrate = r; }
+	void in_audio_vol_changed(qreal);
+	void out_audio_vol_changed(qreal);
 private:
 
 	enum{

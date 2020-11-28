@@ -59,6 +59,14 @@ DCSCodec::~DCSCodec()
 {
 }
 
+void DCSCodec::in_audio_vol_changed(qreal v){
+	m_audio->set_input_volume(v);
+}
+
+void DCSCodec::out_audio_vol_changed(qreal v){
+	m_audio->set_output_volume(v);
+}
+
 void DCSCodec::process_udp()
 {
 	QByteArray buf;
@@ -66,7 +74,6 @@ void DCSCodec::process_udp()
 	quint16 senderPort;
 	int nbAudioSamples = 0;
 	int16_t *audioSamples;
-	static uint16_t s = 0;
 	static bool sd_sync = 0;
 	static int sd_seq = 0;
 	static char user_data[21];

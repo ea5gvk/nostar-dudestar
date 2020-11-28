@@ -43,6 +43,14 @@ M17Codec::~M17Codec()
 {
 }
 
+void M17Codec::in_audio_vol_changed(qreal v){
+	m_audio->set_input_volume(v);
+}
+
+void M17Codec::out_audio_vol_changed(qreal v){
+	m_audio->set_output_volume(v);
+}
+
 void M17Codec::encode_callsign(uint8_t *callsign)
 {
 	const std::string m17_alphabet(M17CHARACTERS);

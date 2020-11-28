@@ -77,6 +77,14 @@ YSFCodec::~YSFCodec()
 {
 }
 
+void YSFCodec::in_audio_vol_changed(qreal v){
+	m_audio->set_input_volume(v);
+}
+
+void YSFCodec::out_audio_vol_changed(qreal v){
+	m_audio->set_output_volume(v);
+}
+
 void YSFCodec::process_udp()
 {
 	QByteArray buf;

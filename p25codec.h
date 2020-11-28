@@ -104,6 +104,8 @@ private slots:
 	void hostname_lookup(QHostInfo i);
 	void dmr_tgid_changed(unsigned int id) { m_dstid = id; }
 	void input_src_changed(int id, QString t) { m_ttsid = id; m_ttstext = t; }
+	void in_audio_vol_changed(qreal);
+	void out_audio_vol_changed(qreal);
 };
 
 #endif // P25CODEC_H
