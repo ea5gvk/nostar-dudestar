@@ -1414,7 +1414,7 @@ void DudeStar::update_m17_data()
 {
 	if((connect_status == CONNECTING) && (m_m17->get_status() == DISCONNECTED)){
 		process_connect();
-		QMessageBox::warning(this, tr("Connection refused"), tr("M17 connection refused.  Check callsign and confirm this callsign is not already connected to this reflector"));
+		QMessageBox::warning(this, tr("Connection refused"), tr("M17 connection refused.  Check callsign and confirm this callsign or IP is not already connected to this reflector"));
 		return;
 	}
 	if( (connect_status == CONNECTING) && ( m_m17->get_status() == CONNECTED_RW)){
