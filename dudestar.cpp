@@ -1192,7 +1192,7 @@ void DudeStar::process_connect()
 		hostname = ui->hostCombo->currentText().simplified();
 
 		if(protocol == "REF"){
-			m_ref = new REFCodec(callsign, hostname, host, port, ui->AmbeCombo->currentData().toString().simplified());
+			m_ref = new REFCodec(callsign, hostname, host, port, ui->AmbeCombo->currentData().toString().simplified(), ui->AudioInCombo->currentText(), ui->AudioOutCombo->currentText());
 			m_modethread = new QThread;
 			m_ref->moveToThread(m_modethread);
 			connect(m_ref, SIGNAL(update()), this, SLOT(update_ref_data()));
@@ -1218,7 +1218,7 @@ void DudeStar::process_connect()
 			m_modethread->start();
 		}
 		if(protocol == "DCS"){
-			m_dcs = new DCSCodec(callsign, hostname, host, port, ui->AmbeCombo->currentData().toString().simplified());
+			m_dcs = new DCSCodec(callsign, hostname, host, port, ui->AmbeCombo->currentData().toString().simplified(), ui->AudioInCombo->currentText(), ui->AudioOutCombo->currentText());
 			m_modethread = new QThread;
 			m_dcs->moveToThread(m_modethread);
 			connect(m_dcs, SIGNAL(update()), this, SLOT(update_dcs_data()));
@@ -1243,7 +1243,7 @@ void DudeStar::process_connect()
 			m_modethread->start();
 		}
 		if(protocol == "XRF"){
-			m_xrf = new XRFCodec(callsign, hostname, host, port, ui->AmbeCombo->currentData().toString().simplified());
+			m_xrf = new XRFCodec(callsign, hostname, host, port, ui->AmbeCombo->currentData().toString().simplified(), ui->AudioInCombo->currentText(), ui->AudioOutCombo->currentText());
 			m_modethread = new QThread;
 			m_xrf->moveToThread(m_modethread);
 			connect(m_xrf, SIGNAL(update()), this, SLOT(update_xrf_data()));
@@ -1268,7 +1268,7 @@ void DudeStar::process_connect()
 			m_modethread->start();
 		}
 		if(protocol == "YSF"){
-			m_ysf = new YSFCodec(callsign, hostname, host, port, ui->AmbeCombo->currentData().toString().simplified());
+			m_ysf = new YSFCodec(callsign, hostname, host, port, ui->AmbeCombo->currentData().toString().simplified(), ui->AudioInCombo->currentText(), ui->AudioOutCombo->currentText());
 			m_modethread = new QThread;
 			m_ysf->moveToThread(m_modethread);
 			connect(m_ysf, SIGNAL(update()), this, SLOT(update_ysf_data()));
@@ -1288,7 +1288,7 @@ void DudeStar::process_connect()
 			dmrid = ui->dmridEdit->text().toUInt();
 			dmr_password = (ui->dmrpwEdit->text().isEmpty()) ? sl.at(2).simplified() : ui->dmrpwEdit->text();
 			dmr_destid = ui->dmrtgEdit->text().toUInt();
-			m_dmr = new DMRCodec(callsign, dmrid, dmr_password, dmr_destid, host, port, ui->AmbeCombo->currentData().toString().simplified());
+			m_dmr = new DMRCodec(callsign, dmrid, dmr_password, dmr_destid, host, port, ui->AmbeCombo->currentData().toString().simplified(), ui->AudioInCombo->currentText(), ui->AudioOutCombo->currentText());
 			m_modethread = new QThread;
 			m_dmr->moveToThread(m_modethread);
 			connect(m_dmr, SIGNAL(update()), this, SLOT(update_dmr_data()));
@@ -1307,7 +1307,7 @@ void DudeStar::process_connect()
 		if(protocol == "P25"){
 			dmrid = ui->dmridEdit->text().toUInt();
 			dmr_destid = ui->dmrtgEdit->text().toUInt();
-			m_p25 = new P25Codec(callsign, dmrid, dmr_destid, host, port);
+			m_p25 = new P25Codec(callsign, dmrid, dmr_destid, host, port, ui->AudioInCombo->currentText(), ui->AudioOutCombo->currentText());
 			m_modethread = new QThread;
 			m_p25->moveToThread(m_modethread);
 			connect(m_p25, SIGNAL(update()), this, SLOT(update_p25_data()));
@@ -1323,7 +1323,7 @@ void DudeStar::process_connect()
 		if(protocol == "NXDN"){
 			dmrid = nxdnids.key(callsign);
 			dmr_destid = ui->hostCombo->currentText().toUInt();
-			m_nxdn = new NXDNCodec(callsign, dmr_destid, host, port, ui->AmbeCombo->currentData().toString().simplified());
+			m_nxdn = new NXDNCodec(callsign, dmr_destid, host, port, ui->AmbeCombo->currentData().toString().simplified(), ui->AudioInCombo->currentText(), ui->AudioOutCombo->currentText());
 			m_modethread = new QThread;
 			m_nxdn->moveToThread(m_modethread);
 			connect(m_nxdn, SIGNAL(update()), this, SLOT(update_nxdn_data()));
@@ -1338,7 +1338,7 @@ void DudeStar::process_connect()
 			m_modethread->start();
 		}
 		if(protocol == "M17"){
-			m_m17 = new M17Codec(callsign, module, hostname, host, port);
+			m_m17 = new M17Codec(callsign, module, hostname, host, port, ui->AudioInCombo->currentText(), ui->AudioOutCombo->currentText());
 			m_modethread = new QThread;
 			m_m17->moveToThread(m_modethread);
 			connect(m_m17, SIGNAL(update()), this, SLOT(update_m17_data()));

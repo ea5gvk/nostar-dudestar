@@ -54,7 +54,7 @@ extern cst_voice * register_cmu_us_rms(const char *);
 }
 #endif
 
-P25Codec::P25Codec(QString callsign, int dmrid, int hostname, QString host, int port) :
+P25Codec::P25Codec(QString callsign, int dmrid, int hostname, QString host, int port, QString audioin, QString audioout) :
 	m_tx(false),
 	m_callsign(callsign),
 	m_hostname(hostname),
@@ -65,7 +65,9 @@ P25Codec::P25Codec(QString callsign, int dmrid, int hostname, QString host, int 
 	m_dstid(0),
 	m_fn(0),
 	m_cnt(0),
-	m_rxcnt(0)
+	m_rxcnt(0),
+	m_audioin(audioin),
+	m_audioout(audioout)
 {
 	m_p25cnt = 0;
 #ifdef USE_FLITE
@@ -112,7 +114,7 @@ void P25Codec::process_udp()
 			m_ping_timer = new QTimer();
 			connect(m_ping_timer, SIGNAL(timeout()), this, SLOT(send_ping()));
 			m_ping_timer->start(5000);
-			m_audio = new AudioEngine();
+			m_audio = new AudioEngine(m_audioin, m_audioout);
 			m_audio->init();
 		}
 		m_cnt++;

@@ -32,7 +32,7 @@ class DCSCodec : public QObject
 {
 	Q_OBJECT
 public:
-	DCSCodec(QString callsign, QString hostname, QString host, int port, QString vocoder);
+	DCSCodec(QString callsign, QString hostname, QString host, int port, QString vocoder, QString audioin, QString audioout);
 	~DCSCodec();
 	unsigned char * get_frame(unsigned char *ambe);
 	QString get_callsign() { return m_callsign; }
@@ -105,6 +105,8 @@ private:
 	uint8_t packet_size;
 	uint16_t m_ttscnt;
 	QQueue<char> m_ambeq;
+	QString m_audioin;
+	QString m_audioout;
 
 private slots:
 	void start_tx();

@@ -30,7 +30,7 @@ extern cst_voice * register_cmu_us_rms(const char *);
 }
 #endif
 
-REFCodec::REFCodec(QString callsign, QString hostname, QString host, int port, QString vocoder) :
+REFCodec::REFCodec(QString callsign, QString hostname, QString host, int port, QString vocoder, QString audioin, QString audioout) :
 	m_tx(false),
 	m_callsign(callsign),
 	m_hostname(hostname),
@@ -42,7 +42,9 @@ REFCodec::REFCodec(QString callsign, QString hostname, QString host, int port, Q
 	m_vocoder(vocoder),
 	m_ambedev(nullptr),
 	m_hwrx(false),
-	m_hwtx(false)
+	m_hwtx(false),
+	m_audioin(audioin),
+	m_audioout(audioout)
 {
 #ifdef USE_FLITE
 	flite_init();
@@ -133,7 +135,7 @@ void REFCodec::process_udp()
 			m_ping_timer = new QTimer();
 			connect(m_ping_timer, SIGNAL(timeout()), this, SLOT(send_ping()));
 			m_ping_timer->start(1000);
-			m_audio = new AudioEngine();
+			m_audio = new AudioEngine(m_audioin, m_audioout);
 			m_audio->init();
 
 			if(buf.data()[7] == 0x57){ //OKRW

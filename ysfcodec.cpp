@@ -43,7 +43,7 @@ extern cst_voice * register_cmu_us_rms(const char *);
 }
 #endif
 
-YSFCodec::YSFCodec(QString callsign, QString hostname, QString host, int port, QString vocoder) :
+YSFCodec::YSFCodec(QString callsign, QString hostname, QString host, int port, QString vocoder, QString audioin, QString audioout) :
 	m_callsign(callsign),
 	m_hostname(hostname),
 	m_host(host),
@@ -60,7 +60,9 @@ YSFCodec::YSFCodec(QString callsign, QString hostname, QString host, int port, Q
 	m_ambedev(nullptr),
 	m_hwrx(false),
 	m_hwtx(false),
-	m_fcs(false)
+	m_fcs(false),
+	m_audioin(audioin),
+	m_audioout(audioout)
 {
 #ifdef USE_FLITE
 	flite_init();
@@ -121,7 +123,7 @@ void YSFCodec::process_udp()
 				m_hwrx = false;
 				m_hwtx = false;
 			}
-			m_audio = new AudioEngine();
+			m_audio = new AudioEngine(m_audioin, m_audioout);
 			m_audio->init();
 
 			if(m_hostname.left(3) == "FCS"){

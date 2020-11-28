@@ -13,7 +13,7 @@ class M17Codec : public QObject
 {
 	Q_OBJECT
 public:
-	M17Codec(QString callsign, char module, QString hostname, QString host, int port);
+	M17Codec(QString callsign, char module, QString hostname, QString host, int port, QString audioin, QString audioout);
 	~M17Codec();
 	static void encode_callsign(uint8_t *);
 	static void decode_callsign(uint8_t *);
@@ -90,6 +90,8 @@ private:
 	QTimer *m_ping_timer;
 	QTimer *m_txtimer;
 	AudioEngine *m_audio;
+	QString m_audioin;
+	QString m_audioout;
 };
 
 #endif // M17CODEC_H

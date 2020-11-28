@@ -64,7 +64,7 @@ class YSFCodec : public QObject
 {
 	Q_OBJECT
 public:
-	YSFCodec(QString callsign, QString hostname, QString host, int port, QString vocoder);
+	YSFCodec(QString callsign, QString hostname, QString host, int port, QString vocoder, QString audioin, QString audioout);
 	~YSFCodec();
 	uint8_t get_status(){ return m_status; }
 	QString get_callsign() { return m_callsign; }
@@ -178,6 +178,8 @@ private:
 	unsigned int ambe_c;
 	bool m_fcs;
 	std::string m_fcsname;
+	QString m_audioin;
+	QString m_audioout;
 };
 
 #endif

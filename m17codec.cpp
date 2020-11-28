@@ -14,8 +14,7 @@ extern cst_voice * register_cmu_us_rms(const char *);
 }
 #endif
 
-
-M17Codec::M17Codec(QString callsign, char module, QString hostname, QString host, int port) :
+M17Codec::M17Codec(QString callsign, char module, QString hostname, QString host, int port, QString audioin, QString audioout) :
 	m_callsign(callsign),
 	m_module(module),
 	m_hostname(hostname),
@@ -25,7 +24,9 @@ M17Codec::M17Codec(QString callsign, char module, QString hostname, QString host
 	m_ttsid(0),
 	m_cnt(0),
 	m_fn(0),
-	m_streamid(0)
+	m_streamid(0),
+	m_audioin(audioin),
+	m_audioout(audioout)
 {
 #ifdef USE_FLITE
 	flite_init();
@@ -118,7 +119,7 @@ void M17Codec::process_udp()
 			m_ping_timer = new QTimer();
 			connect(m_ping_timer, SIGNAL(timeout()), this, SLOT(send_ping()));
 			m_ping_timer->start(8000);
-			m_audio = new AudioEngine();
+			m_audio = new AudioEngine(m_audioin, m_audioout);
 			m_audio->init();
 		}
 	}

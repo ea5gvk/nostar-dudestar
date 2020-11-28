@@ -13,7 +13,8 @@ class AudioEngine : public QObject
 {
 	Q_OBJECT
 public:
-	explicit AudioEngine(QObject *parent = nullptr);
+	//explicit AudioEngine(QObject *parent = nullptr);
+	AudioEngine(QString in, QString out);
 	~AudioEngine();
 	static QStringList discover_audio_devices(uint8_t d);
 	void init();

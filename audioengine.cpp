@@ -1,6 +1,9 @@
 #include "audioengine.h"
 #include <QDebug>
-AudioEngine::AudioEngine(QObject *parent) : QObject(parent)
+//AudioEngine::AudioEngine(QObject *parent) : QObject(parent)
+AudioEngine::AudioEngine(QString in, QString out) :
+	m_outputdevice(out),
+	m_inputdevice(in)
 {
 
 }
@@ -60,7 +63,7 @@ void AudioEngine::init()
 		else{
 			tempformat = format;
 		}
-		//fprintf(stderr, "Using playback device %s\n", info.deviceName().toStdString().c_str());fflush(stderr);
+		fprintf(stderr, "Using playback device %s\n", info.deviceName().toStdString().c_str());fflush(stderr);
 
 		m_out = new QAudioOutput(info, tempformat, this);
 		m_out->setBufferSize(6400);
@@ -92,7 +95,7 @@ void AudioEngine::init()
 		else{
 			tempformat = format;
 		}
-		//fprintf(stderr, "Using recording device %s\n", info.deviceName().toStdString().c_str());fflush(stderr);
+		fprintf(stderr, "Using recording device %s\n", info.deviceName().toStdString().c_str());fflush(stderr);
 		m_in = new QAudioInput(info, format, this);
 		//connect(ui->inmuteButton, SIGNAL(clicked()), this, SLOT(process_input_mute_button()));
 		//connect(ui->involSlider, SIGNAL(valueChanged(int)), this, SLOT(process_input_volume_changed(int)));

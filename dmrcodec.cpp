@@ -46,7 +46,7 @@ extern cst_voice * register_cmu_us_rms(const char *);
 }
 #endif
 
-DMRCodec::DMRCodec(QString callsign, uint32_t dmrid, QString password, uint32_t dstid, QString host, uint32_t port, QString vocoder) :
+DMRCodec::DMRCodec(QString callsign, uint32_t dmrid, QString password, uint32_t dstid, QString host, uint32_t port, QString vocoder, QString audioin, QString audioout) :
 	m_callsign(callsign),
 	m_dmrid(dmrid),
 	m_password(password),
@@ -63,7 +63,9 @@ DMRCodec::DMRCodec(QString callsign, uint32_t dmrid, QString password, uint32_t 
 	m_ambedev(nullptr),
 	m_hwrx(false),
 	m_hwtx(false),
-	m_pc(false)
+	m_pc(false),
+	m_audioin(audioin),
+	m_audioout(audioout)
 {
 	m_dmrcnt = 0;
 	m_colorcode = 1;
@@ -176,7 +178,7 @@ void DMRCodec::process_udp()
 				m_hwrx = false;
 				m_hwtx = false;
 			}
-			m_audio = new AudioEngine();
+			m_audio = new AudioEngine(m_audioin, m_audioout);
 			m_audio->init();
 			break;
 		default:

@@ -30,7 +30,7 @@ extern cst_voice * register_cmu_us_rms(const char *);
 }
 #endif
 
-XRFCodec::XRFCodec(QString callsign, QString hostname, QString host, int port, QString vocoder) :
+XRFCodec::XRFCodec(QString callsign, QString hostname, QString host, int port, QString vocoder, QString audioin, QString audioout) :
 	m_callsign(callsign),
 	m_hostname(hostname),
 	m_host(host),
@@ -41,7 +41,9 @@ XRFCodec::XRFCodec(QString callsign, QString hostname, QString host, int port, Q
 	m_vocoder(vocoder),
 	m_ambedev(nullptr),
 	m_hwrx(false),
-	m_hwtx(false)
+	m_hwtx(false),
+	m_audioin(audioin),
+	m_audioout(audioout)
 {
 #ifdef USE_FLITE
 	flite_init();
@@ -105,7 +107,7 @@ void XRFCodec::process_udp()
 		m_ping_timer = new QTimer();
 		connect(m_ping_timer, SIGNAL(timeout()), this, SLOT(send_ping()));
 		m_ping_timer->start(3000);
-		m_audio = new AudioEngine();
+		m_audio = new AudioEngine(m_audioin, m_audioout);
 		m_audio->init();
 	}
 

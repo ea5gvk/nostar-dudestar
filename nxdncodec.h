@@ -41,7 +41,7 @@ class NXDNCodec : public QObject
 {
 	Q_OBJECT
 public:
-	NXDNCodec(QString callsign, uint32_t dmr_destid, QString host, int port, QString vocoder);
+	NXDNCodec(QString callsign, uint32_t dmr_destid, QString host, int port, QString vocoder, QString audioin, QString audioout);
 	~NXDNCodec();
 	uint8_t get_status(){ return m_status; }
 	unsigned char * get_frame();
@@ -124,6 +124,8 @@ private:
 	uint16_t m_ttscnt;
 	QQueue<char> m_rxambeq;
 	QQueue<char> m_ambeq;
+	QString m_audioin;
+	QString m_audioout;
 
 #ifdef USE_FLITE
 	cst_voice *voice_slt;

@@ -35,7 +35,7 @@ class DMRCodec : public QObject
 {
 	Q_OBJECT
 public:
-	DMRCodec(QString callsign, uint32_t dmrid, QString password, uint32_t dstid, QString host, uint32_t port, QString vocoder);
+	DMRCodec(QString callsign, uint32_t dmrid, QString password, uint32_t dstid, QString host, uint32_t port, QString vocoder, QString audioin, QString audioout);
 	~DMRCodec();
 	unsigned char * get_eot();
 	uint8_t get_status(){ return m_status; }
@@ -142,6 +142,8 @@ private:
 	CBPTC19696 m_bptc;
 	bool m_raw[128U];
 	bool m_data[72U];
+	QString m_audioin;
+	QString m_audioout;
 
 	void byteToBitsBE(uint8_t byte, bool* bits);
 	void bitsToByteBE(const bool* bits, uint8_t& byte);

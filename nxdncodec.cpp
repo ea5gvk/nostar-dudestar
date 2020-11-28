@@ -45,7 +45,7 @@ const unsigned char BIT_MASK_TABLE[] = { 0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04
 #define WRITE_BIT1(p,i,b) p[(i)>>3] = (b) ? (p[(i)>>3] | BIT_MASK_TABLE[(i)&7]) : (p[(i)>>3] & ~BIT_MASK_TABLE[(i)&7])
 #define READ_BIT1(p,i)    (p[(i)>>3] & BIT_MASK_TABLE[(i)&7])
 
-NXDNCodec::NXDNCodec(QString callsign, uint32_t dstid, QString host, int port, QString vocoder) :
+NXDNCodec::NXDNCodec(QString callsign, uint32_t dstid, QString host, int port, QString vocoder, QString audioin, QString audioout) :
 	m_callsign(callsign),
 	m_dstid(dstid),
 	m_host(host),
@@ -59,7 +59,9 @@ NXDNCodec::NXDNCodec(QString callsign, uint32_t dstid, QString host, int port, Q
 	m_vocoder(vocoder),
 	m_ambedev(nullptr),
 	m_hwrx(false),
-	m_hwtx(false)
+	m_hwtx(false),
+	m_audioin(audioin),
+	m_audioout(audioout)
 {
 	m_txcnt = 0;
 	//m_srcid = 12065;
@@ -122,7 +124,7 @@ void NXDNCodec::process_udp()
 				m_hwrx = false;
 				m_hwtx = false;
 			}
-			m_audio = new AudioEngine();
+			m_audio = new AudioEngine(m_audioin, m_audioout);
 			m_audio->init();
 			m_ping_timer->start(1000);
 		}

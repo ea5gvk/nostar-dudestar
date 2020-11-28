@@ -30,7 +30,7 @@ extern cst_voice * register_cmu_us_rms(const char *);
 }
 #endif
 
-DCSCodec::DCSCodec(QString callsign, QString hostname, QString host, int port, QString vocoder) :
+DCSCodec::DCSCodec(QString callsign, QString hostname, QString host, int port, QString vocoder, QString audioin, QString audioout) :
 	m_tx(false),
 	m_callsign(callsign),
 	m_hostname(hostname),
@@ -42,7 +42,9 @@ DCSCodec::DCSCodec(QString callsign, QString hostname, QString host, int port, Q
 	m_vocoder(vocoder),
 	m_ambedev(nullptr),
 	m_hwrx(false),
-	m_hwtx(false)
+	m_hwtx(false),
+	m_audioin(audioin),
+	m_audioout(audioout)
 {
 #ifdef USE_FLITE
 	flite_init();
@@ -108,7 +110,7 @@ void DCSCodec::process_udp()
 		m_ping_timer = new QTimer();
 		connect(m_ping_timer, SIGNAL(timeout()), this, SLOT(send_ping()));
 		m_ping_timer->start(2000);
-		m_audio = new AudioEngine();
+		m_audio = new AudioEngine(m_audioin, m_audioout);
 		m_audio->init();
 		fprintf(stderr, "m_vocoder == %s m_hwtx:m_hwrx == %d:%d\n", m_vocoder.toStdString().c_str(), m_hwtx, m_hwrx);fflush(stderr);
 	}
