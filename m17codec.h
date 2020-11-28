@@ -50,7 +50,7 @@ private slots:
 	void transmit();
 	void hostname_lookup(QHostInfo i);
 	void input_src_changed(int id, QString t) { m_ttsid = id; m_ttstext = t; }
-	void rate_changed(int r) { m_c2->codec2_set_mode(r); }
+	void rate_changed(int r) { m_txrate = r; /* m_c2->codec2_set_mode(r); */ }
 private:
 
 	enum{
@@ -92,6 +92,7 @@ private:
 	AudioEngine *m_audio;
 	QString m_audioin;
 	QString m_audioout;
+	int m_txrate;
 };
 
 #endif // M17CODEC_H

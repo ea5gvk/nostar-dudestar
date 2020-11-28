@@ -26,7 +26,8 @@ M17Codec::M17Codec(QString callsign, char module, QString hostname, QString host
 	m_fn(0),
 	m_streamid(0),
 	m_audioin(audioin),
-	m_audioout(audioout)
+	m_audioout(audioout),
+	m_txrate(1)
 {
 #ifdef USE_FLITE
 	flite_init();
@@ -252,6 +253,7 @@ void M17Codec::start_tx()
 	qDebug() << "start_tx() " << m_ttsid << " " << m_ttstext;
 	m_tx = true;
 	m_txcnt = 0;
+	m_c2->codec2_set_mode(m_txrate);
 #ifdef USE_FLITE
 
 	if(m_ttsid == 1){
