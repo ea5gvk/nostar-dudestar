@@ -258,12 +258,10 @@ void P25Codec::send_disconnect()
 
 void P25Codec::start_tx()
 {
-	//std::cerr << "Pressed TX buffersize == " << audioin->bufferSize() << std::endl;
 	qDebug() << "start_tx() " << m_ttsid << " " << m_ttstext;
 	m_tx = true;
 	m_rxtimer->stop();
 	m_rxcnt = 0;
-	m_srcid = m_dmrid;
 
 #ifdef USE_FLITE
 
@@ -360,18 +358,18 @@ void P25Codec::transmit()
 		case 0x03U:
 			::memcpy(buffer, REC65, 17U);
 			::memcpy(buffer + 5U, imbe, 11U);
-			buffer[1U] = (m_dstid >> 16) & 0xFFU;
-			buffer[2U] = (m_dstid >> 8) & 0xFFU;
-			buffer[3U] = (m_dstid >> 0) & 0xFFU;
+			buffer[1U] = (m_hostname >> 16) & 0xFFU;
+			buffer[2U] = (m_hostname >> 8) & 0xFFU;
+			buffer[3U] = (m_hostname >> 0) & 0xFFU;
 			txdata.append((char *)buffer, 17U);
 			++p25step;
 			break;
 		case 0x04U:
 			::memcpy(buffer, REC66, 17U);
 			::memcpy(buffer + 5U, imbe, 11U);
-			buffer[1U] = (m_srcid >> 16) & 0xFFU;
-			buffer[2U] = (m_srcid >> 8) & 0xFFU;
-			buffer[3U] = (m_srcid >> 0) & 0xFFU;
+			buffer[1U] = (m_dmrid >> 16) & 0xFFU;
+			buffer[2U] = (m_dmrid >> 8) & 0xFFU;
+			buffer[3U] = (m_dmrid >> 0) & 0xFFU;
 			txdata.append((char *)buffer, 17U);
 			++p25step;
 			break;
@@ -455,13 +453,10 @@ void P25Codec::transmit()
 			p25step = 0;
 			break;
 		}
-		//ui->mycall->setText(callsign);
-		//ui->urcall->setText(QString::number(dmrid));
-		//ui->rptr1->setText(QString::number(dmr_destid));
-		//ui->rptr2->setText(QString::number(dmrid));
-		//ui->streamid->setText(QString("TX %1").arg(p25step, 4, 16, QChar('0')));
-		//m_udp->writeDatagram(txdata, m_address, m_port);
 
+		m_srcid = m_dmrid;
+		m_dstid = m_hostname;
+		m_fn = p25step;
 		m_udp->writeDatagram(txdata, m_address, m_port);
 	}
 	else{
@@ -474,6 +469,9 @@ void P25Codec::transmit()
 		}
 		ttscnt = 0;
 		p25step = 0;
+		m_srcid = 0;
+		m_dstid = 0;
+		m_fn = 0;
 	}
 #ifdef DEBUG
 		fprintf(stderr, "SEND: ");

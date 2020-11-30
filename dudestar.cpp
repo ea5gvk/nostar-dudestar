@@ -1574,6 +1574,7 @@ void DudeStar::update_p25_data()
 	if(m_p25->get_src()){
 		ui->mycall->setText(m_dmrids[m_p25->get_src()]);
 		ui->urcall->setText(QString::number(m_p25->get_src()));
+		ui->rptr2->setText(QString::number(m_p25->get_src()));
 	}
 	ui->rptr1->setText(m_p25->get_dst() ? QString::number(m_p25->get_dst()) : "");
 	if(m_p25->get_fn()){
