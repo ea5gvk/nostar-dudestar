@@ -115,10 +115,9 @@ void YSFCodec::process_udp()
 			m_mbedec->setAutoGain(true);
 			m_mbeenc = new MBEEncoder();
 			m_mbeenc->set_49bit_mode();
+			m_mbeenc->set_gain_adjust(2.5);
 			m_rxtimer = new QTimer();
 			connect(m_rxtimer, SIGNAL(timeout()), this, SLOT(process_rx_data()));
-			//m_mbeenc->set_gain_adjust(2.5);
-			//m_mbeenc->set_gain_adjust(1.0);
 			if(m_vocoder != ""){
 				m_hwrx = true;
 				m_hwtx = true;

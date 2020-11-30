@@ -51,6 +51,7 @@ DMRCodec::DMRCodec(QString callsign, uint32_t dmrid, QString password, uint32_t 
 	m_dmrid(dmrid),
 	m_password(password),
 	m_srcid(0),
+	m_dstid(0),
 	m_txdstid(dstid),
 	m_gwid(0),
 	m_host(host),
@@ -158,7 +159,7 @@ void DMRCodec::process_udp()
 			char longitude[20U];
 			::sprintf(longitude, "00.000000");
 			::sprintf(buffer + 8U, "%-8.8s%09u%09u%02u%02u%8.8s%9.9s%03d%-20.20s%-19.19s%c%-124.124s%-40.40s%-40.40s", m_callsign.toStdString().c_str(),
-					438800000, 438800000, 1, 1, latitude, longitude, 0, "Nowhere","ABC", '2', "www.qrz.com", "20200101", "MMDVM");
+					438800000, 438800000, 1, 1, latitude, longitude, 0, "Nowhere","ABC", '4', "www.qrz.com", "20200101", "MMDVM_DVMEGA");
 			out.append(buffer, 302);
 			break;
 		case DMR_CONF:
@@ -332,7 +333,7 @@ void DMRCodec::start_tx()
 	m_rxcnt = 0;
 	m_ttscnt = 0;
 	m_transmitcnt = 0;
-	m_srcid = m_dmrid;
+	//m_srcid = m_dmrid;
 #ifdef USE_FLITE
 
 	if(m_ttsid == 1){
@@ -476,16 +477,16 @@ void DMRCodec::build_frame()
 	m_dmrFrame[2U]  = 'R';
 	m_dmrFrame[3U]  = 'D';
 
-	m_dmrFrame[5U]  = m_srcid >> 16;
-	m_dmrFrame[6U]  = m_srcid >> 8;
-	m_dmrFrame[7U]  = m_srcid >> 0;
+	m_dmrFrame[5U]  = m_dmrid >> 16;
+	m_dmrFrame[6U]  = m_dmrid >> 8;
+	m_dmrFrame[7U]  = m_dmrid >> 0;
 	m_dmrFrame[8U]  = m_txdstid >> 16;
 	m_dmrFrame[9U]  = m_txdstid >> 8;
 	m_dmrFrame[10U] = m_txdstid >> 0;
-	m_dmrFrame[11U]  = m_srcid >> 24;
-	m_dmrFrame[12U]  = m_srcid >> 16;
-	m_dmrFrame[13U]  = m_srcid >> 8;
-	m_dmrFrame[14U]  = m_srcid >> 0;
+	m_dmrFrame[11U]  = m_dmrid >> 24;
+	m_dmrFrame[12U]  = m_dmrid >> 16;
+	m_dmrFrame[13U]  = m_dmrid >> 8;
+	m_dmrFrame[14U]  = m_dmrid >> 0;
 
 	m_dmrFrame[15U] = (m_slot == 1U) ? 0x00U : 0x80U;
 	m_dmrFrame[15U] |= (m_flco == FLCO_GROUP) ? 0x00U : 0x40U;
@@ -500,7 +501,7 @@ void DMRCodec::build_frame()
 
 	m_dmrFrame[4U] = m_dmrcnt;
 
-	unsigned int streamId = 0X01A6;
+	unsigned int streamId = 0x3cfa;
 	::memcpy(m_dmrFrame + 16U, &streamId, 4U);
 
 	m_dmrFrame[53U] = 0; //data.getBER();
@@ -718,9 +719,9 @@ void DMRCodec::lc_get_data(uint8_t *bytes)
 	bytes[3U] = m_txdstid >> 16;
 	bytes[4U] = m_txdstid >> 8;
 	bytes[5U] = m_txdstid >> 0;
-	bytes[6U] = m_srcid >> 16;
-	bytes[7U] = m_srcid >> 8;
-	bytes[8U] = m_srcid >> 0;
+	bytes[6U] = m_dmrid >> 16;
+	bytes[7U] = m_dmrid >> 8;
+	bytes[8U] = m_dmrid >> 0;
 }
 
 void DMRCodec::full_lc_encode(uint8_t* data, uint8_t type)
