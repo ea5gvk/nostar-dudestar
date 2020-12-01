@@ -53,7 +53,7 @@ YSFCodec::YSFCodec(QString callsign, QString hostname, QString host, int port, Q
 	m_rxcnt(0),
 	m_ttsid(0),
 	m_cnt(0),
-	m_transmitcnt(0),
+	m_type(-1),
 	m_fn(0),
 	m_streamid(0),
 	m_vocoder(vocoder),

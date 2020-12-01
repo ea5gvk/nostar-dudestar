@@ -1155,9 +1155,9 @@ void DudeStar::process_connect()
 {
 	//fprintf(stderr, "process_connect() called connect_status == %d\n", connect_status);fflush(stderr);
     if(connect_status != DISCONNECTED){
+		connect_status = DISCONNECTED;
 		m_modethread->quit();
 		//delete m_modethread;
-        connect_status = DISCONNECTED;
         ui->connectButton->setText("Connect");
         ui->mycall->clear();
         ui->urcall->clear();
@@ -1430,6 +1430,10 @@ void DudeStar::process_input_mute_button()
 
 void DudeStar::update_m17_data()
 {
+	if(connect_status == DISCONNECTED){
+		qDebug() << "update_m17_data() called after disconnected";
+		return;
+	}
 	if((connect_status == CONNECTING) && (m_m17->get_status() == DISCONNECTED)){
 		process_connect();
 		QMessageBox::warning(this, tr("Connection refused"), tr("M17 connection refused.  Check callsign and confirm this callsign or IP is not already connected to this reflector"));
@@ -1452,7 +1456,6 @@ void DudeStar::update_m17_data()
 		ui->checkBoxSWRX->setEnabled(false);
 		ui->checkBoxSWTX->setEnabled(false);
 	}
-
 	status_txt->setText(" Host: " + m_m17->get_host() + ":" + QString::number( m_m17->get_port()) + " Ping: " + QString::number(m_m17->get_cnt()));
 	ui->mycall->setText(m_m17->get_src());
 	ui->urcall->setText(m_m17->get_dst());
@@ -1468,6 +1471,10 @@ void DudeStar::update_m17_data()
 
 void DudeStar::update_ysf_data()
 {
+	if(connect_status == DISCONNECTED){
+		qDebug() << "update_ysf_data() called after disconnected";
+		return;
+	}
 	if( (connect_status == CONNECTING) && ( m_ysf->get_status() == CONNECTED_RW)){
 		connect_status = CONNECTED_RW;
 		ui->connectButton->setText("Disconnect");
@@ -1508,14 +1515,20 @@ void DudeStar::update_ysf_data()
 		ui->rptr2->setText("Voice Full Rate");
 	}
 	else{
-		ui->rptr2->setText("Unknown type " + QString::number(m_ysf->get_type()));
+		ui->rptr2->setText("");
 	}
-	ui->streamid->setText(m_ysf->get_path()  ? "Internet" : "Local");
-	ui->usertxt->setText(QString::number(m_ysf->get_fn()) + "/" + QString::number(m_ysf->get_ft()));
+	if(m_ysf->get_type() >= 0){
+		ui->streamid->setText(m_ysf->get_path()  ? "Internet" : "Local");
+		ui->usertxt->setText(QString::number(m_ysf->get_fn()) + "/" + QString::number(m_ysf->get_ft()));
+	}
 }
 
 void DudeStar::update_nxdn_data()
 {
+	if(connect_status == DISCONNECTED){
+		qDebug() << "update_nxdn_data() called after disconnected";
+		return;
+	}
 	if( (connect_status == CONNECTING) && ( m_nxdn->get_status() == CONNECTED_RW)){
 		connect_status = CONNECTED_RW;
 		ui->connectButton->setText("Disconnect");
@@ -1552,6 +1565,10 @@ void DudeStar::update_nxdn_data()
 
 void DudeStar::update_p25_data()
 {
+	if(connect_status == DISCONNECTED){
+		qDebug() << "update_p25_data() called after disconnected";
+		return;
+	}
 	if( (connect_status == CONNECTING) && ( m_p25->get_status() == CONNECTED_RW)){
 		connect_status = CONNECTED_RW;
 		ui->connectButton->setText("Disconnect");
@@ -1585,6 +1602,10 @@ void DudeStar::update_p25_data()
 
 void DudeStar::update_dmr_data()
 {
+	if(connect_status == DISCONNECTED){
+		qDebug() << "update_dmr_data() called after disconnected";
+		return;
+	}
 	if((connect_status == CONNECTING) && (m_dmr->get_status() == DISCONNECTED)){
 		process_connect();
 		QMessageBox::warning(this, tr("Connection refused"), tr("DMR connection refused.  Check callsign, DMR ID, or password"));
@@ -1628,6 +1649,10 @@ void DudeStar::update_dmr_data()
 
 void DudeStar::update_ref_data()
 {
+	if(connect_status == DISCONNECTED){
+		qDebug() << "update_ref_data() called after disconnected";
+		return;
+	}
 	if((connect_status == CONNECTING) && (m_ref->get_status() == CONNECTED_RW)){
 		connect_status = CONNECTED_RW;
 		ui->connectButton->setText("Disconnect");
@@ -1662,6 +1687,10 @@ void DudeStar::update_ref_data()
 
 void DudeStar::update_dcs_data()
 {
+	if(connect_status == DISCONNECTED){
+		qDebug() << "update_dcs_data() called after disconnected";
+		return;
+	}
 	if((connect_status == CONNECTING) && (m_dcs->get_status() == CONNECTED_RW)){
 		connect_status = CONNECTED_RW;
 		ui->connectButton->setText("Disconnect");
@@ -1696,6 +1725,10 @@ void DudeStar::update_dcs_data()
 
 void DudeStar::update_xrf_data()
 {
+	if(connect_status == DISCONNECTED){
+		qDebug() << "update_xrf_data() called after disconnected";
+		return;
+	}
 	if((connect_status == CONNECTING) && (m_xrf->get_status() == CONNECTED_RW)){
 		connect_status = CONNECTED_RW;
 		ui->connectButton->setText("Disconnect");
