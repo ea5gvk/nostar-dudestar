@@ -293,7 +293,11 @@ void M17Codec::start_tx()
 			m_audio->start_capture();
 			//audioin->start(&audio_buffer);
 		}
-		m_txtimer->start(30);
+#ifdef Q_OS_WIN
+		m_txtimer->start(30); // Qt timers on windows seem to be slower than desired value
+#else
+		m_txtimer->start(35);
+#endif
 	}
 }
 
@@ -457,6 +461,7 @@ void M17Codec::transmit()
 void M17Codec::deleteLater()
 {
 	if(m_status == CONNECTED_RW){
+		m_udp->disconnect();
 		m_ping_timer->stop();
 		send_disconnect();
 		delete m_audio;
