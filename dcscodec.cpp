@@ -394,7 +394,6 @@ void DCSCodec::send_frame(uint8_t *ambe)
 {
 	static QByteArray txdata;
 	static uint16_t txstreamid = 0;
-	static bool sendheader = 1;
 	if(m_tx){
 		txdata.resize(100);
 		memset(txdata.data(), 0, 100);
@@ -487,7 +486,6 @@ void DCSCodec::send_frame(uint8_t *ambe)
 		m_udp->writeDatagram(txdata, m_address, m_port);
 		m_txcnt = 0;
 		txstreamid = 0;
-		sendheader = 1;
 		m_txtimer->stop();
 		m_udp->writeDatagram(txdata, m_address, m_port);
 		if(m_ttsid == 0){

@@ -92,7 +92,6 @@ void NXDNCodec::process_udp()
 	QByteArray buf;
 	QHostAddress sender;
 	quint16 senderPort;
-	static uint8_t cnt = 0;
 	int nbAudioSamples = 0;
 	int16_t *audioSamples;
 	uint8_t ambe[7];

@@ -143,7 +143,6 @@ void M17Codec::process_udp()
 	}
 	if((buf.size() == 54) && (::memcmp(buf.data(), "M17 ", 4U) == 0)){
 		uint8_t cs[10];
-		uint8_t sz;
 		::memcpy(cs, &(buf.data()[12]), 6);
 		decode_callsign(cs);
 		m_src = QString((char *)cs);
@@ -153,12 +152,10 @@ void M17Codec::process_udp()
 		if((buf.data()[19] & 0x06U) == 0x04U){
 			m_type = "3200 Voice";
 			set_mode(true);
-			sz = 16;
 		}
 		else{
 			m_type = "1600 V/D";
 			set_mode(false);
-			sz = 8;
 		}
 		m_streamid = (buf.data()[4] << 8) | (buf.data()[5] & 0xff);
 		m_fn = (buf.data()[34] << 8) | (buf.data()[35] & 0xff);
@@ -312,10 +309,10 @@ void M17Codec::transmit()
 	QByteArray txframe;
 	static uint16_t txstreamid = 0;
 	static uint16_t tx_cnt = 0;
-	static uint16_t ttscnt = 0;
 	int16_t pcm[320];
 	uint8_t c2[16];
 #ifdef USE_FLITE
+	static uint16_t ttscnt = 0;
 	if(m_ttsid > 0){
 		for(int i = 0; i < 320; ++i){
 			if(ttscnt >= tts_audio->num_samples/2){
@@ -438,7 +435,9 @@ void M17Codec::transmit()
 		m_udp->writeDatagram(txframe, m_address, m_port);
 		txstreamid = 0;
 		tx_cnt = 0;
+#ifdef USE_FLITE
 		ttscnt = 0;
+#endif
 		m_txtimer->stop();
 		if(m_ttsid == 0){
 			m_audio->stop_capture();

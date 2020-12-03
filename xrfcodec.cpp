@@ -73,11 +73,9 @@ void XRFCodec::process_udp()
 	quint16 senderPort;
 	int nbAudioSamples = 0;
 	int16_t *audioSamples;
-	static uint16_t s = 0;
 	static bool sd_sync = 0;
 	static int sd_seq = 0;
 	static char user_data[21];
-	const unsigned char header[5] = {0x80,0x44,0x53,0x56,0x54};
 
 	buf.resize(m_udp->pendingDatagramSize());
 	m_udp->readDatagram(buf.data(), buf.size(), &sender, &senderPort);

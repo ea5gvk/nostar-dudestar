@@ -134,7 +134,7 @@ void P25Codec::process_udp()
 		}
 		int offset = 0;
 		m_fn = buf.data()[0U];
-		switch (buf.data()[0U]) {
+		switch ((uint8_t)buf.data()[0U]) {
 		case 0x62U:
 			offset = 10U;
 			break;
@@ -306,9 +306,9 @@ void P25Codec::transmit()
 	int16_t pcm[160];
 	unsigned char buffer[22];
 	static uint8_t p25step = 0;
+#ifdef USE_FLITE
 	static uint16_t ttscnt = 0;
 
-#ifdef USE_FLITE
 	if(m_ttsid > 0){
 		for(int i = 0; i < 160; ++i){
 			if(ttscnt >= tts_audio->num_samples/2){
@@ -467,7 +467,9 @@ void P25Codec::transmit()
 		if(m_ttsid == 0){
 			m_audio->stop_capture();
 		}
+#ifdef USE_FLITE
 		ttscnt = 0;
+#endif
 		p25step = 0;
 		m_srcid = 0;
 		m_dstid = 0;

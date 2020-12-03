@@ -128,7 +128,7 @@ void SerialAMBE::encode(int16_t *audio)
 		packet [(i*2)+7] = (audio[i] >> 8) & 0xff;
 		packet [(i*2)+8] = audio[i] & 0xff;
 	}
-	int r = m_serial->write((char *)packet, 327);
+	m_serial->write((char *)packet, 327);
 #ifdef DEBUG
 			fprintf(stderr, "SENDHW:%d: ", r);
 			for(int i = 0; i < 326; ++i){
@@ -140,7 +140,6 @@ void SerialAMBE::encode(int16_t *audio)
 			fprintf(stderr, "\n");
 			fflush(stderr);
 #endif
-	//qDebug() << "SerialAMBE::encode() r == " << r;
 }
 
 void SerialAMBE::process_serial()
