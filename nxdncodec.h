@@ -64,7 +64,7 @@ private slots:
 	void stop_tx();
 	void deleteLater();
 	void process_udp();
-	void process_hwrx_data();
+	void process_rx_data();
 	void get_ambe();
 	void send_ping();
 	void send_connect();
@@ -119,7 +119,7 @@ private:
 	MBEEncoder *m_mbeenc;
 	QString m_vocoder;
 	SerialAMBE *m_ambedev;
-	QTimer *m_hwrxtimer;
+	QTimer *m_rxtimer;
 	bool m_hwrx;
 	bool m_hwtx;
 	uint8_t packet_size;

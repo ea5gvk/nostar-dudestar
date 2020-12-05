@@ -32,8 +32,6 @@ const int dvsi_interleave[49] = {
 		2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35, 38
 };
 
-const char ysf_radioid[] = {'H', '5', '0', '0', '0'};
-
 #ifdef USE_FLITE
 extern "C" {
 extern cst_voice * register_cmu_us_slt(const char *);
@@ -554,8 +552,6 @@ void YSFCodec::transmit()
 			for(int j = 0; j < 8; ++j){
 				ambe[i] |= (ambe_frame[(i*8)+j] << (7-j));
 			}
-		}
-		for(int i = 0; i < 7; ++i){
 			m_ambeq.append(ambe[i]);
 		}
 	}

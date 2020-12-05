@@ -35,7 +35,7 @@ public:
 	void process_p25(unsigned char *d);
 	void ambe49to72(char ambe_data[49], char data[9]);
 	void process_frame(char ambe_fr[4][24]);
-	void processData(char ambe_data[49], unsigned char ambe_frame[9]);
+	void processData(char ambe_data[49]);
 	void processData4400(char imbe_data[88]);
     short *getAudio(int& nbSamples)
     {
@@ -56,7 +56,6 @@ public:
     void setChannels(unsigned char channels) { m_channels = channels % 4; }
     void setUpsamplingFactor(int upsample) { m_upsample = upsample; }
     int getUpsamplingFactor() const { return m_upsample; }
-	void set_hwrx(bool h){ m_hwrx = h; }
 	std::queue<char> ambe72;
 
 private:
@@ -101,8 +100,6 @@ private:
 	static const int rY[36];
 	static const int rZ[36];
 	char ambe_d[49];
-	static const int dvsi_interleave[49];
-	bool m_hwrx;
 };
 
 #endif /* MBE_H_ */

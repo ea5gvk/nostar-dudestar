@@ -293,7 +293,7 @@ void M17Codec::start_tx()
 #ifdef Q_OS_WIN
 		m_txtimer->start(30); // Qt timers on windows seem to be slower than desired value
 #else
-		m_txtimer->start(35);
+		m_txtimer->start(36);
 #endif
 	}
 }

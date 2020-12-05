@@ -1174,6 +1174,7 @@ void DudeStar::process_connect()
         ui->hostCombo->setEnabled(true);
         ui->callsignEdit->setEnabled(true);
 		ui->dmridEdit->setEnabled(true);
+		ui->dmrpwEdit->setEnabled(true);
 		ui->txButton->setDisabled(true);
 		status_txt->setText("Not connected");
 
