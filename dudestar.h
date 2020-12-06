@@ -94,10 +94,10 @@ private:
 	uint32_t dmrid;
 	uint32_t dmr_srcid;
 	uint32_t dmr_destid;
-	uint32_t dmrcc;
-	uint32_t dmrslot;
-	uint8_t dmrcalltype;
-	QString protocol;
+	uint32_t m_dmrcc;
+	uint32_t m_dmrslot;
+	uint8_t m_dmrcalltype;
+	QString m_protocol;
 	uint64_t ping_cnt;
 	QThread *m_modethread;
 	REFCodec *m_ref;

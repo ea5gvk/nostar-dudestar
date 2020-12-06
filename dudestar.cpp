@@ -44,11 +44,11 @@
 DudeStar::DudeStar(QWidget *parent) :
     QMainWindow(parent),
 	ui(new Ui::DudeStar),
-	m_update_host_files(false)
+	m_update_host_files(false),
+	m_dmrcc(1),
+	m_dmrslot(2),
+	m_dmrcalltype(0)
 {
-	dmrslot = 2;
-	dmrcc = 1;
-	dmrcalltype = 0;
 	muted = false;
 	config_path = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation);
 #ifndef Q_OS_WIN
@@ -82,6 +82,7 @@ DudeStar::~DudeStar()
 	stream << "MODULE:" << ui->comboMod->currentText() << ENDLINE;
 	stream << "CALLSIGN:" << ui->callsignEdit->text() << ENDLINE;
 	stream << "DMRID:" << ui->dmridEdit->text() << ENDLINE;
+	stream << "ESSID:" << ui->essidEdit->text() << ENDLINE;
 	stream << "DMRPASSWORD:" << ui->dmrpwEdit->text() << ENDLINE;
 	stream << "DMRTGID:" << ui->dmrtgEdit->text() << ENDLINE;
 	stream << "MYCALL:" << ui->mycallEdit->text().simplified() << ENDLINE;
@@ -133,9 +134,8 @@ void DudeStar::init_gui()
 	tts_voices = new QButtonGroup();
 	tts_voices->addButton(ui->checkBoxTTSOff, 0);
 	tts_voices->addButton(ui->checkBoxKal, 1);
-	tts_voices->addButton(ui->checkBoxRms, 2);
-	tts_voices->addButton(ui->checkBoxAwb, 3);
-	tts_voices->addButton(ui->checkBoxSlt, 4);
+	tts_voices->addButton(ui->checkBoxAwb, 2);
+	tts_voices->addButton(ui->checkBoxSlt, 3);
 #ifdef USE_FLITE
 	connect(tts_voices, SIGNAL(buttonClicked(int)), this, SLOT(tts_changed(int)));
 	connect(ui->TTSEdit, SIGNAL(textChanged(QString)), this, SLOT(tts_text_changed(QString)));
@@ -143,7 +143,6 @@ void DudeStar::init_gui()
 #ifndef USE_FLITE
 	ui->checkBoxTTSOff->hide();
 	ui->checkBoxKal->hide();
-	ui->checkBoxRms->hide();
 	ui->checkBoxAwb->hide();
 	ui->checkBoxSlt->hide();
 	ui->TTSEdit->hide();
@@ -190,8 +189,9 @@ void DudeStar::init_gui()
 	ui->modeCombo->addItem("P25");
 	ui->modeCombo->addItem("NXDN");
 	ui->modeCombo->addItem("M17");
-	ui->dmrccEdit->setText(QString::number(dmrcc));
-	ui->dmrslotEdit->setText(QString::number(dmrslot));
+	ui->dmrccEdit->setText(QString::number(m_dmrcc));
+	ui->dmrslotEdit->setText(QString::number(m_dmrslot));
+
 	connect(ui->modeCombo, SIGNAL(currentTextChanged(const QString &)), this, SLOT(process_mode_change(const QString &)));
 	connect(ui->hostCombo, SIGNAL(currentTextChanged(const QString &)), this, SLOT(process_host_change(const QString &)));
 
@@ -295,6 +295,7 @@ void DudeStar::process_mode_change(const QString &m)
 		process_ref_hosts();
 		ui->comboMod->setEnabled(true);
 		ui->dmridEdit->setEnabled(false);
+		ui->essidEdit->setEnabled(false);
 		ui->dmrpwEdit->setEnabled(false);
 		ui->dmrtgEdit->setEnabled(false);
 		ui->dmrccEdit->setEnabled(false);
@@ -305,8 +306,8 @@ void DudeStar::process_mode_change(const QString &m)
 		ui->rptr1Edit->setEnabled(true);
 		ui->rptr2Edit->setEnabled(true);
 		ui->usertxtEdit->setEnabled(true);
-		//ui->m17VoiceFull->setEnabled(false);
-		//ui->m17VoiceData->setEnabled(false);
+		ui->m17VoiceFull->setEnabled(false);
+		ui->m17VoiceData->setEnabled(false);
 		ui->label_1->setText("MYCALL");
 		ui->label_2->setText("URCALL");
 		ui->label_3->setText("RPTR1");
@@ -318,6 +319,7 @@ void DudeStar::process_mode_change(const QString &m)
 		process_dcs_hosts();
 		ui->comboMod->setEnabled(true);
 		ui->dmridEdit->setEnabled(false);
+		ui->essidEdit->setEnabled(false);
 		ui->dmrpwEdit->setEnabled(false);
 		ui->dmrtgEdit->setEnabled(false);
 		ui->dmrccEdit->setEnabled(false);
@@ -328,8 +330,8 @@ void DudeStar::process_mode_change(const QString &m)
 		ui->rptr1Edit->setEnabled(true);
 		ui->rptr2Edit->setEnabled(true);
 		ui->usertxtEdit->setEnabled(true);
-		//ui->m17VoiceFull->setEnabled(false);
-		//ui->m17VoiceData->setEnabled(false);
+		ui->m17VoiceFull->setEnabled(false);
+		ui->m17VoiceData->setEnabled(false);
 		ui->label_1->setText("MYCALL");
 		ui->label_2->setText("URCALL");
 		ui->label_3->setText("RPTR1");
@@ -341,6 +343,7 @@ void DudeStar::process_mode_change(const QString &m)
 		process_xrf_hosts();
 		ui->comboMod->setEnabled(true);
 		ui->dmridEdit->setEnabled(false);
+		ui->essidEdit->setEnabled(false);
 		ui->dmrpwEdit->setEnabled(false);
 		ui->dmrtgEdit->setEnabled(false);
 		ui->dmrccEdit->setEnabled(false);
@@ -351,8 +354,8 @@ void DudeStar::process_mode_change(const QString &m)
 		ui->rptr1Edit->setEnabled(true);
 		ui->rptr2Edit->setEnabled(true);
 		ui->usertxtEdit->setEnabled(true);
-		//ui->m17VoiceFull->setEnabled(false);
-		//ui->m17VoiceData->setEnabled(false);
+		ui->m17VoiceFull->setEnabled(false);
+		ui->m17VoiceData->setEnabled(false);
 		ui->label_1->setText("MYCALL");
 		ui->label_2->setText("URCALL");
 		ui->label_3->setText("RPTR1");
@@ -364,6 +367,7 @@ void DudeStar::process_mode_change(const QString &m)
 		process_ysf_hosts();
 		ui->comboMod->setEnabled(false);
 		ui->dmridEdit->setEnabled(false);
+		ui->essidEdit->setEnabled(false);
 		ui->dmrpwEdit->setEnabled(false);
 		ui->dmrtgEdit->setEnabled(false);
 		ui->dmrccEdit->setEnabled(false);
@@ -374,8 +378,8 @@ void DudeStar::process_mode_change(const QString &m)
 		ui->rptr1Edit->setEnabled(false);
 		ui->rptr2Edit->setEnabled(false);
 		ui->usertxtEdit->setEnabled(false);
-		//ui->m17VoiceFull->setEnabled(false);
-		//ui->m17VoiceData->setEnabled(false);
+		ui->m17VoiceFull->setEnabled(false);
+		ui->m17VoiceData->setEnabled(false);
 		ui->label_1->setText("Gateway");
 		ui->label_2->setText("Callsign");
 		ui->label_3->setText("Dest");
@@ -387,6 +391,7 @@ void DudeStar::process_mode_change(const QString &m)
 		process_dmr_hosts();
 		ui->comboMod->setEnabled(false);
 		ui->dmridEdit->setEnabled(true);
+		ui->essidEdit->setEnabled(true);
 		ui->dmrpwEdit->setEnabled(true);
 		ui->dmrtgEdit->setEnabled(true);
 		ui->dmrccEdit->setEnabled(true);
@@ -397,8 +402,8 @@ void DudeStar::process_mode_change(const QString &m)
 		ui->rptr1Edit->setEnabled(false);
 		ui->rptr2Edit->setEnabled(false);
 		ui->usertxtEdit->setEnabled(false);
-		//ui->m17VoiceFull->setEnabled(false);
-		//ui->m17VoiceData->setEnabled(false);
+		ui->m17VoiceFull->setEnabled(false);
+		ui->m17VoiceData->setEnabled(false);
 		ui->label_1->setText("Callsign");
 		ui->label_2->setText("SrcID");
 		ui->label_3->setText("DestID");
@@ -410,6 +415,7 @@ void DudeStar::process_mode_change(const QString &m)
 		process_p25_hosts();
 		ui->comboMod->setEnabled(false);
 		ui->dmridEdit->setEnabled(true);
+		ui->essidEdit->setEnabled(false);
 		ui->dmrpwEdit->setEnabled(false);
 		ui->dmrtgEdit->setEnabled(true);
 		ui->dmrccEdit->setEnabled(false);
@@ -420,8 +426,8 @@ void DudeStar::process_mode_change(const QString &m)
 		ui->rptr1Edit->setEnabled(false);
 		ui->rptr2Edit->setEnabled(false);
 		ui->usertxtEdit->setEnabled(false);
-		//ui->m17VoiceFull->setEnabled(false);
-		//ui->m17VoiceData->setEnabled(false);
+		ui->m17VoiceFull->setEnabled(false);
+		ui->m17VoiceData->setEnabled(false);
 		ui->label_1->setText("Callsign");
 		ui->label_2->setText("SrcID");
 		ui->label_3->setText("DestID");
@@ -433,6 +439,7 @@ void DudeStar::process_mode_change(const QString &m)
 		process_nxdn_hosts();
 		ui->comboMod->setEnabled(false);
 		ui->dmridEdit->setEnabled(true);
+		ui->essidEdit->setEnabled(false);
 		ui->dmrtgEdit->setEnabled(false);
 		ui->dmrccEdit->setEnabled(false);
 		ui->dmrslotEdit->setEnabled(false);
@@ -442,8 +449,8 @@ void DudeStar::process_mode_change(const QString &m)
 		ui->rptr1Edit->setEnabled(false);
 		ui->rptr2Edit->setEnabled(false);
 		ui->usertxtEdit->setEnabled(false);
-		//ui->m17VoiceFull->setEnabled(false);
-		//ui->m17VoiceData->setEnabled(false);
+		ui->m17VoiceFull->setEnabled(false);
+		ui->m17VoiceData->setEnabled(false);
 		ui->label_1->setText("Callsign");
 		ui->label_2->setText("SrcID");
 		ui->label_3->setText("DestID");
@@ -455,6 +462,7 @@ void DudeStar::process_mode_change(const QString &m)
 		process_m17_hosts();
 		ui->comboMod->setEnabled(true);
 		ui->dmridEdit->setEnabled(false);
+		ui->essidEdit->setEnabled(false);
 		ui->dmrtgEdit->setEnabled(false);
 		ui->dmrccEdit->setEnabled(false);
 		ui->dmrslotEdit->setEnabled(false);
@@ -464,8 +472,8 @@ void DudeStar::process_mode_change(const QString &m)
 		ui->rptr1Edit->setEnabled(false);
 		ui->rptr2Edit->setEnabled(false);
 		ui->usertxtEdit->setEnabled(false);
-		//ui->m17VoiceFull->setEnabled(true);
-		//ui->m17VoiceData->setEnabled(true);
+		ui->m17VoiceFull->setEnabled(true);
+		ui->m17VoiceData->setEnabled(true);
 		ui->label_1->setText("SrcID");
 		ui->label_2->setText("DstID");
 		ui->label_3->setText("Type");
@@ -1110,6 +1118,9 @@ void DudeStar::process_settings()
 				if(sl.at(0) == "DMRID"){
 					ui->dmridEdit->setText(sl.at(1).simplified());
 				}
+				if(sl.at(0) == "ESSID"){
+					ui->essidEdit->setText(sl.at(1).simplified());
+				}
 				if(sl.at(0) == "DMRPASSWORD"){
 					ui->dmrpwEdit->setText(sl.at(1).simplified());
 				}
@@ -1173,15 +1184,27 @@ void DudeStar::process_connect()
 		ui->modeCombo->setEnabled(true);
         ui->hostCombo->setEnabled(true);
         ui->callsignEdit->setEnabled(true);
-		ui->dmridEdit->setEnabled(true);
-		ui->dmrpwEdit->setEnabled(true);
+
 		ui->txButton->setDisabled(true);
 		status_txt->setText("Not connected");
 
-		if((protocol == "DCS") || (protocol == "XRF") || (protocol == "M17")){
+		if(m_protocol == "DMR"){
+			ui->dmridEdit->setEnabled(true);
+			ui->essidEdit->setEnabled(true);
+			ui->dmrpwEdit->setEnabled(true);
+		}
+
+		if( (m_protocol == "P25") || (m_protocol == "NXDN") ){
+			ui->dmridEdit->setEnabled(true);
+		}
+
+		if((m_protocol == "DCS") || (m_protocol == "XRF") || (m_protocol == "M17")){
 			ui->comboMod->setEnabled(true);
 		}
     }
+	else if( (connect_status == DISCONNECTED) && (ui->hostCombo->currentText().size() == 0) ){
+		QMessageBox::warning(this, tr("Select host"), tr("No host selected"));
+	}
     else{
 		QStringList sl = ui->hostCombo->currentData().toString().simplified().split(':');
 		connect_status = CONNECTING;
@@ -1193,10 +1216,10 @@ void DudeStar::process_connect()
 		callsign = ui->callsignEdit->text().toUpper();
 		ui->callsignEdit->setText(callsign);
 		module = ui->comboMod->currentText().toStdString()[0];
-		protocol = ui->modeCombo->currentText();
+		m_protocol = ui->modeCombo->currentText();
 		hostname = ui->hostCombo->currentText().simplified();
 
-		if(protocol == "REF"){
+		if(m_protocol == "REF"){
 			m_ref = new REFCodec(callsign, hostname, host, port, ui->AmbeCombo->currentData().toString().simplified(), ui->AudioInCombo->currentText(), ui->AudioOutCombo->currentText());
 			m_modethread = new QThread;
 			m_ref->moveToThread(m_modethread);
@@ -1224,7 +1247,7 @@ void DudeStar::process_connect()
 			emit ui->rptr2Edit->textChanged(ui->rptr2Edit->text());
 			m_modethread->start();
 		}
-		if(protocol == "DCS"){
+		if(m_protocol == "DCS"){
 			m_dcs = new DCSCodec(callsign, hostname, host, port, ui->AmbeCombo->currentData().toString().simplified(), ui->AudioInCombo->currentText(), ui->AudioOutCombo->currentText());
 			m_modethread = new QThread;
 			m_dcs->moveToThread(m_modethread);
@@ -1251,7 +1274,7 @@ void DudeStar::process_connect()
 			emit ui->rptr2Edit->textChanged(ui->rptr2Edit->text());
 			m_modethread->start();
 		}
-		if(protocol == "XRF"){
+		if(m_protocol == "XRF"){
 			m_xrf = new XRFCodec(callsign, hostname, host, port, ui->AmbeCombo->currentData().toString().simplified(), ui->AudioInCombo->currentText(), ui->AudioOutCombo->currentText());
 			m_modethread = new QThread;
 			m_xrf->moveToThread(m_modethread);
@@ -1278,7 +1301,7 @@ void DudeStar::process_connect()
 			emit ui->rptr2Edit->textChanged(ui->rptr2Edit->text());
 			m_modethread->start();
 		}
-		if(protocol == "YSF"){
+		if(m_protocol == "YSF"){
 			m_ysf = new YSFCodec(callsign, hostname, host, port, ui->AmbeCombo->currentData().toString().simplified(), ui->AudioInCombo->currentText(), ui->AudioOutCombo->currentText());
 			m_modethread = new QThread;
 			m_ysf->moveToThread(m_modethread);
@@ -1295,13 +1318,20 @@ void DudeStar::process_connect()
 			emit input_source_changed(tts_voices->checkedId(), ui->TTSEdit->text());
 			m_modethread->start();
 		}
-		if(protocol == "DMR"){
+		if(m_protocol == "DMR"){
 			//dmrid = dmrids.key(callsign);
 			//dmr_password = sl.at(2).simplified();
 			dmrid = ui->dmridEdit->text().toUInt();
 			dmr_password = (ui->dmrpwEdit->text().isEmpty()) ? sl.at(2).simplified() : ui->dmrpwEdit->text();
 			dmr_destid = ui->dmrtgEdit->text().toUInt();
-			m_dmr = new DMRCodec(callsign, dmrid, dmr_password, dmr_destid, host, port, ui->AmbeCombo->currentData().toString().simplified(), ui->AudioInCombo->currentText(), ui->AudioOutCombo->currentText());
+			uint8_t essid = 0;
+			if ( (ui->essidEdit->text().size() > 0) &&
+				 (ui->essidEdit->text().toInt() >= 0) &&
+				 (ui->essidEdit->text().toInt() < 100))
+			{
+				essid = ui->essidEdit->text().toInt() + 1;
+			}
+			m_dmr = new DMRCodec(callsign, dmrid, essid, dmr_password, dmr_destid, host, port, ui->AmbeCombo->currentData().toString().simplified(), ui->AudioInCombo->currentText(), ui->AudioOutCombo->currentText());
 			m_modethread = new QThread;
 			m_dmr->moveToThread(m_modethread);
 			connect(m_dmr, SIGNAL(update()), this, SLOT(update_dmr_data()));
@@ -1319,7 +1349,7 @@ void DudeStar::process_connect()
 			emit input_source_changed(tts_voices->checkedId(), ui->TTSEdit->text());
 			m_modethread->start();
 		}
-		if(protocol == "P25"){
+		if(m_protocol == "P25"){
 			dmrid = ui->dmridEdit->text().toUInt();
 			dmr_destid = ui->dmrtgEdit->text().toUInt();
 			m_p25 = new P25Codec(callsign, dmrid, dmr_destid, host, port, ui->AudioInCombo->currentText(), ui->AudioOutCombo->currentText());
@@ -1337,7 +1367,7 @@ void DudeStar::process_connect()
 			emit input_source_changed(tts_voices->checkedId(), ui->TTSEdit->text());
 			m_modethread->start();
 		}
-		if(protocol == "NXDN"){
+		if(m_protocol == "NXDN"){
 			dmrid = nxdnids.key(callsign);
 			dmr_destid = ui->hostCombo->currentText().toUInt();
 			m_nxdn = new NXDNCodec(callsign, dmr_destid, host, port, ui->AmbeCombo->currentData().toString().simplified(), ui->AudioInCombo->currentText(), ui->AudioOutCombo->currentText());
@@ -1356,7 +1386,7 @@ void DudeStar::process_connect()
 			emit input_source_changed(tts_voices->checkedId(), ui->TTSEdit->text());
 			m_modethread->start();
 		}
-		if(protocol == "M17"){
+		if(m_protocol == "M17"){
 			m_m17 = new M17Codec(callsign, module, hostname, host, port, ui->AudioInCombo->currentText(), ui->AudioOutCombo->currentText());
 			m_modethread = new QThread;
 			m_m17->moveToThread(m_modethread);
@@ -1623,6 +1653,7 @@ void DudeStar::update_dmr_data()
 		ui->hostCombo->setEnabled(false);
 		ui->callsignEdit->setEnabled(false);
 		ui->dmridEdit->setEnabled(false);
+		ui->essidEdit->setEnabled(false);
 		ui->dmrpwEdit->setEnabled(false);
 		ui->txButton->setDisabled(false);
 		//ui->dmrtgEdit->setEnabled(false);
@@ -1701,6 +1732,7 @@ void DudeStar::update_dcs_data()
 		ui->AudioInCombo->setEnabled(false);
 		ui->modeCombo->setEnabled(false);
 		ui->hostCombo->setEnabled(false);
+		ui->comboMod->setEnabled(false);
 		ui->callsignEdit->setEnabled(false);
 		ui->dmridEdit->setEnabled(false);
 		ui->dmrpwEdit->setEnabled(false);
@@ -1739,6 +1771,7 @@ void DudeStar::update_xrf_data()
 		ui->AudioInCombo->setEnabled(false);
 		ui->modeCombo->setEnabled(false);
 		ui->hostCombo->setEnabled(false);
+		ui->comboMod->setEnabled(false);
 		ui->callsignEdit->setEnabled(false);
 		ui->dmridEdit->setEnabled(false);
 		ui->dmrpwEdit->setEnabled(false);

@@ -42,11 +42,10 @@ extern "C" {
 extern cst_voice * register_cmu_us_slt(const char *);
 extern cst_voice * register_cmu_us_kal16(const char *);
 extern cst_voice * register_cmu_us_awb(const char *);
-extern cst_voice * register_cmu_us_rms(const char *);
 }
 #endif
 
-DMRCodec::DMRCodec(QString callsign, uint32_t dmrid, QString password, uint32_t dstid, QString host, uint32_t port, QString vocoder, QString audioin, QString audioout) :
+DMRCodec::DMRCodec(QString callsign, uint32_t dmrid, uint8_t essid, QString password, uint32_t dstid, QString host, uint32_t port, QString vocoder, QString audioin, QString audioout) :
 	m_callsign(callsign),
 	m_dmrid(dmrid),
 	m_password(password),
@@ -72,12 +71,17 @@ DMRCodec::DMRCodec(QString callsign, uint32_t dmrid, QString password, uint32_t 
 	m_colorcode = 1;
 	m_slot = 2;
 	m_flco = FLCO(0);
+	if (essid){
+		m_essid = m_dmrid * 100 + (essid-1);
+	}
+	else{
+		m_essid = m_dmrid;
+	}
 #ifdef USE_FLITE
 	flite_init();
 	voice_slt = register_cmu_us_slt(nullptr);
 	voice_kal = register_cmu_us_kal16(nullptr);
 	voice_awb = register_cmu_us_awb(nullptr);
-	voice_rms = register_cmu_us_rms(nullptr);
 #endif
 }
 
@@ -135,10 +139,10 @@ void DMRCodec::process_udp()
 			out[1] = 'P';
 			out[2] = 'T';
 			out[3] = 'K';
-			out[4] = (m_dmrid >> 24) & 0xff;
-			out[5] = (m_dmrid >> 16) & 0xff;
-			out[6] = (m_dmrid >> 8) & 0xff;
-			out[7] = (m_dmrid >> 0) & 0xff;
+			out[4] = (m_essid >> 24) & 0xff;
+			out[5] = (m_essid >> 16) & 0xff;
+			out[6] = (m_essid >> 8) & 0xff;
+			out[7] = (m_essid >> 0) & 0xff;
 			sha256.buffer((unsigned char *)in.data(), (unsigned int)(m_password.size() + sizeof(uint32_t)), (unsigned char *)out.data() + 8U);
 			break;
 		case DMR_AUTH:
@@ -147,10 +151,10 @@ void DMRCodec::process_udp()
 			buffer[1] = 'P';
 			buffer[2] = 'T';
 			buffer[3] = 'C';
-			buffer[4] = (m_dmrid >> 24) & 0xff;
-			buffer[5] = (m_dmrid >> 16) & 0xff;
-			buffer[6] = (m_dmrid >> 8) & 0xff;
-			buffer[7] = (m_dmrid >> 0) & 0xff;
+			buffer[4] = (m_essid >> 24) & 0xff;
+			buffer[5] = (m_essid >> 16) & 0xff;
+			buffer[6] = (m_essid >> 8) & 0xff;
+			buffer[7] = (m_essid >> 0) & 0xff;
 
 			m_status = DMR_CONF;
 			char latitude[20U];
@@ -253,10 +257,10 @@ void DMRCodec::hostname_lookup(QHostInfo i)
 		out.append('P');
 		out.append('T');
 		out.append('L');
-		out.append((m_dmrid >> 24) & 0xff);
-		out.append((m_dmrid >> 16) & 0xff);
-		out.append((m_dmrid >> 8) & 0xff);
-		out.append((m_dmrid >> 0) & 0xff);
+		out.append((m_essid >> 24) & 0xff);
+		out.append((m_essid >> 16) & 0xff);
+		out.append((m_essid >> 8) & 0xff);
+		out.append((m_essid >> 0) & 0xff);
 		m_address = i.addresses().first();
 		m_udp = new QUdpSocket(this);
 		connect(m_udp, SIGNAL(readyRead()), this, SLOT(process_udp()));
@@ -283,10 +287,10 @@ void DMRCodec::send_ping()
 	QByteArray out;
 	char tag[] = { 'R','P','T','P','I','N','G' };
 	out.append(tag, 7);
-	out.append((m_dmrid >> 24) & 0xff);
-	out.append((m_dmrid >> 16) & 0xff);
-	out.append((m_dmrid >> 8) & 0xff);
-	out.append((m_dmrid >> 0) & 0xff);
+	out.append((m_essid >> 24) & 0xff);
+	out.append((m_essid >> 16) & 0xff);
+	out.append((m_essid >> 8) & 0xff);
+	out.append((m_essid >> 0) & 0xff);
 	m_udp->writeDatagram(out, m_address, m_port);
 #ifdef DEBUG
 	fprintf(stderr, "PING: ");
@@ -306,10 +310,10 @@ void DMRCodec::send_disconnect()
 	out.append('T');
 	out.append('C');
 	out.append('L');
-	out.append((m_dmrid >> 24) & 0xff);
-	out.append((m_dmrid >> 16) & 0xff);
-	out.append((m_dmrid >> 8) & 0xff);
-	out.append((m_dmrid >> 0) & 0xff);
+	out.append((m_essid >> 24) & 0xff);
+	out.append((m_essid >> 16) & 0xff);
+	out.append((m_essid >> 8) & 0xff);
+	out.append((m_essid >> 0) & 0xff);
 	m_udp->writeDatagram(out, m_address, m_port);
 #ifdef DEBUG
 	fprintf(stderr, "SEND: ");
@@ -340,12 +344,9 @@ void DMRCodec::start_tx()
 		tts_audio = flite_text_to_wave(m_ttstext.toStdString().c_str(), voice_kal);
 	}
 	else if(m_ttsid == 2){
-		tts_audio = flite_text_to_wave(m_ttstext.toStdString().c_str(), voice_rms);
-	}
-	else if(m_ttsid == 3){
 		tts_audio = flite_text_to_wave(m_ttstext.toStdString().c_str(), voice_awb);
 	}
-	else if(m_ttsid == 4){
+	else if(m_ttsid == 3){
 		tts_audio = flite_text_to_wave(m_ttstext.toStdString().c_str(), voice_slt);
 	}
 #endif

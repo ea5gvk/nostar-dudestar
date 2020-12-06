@@ -37,7 +37,6 @@ extern "C" {
 extern cst_voice * register_cmu_us_slt(const char *);
 extern cst_voice * register_cmu_us_kal16(const char *);
 extern cst_voice * register_cmu_us_awb(const char *);
-extern cst_voice * register_cmu_us_rms(const char *);
 }
 #endif
 
@@ -67,7 +66,6 @@ YSFCodec::YSFCodec(QString callsign, QString hostname, QString host, int port, Q
 	voice_slt = register_cmu_us_slt(nullptr);
 	voice_kal = register_cmu_us_kal16(nullptr);
 	voice_awb = register_cmu_us_awb(nullptr);
-	voice_rms = register_cmu_us_rms(nullptr);
 #endif
 }
 
@@ -488,12 +486,9 @@ void YSFCodec::start_tx()
 		tts_audio = flite_text_to_wave(m_ttstext.toStdString().c_str(), voice_kal);
 	}
 	else if(m_ttsid == 2){
-		tts_audio = flite_text_to_wave(m_ttstext.toStdString().c_str(), voice_rms);
-	}
-	else if(m_ttsid == 3){
 		tts_audio = flite_text_to_wave(m_ttstext.toStdString().c_str(), voice_awb);
 	}
-	else if(m_ttsid == 4){
+	else if(m_ttsid == 3){
 		tts_audio = flite_text_to_wave(m_ttstext.toStdString().c_str(), voice_slt);
 	}
 #endif

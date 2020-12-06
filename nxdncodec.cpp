@@ -58,14 +58,11 @@ NXDNCodec::NXDNCodec(QString callsign, uint32_t dstid, QString host, int port, Q
 	m_audioout(audioout)
 {
 	m_txcnt = 0;
-	//m_srcid = 12065;
-	//m_dstid = 26000;
 #ifdef USE_FLITE
 	flite_init();
 	voice_slt = register_cmu_us_slt(nullptr);
 	voice_kal = register_cmu_us_kal16(nullptr);
 	voice_awb = register_cmu_us_awb(nullptr);
-	voice_rms = register_cmu_us_rms(nullptr);
 #endif
 }
 
@@ -306,12 +303,9 @@ void NXDNCodec::start_tx()
 		tts_audio = flite_text_to_wave(m_ttstext.toStdString().c_str(), voice_kal);
 	}
 	else if(m_ttsid == 2){
-		tts_audio = flite_text_to_wave(m_ttstext.toStdString().c_str(), voice_rms);
-	}
-	else if(m_ttsid == 3){
 		tts_audio = flite_text_to_wave(m_ttstext.toStdString().c_str(), voice_awb);
 	}
-	else if(m_ttsid == 4){
+	else if(m_ttsid == 3){
 		tts_audio = flite_text_to_wave(m_ttstext.toStdString().c_str(), voice_slt);
 	}
 #endif

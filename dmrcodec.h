@@ -35,7 +35,7 @@ class DMRCodec : public QObject
 {
 	Q_OBJECT
 public:
-	DMRCodec(QString callsign, uint32_t dmrid, QString password, uint32_t dstid, QString host, uint32_t port, QString vocoder, QString audioin, QString audioout);
+	DMRCodec(QString callsign, uint32_t dmrid, uint8_t essid, QString password, uint32_t dstid, QString host, uint32_t port, QString vocoder, QString audioin, QString audioout);
 	~DMRCodec();
 	unsigned char * get_eot();
 	uint8_t get_status(){ return m_status; }
@@ -90,6 +90,7 @@ private:
 	QHostAddress m_address;
 	QString m_callsign;
 	uint32_t m_dmrid;
+	uint32_t m_essid;
 	QString m_password;
 	uint32_t m_srcid;
 	uint32_t m_dstid;
@@ -121,7 +122,6 @@ private:
 	cst_voice *voice_slt;
 	cst_voice *voice_kal;
 	cst_voice *voice_awb;
-	cst_voice *voice_rms;
 	cst_wave *tts_audio;
 #endif
 	uint32_t m_defsrcid;

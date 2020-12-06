@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>360</width>
-    <height>577</height>
+    <width>332</width>
+    <height>547</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,84 +18,7 @@
     <normaloff>:/images/dstar.png</normaloff>:/images/dstar.png</iconset>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QGridLayout" name="gridLayout_2">
-    <item row="4" column="0">
-     <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="0">
-       <widget class="QComboBox" name="modeCombo">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>80</width>
-          <height>16777215</height>
-         </size>
-        </property>
-        <property name="toolTip">
-         <string>Choose desired digital mode</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
-    <item row="8" column="0" colspan="4">
-     <widget class="QLineEdit" name="usertxtEdit">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="placeholderText">
-       <string>D-STAR user text 20 chars</string>
-      </property>
-     </widget>
-    </item>
-    <item row="9" column="1">
-     <widget class="QLineEdit" name="dmrccEdit">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>40</width>
-        <height>16777215</height>
-       </size>
-      </property>
-      <property name="toolTip">
-       <string>Enter color code (optional, default = 1)</string>
-      </property>
-      <property name="placeholderText">
-       <string>CC</string>
-      </property>
-     </widget>
-    </item>
-    <item row="17" column="0">
-     <widget class="QLabel" name="label_4">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>80</width>
-        <height>16777215</height>
-       </size>
-      </property>
-      <property name="text">
-       <string>RPTR2</string>
-      </property>
-     </widget>
-    </item>
+   <layout class="QGridLayout" name="gridLayout" columnstretch="0,0,0,0,0,0,0,0">
     <item row="6" column="0">
      <widget class="QLineEdit" name="callsignEdit">
       <property name="sizePolicy">
@@ -106,7 +29,7 @@
       </property>
       <property name="maximumSize">
        <size>
-        <width>80</width>
+        <width>16777215</width>
         <height>16777215</height>
        </size>
       </property>
@@ -118,49 +41,8 @@
       </property>
      </widget>
     </item>
-    <item row="9" column="0">
-     <widget class="QLineEdit" name="dmrtgEdit">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>80</width>
-        <height>16777215</height>
-       </size>
-      </property>
-      <property name="toolTip">
-       <string>Enter Talkgroup</string>
-      </property>
-      <property name="placeholderText">
-       <string>Talkgroup</string>
-      </property>
-     </widget>
-    </item>
-    <item row="6" column="3">
-     <widget class="QComboBox" name="comboMod">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>60</width>
-        <height>16777215</height>
-       </size>
-      </property>
-      <property name="toolTip">
-       <string>Select D-Star module</string>
-      </property>
-     </widget>
-    </item>
-    <item row="17" column="1" colspan="3">
-     <widget class="QLabel" name="rptr2">
+    <item row="20" column="1" colspan="5">
+     <widget class="QLabel" name="streamid">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
         <horstretch>0</horstretch>
@@ -172,8 +54,40 @@
       </property>
      </widget>
     </item>
-    <item row="14" column="0">
-     <widget class="QLabel" name="label_1">
+    <item row="11" column="3">
+     <widget class="QCheckBox" name="checkBoxDMRPC">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="toolTip">
+       <string>Select for DMR private call, i.e. when using parrot</string>
+      </property>
+      <property name="text">
+       <string>Private</string>
+      </property>
+     </widget>
+    </item>
+    <item row="15" column="3">
+     <widget class="QPushButton" name="inmuteButton">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="toolTip">
+       <string>Mute input</string>
+      </property>
+      <property name="text">
+       <string>Mute</string>
+      </property>
+     </widget>
+    </item>
+    <item row="11" column="2">
+     <widget class="QLineEdit" name="dmrslotEdit">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
         <horstretch>0</horstretch>
@@ -182,12 +96,15 @@
       </property>
       <property name="maximumSize">
        <size>
-        <width>80</width>
+        <width>30</width>
         <height>16777215</height>
        </size>
       </property>
-      <property name="text">
-       <string>MYCALL</string>
+      <property name="toolTip">
+       <string>DMR Slot (optional default = 2)</string>
+      </property>
+      <property name="placeholderText">
+       <string>Slot</string>
       </property>
      </widget>
     </item>
@@ -201,7 +118,7 @@
       </property>
       <property name="maximumSize">
        <size>
-        <width>160</width>
+        <width>154</width>
         <height>16777215</height>
        </size>
       </property>
@@ -210,172 +127,22 @@
       </property>
      </widget>
     </item>
-    <item row="7" column="1">
-     <widget class="QLineEdit" name="urcallEdit">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>80</width>
-        <height>16777215</height>
-       </size>
-      </property>
-      <property name="placeholderText">
-       <string>Urcall</string>
-      </property>
-     </widget>
-    </item>
-    <item row="10" column="0">
-     <widget class="QCheckBox" name="checkBoxSWRX">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="toolTip">
-       <string>Use software decoding</string>
-      </property>
-      <property name="text">
-       <string>SWRX</string>
-      </property>
-     </widget>
-    </item>
-    <item row="23" column="1">
-     <widget class="QCheckBox" name="checkBoxRms">
-      <property name="text">
-       <string>TTS2</string>
-      </property>
-     </widget>
-    </item>
-    <item row="4" column="1" colspan="4">
-     <widget class="QComboBox" name="hostCombo">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="toolTip">
-       <string>Select Refector / Repeater / Server</string>
-      </property>
-     </widget>
-    </item>
-    <item row="23" column="0">
-     <widget class="QCheckBox" name="checkBoxKal">
-      <property name="text">
-       <string>TTS1</string>
-      </property>
-     </widget>
-    </item>
-    <item row="12" column="3">
-     <widget class="QPushButton" name="muteButton">
-      <property name="toolTip">
-       <string>Mute output</string>
-      </property>
-      <property name="text">
-       <string>Mute</string>
-      </property>
-     </widget>
-    </item>
-    <item row="6" column="2">
-     <widget class="QLineEdit" name="dmrpwEdit">
-      <property name="toolTip">
-       <string>Enter DMR password (optional)</string>
-      </property>
-      <property name="echoMode">
-       <enum>QLineEdit::Password</enum>
-      </property>
-      <property name="placeholderText">
-       <string>password</string>
-      </property>
-     </widget>
-    </item>
-    <item row="19" column="1" colspan="3">
-     <widget class="QLabel" name="usertxt">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-     </widget>
-    </item>
-    <item row="7" column="0">
-     <widget class="QLineEdit" name="mycallEdit">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>80</width>
-        <height>16777215</height>
-       </size>
-      </property>
-      <property name="placeholderText">
-       <string>Mycall</string>
-      </property>
-     </widget>
-    </item>
-    <item row="15" column="0">
-     <widget class="QLabel" name="label_2">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>80</width>
-        <height>16777215</height>
-       </size>
-      </property>
-      <property name="text">
-       <string>URCALL</string>
-      </property>
-     </widget>
-    </item>
     <item row="0" column="0" colspan="4">
      <widget class="QComboBox" name="AmbeCombo">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>314</width>
+        <height>16777215</height>
+       </size>
+      </property>
       <property name="toolTip">
        <string>Select vocoder device</string>
-      </property>
-     </widget>
-    </item>
-    <item row="14" column="1" colspan="3">
-     <widget class="QLabel" name="mycall">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-     </widget>
-    </item>
-    <item row="26" column="0" colspan="4">
-     <widget class="QLineEdit" name="TTSEdit">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="placeholderText">
-       <string>Text to speech text</string>
       </property>
      </widget>
     </item>
@@ -389,43 +156,128 @@
       </property>
       <property name="maximumSize">
        <size>
-        <width>80</width>
+        <width>16777215</width>
         <height>16777215</height>
        </size>
+      </property>
+      <property name="toolTip">
+       <string>Dstar RPTR2</string>
       </property>
       <property name="placeholderText">
        <string>Rptr2</string>
       </property>
      </widget>
     </item>
-    <item row="23" column="3">
-     <widget class="QCheckBox" name="checkBoxSlt">
-      <property name="text">
-       <string>TTS4</string>
-      </property>
-     </widget>
-    </item>
-    <item row="22" column="0" colspan="4">
-     <widget class="QPushButton" name="txButton">
+    <item row="7" column="0">
+     <widget class="QLineEdit" name="mycallEdit">
       <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
       <property name="maximumSize">
        <size>
-        <width>600</width>
+        <width>16777215</width>
         <height>16777215</height>
        </size>
       </property>
-      <property name="text">
-       <string>TX</string>
+      <property name="toolTip">
+       <string>Dstar MYCALL</string>
+      </property>
+      <property name="placeholderText">
+       <string>Mycall</string>
       </property>
      </widget>
     </item>
-    <item row="18" column="1" colspan="3">
-     <widget class="QLabel" name="streamid">
+    <item row="11" column="1">
+     <widget class="QLineEdit" name="dmrccEdit">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>30</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="toolTip">
+       <string>DMR color code (optional, default = 1)</string>
+      </property>
+      <property name="placeholderText">
+       <string>CC</string>
+      </property>
+     </widget>
+    </item>
+    <item row="6" column="3">
+     <widget class="QLineEdit" name="dmrpwEdit">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="toolTip">
+       <string>Hotspot security password</string>
+      </property>
+      <property name="echoMode">
+       <enum>QLineEdit::Password</enum>
+      </property>
+      <property name="placeholderText">
+       <string>password</string>
+      </property>
+     </widget>
+    </item>
+    <item row="25" column="3">
+     <widget class="QCheckBox" name="checkBoxSlt">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string>TTS3</string>
+      </property>
+     </widget>
+    </item>
+    <item row="14" column="0" colspan="3">
+     <widget class="QSlider" name="volumeSlider">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="toolTip">
+       <string>Output volume</string>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
+    </item>
+    <item row="15" column="0" colspan="3">
+     <widget class="QSlider" name="involSlider">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="toolTip">
+       <string>Input volume</string>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
+    </item>
+    <item row="16" column="1" colspan="5">
+     <widget class="QLabel" name="mycall">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
         <horstretch>0</horstretch>
@@ -437,7 +289,340 @@
       </property>
      </widget>
     </item>
-    <item row="11" column="0" colspan="4">
+    <item row="17" column="0">
+     <widget class="QLabel" name="label_2">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>URCALL</string>
+      </property>
+     </widget>
+    </item>
+    <item row="7" column="1">
+     <widget class="QLineEdit" name="urcallEdit">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="toolTip">
+       <string>Dstar URCALL</string>
+      </property>
+      <property name="placeholderText">
+       <string>Urcall</string>
+      </property>
+     </widget>
+    </item>
+    <item row="25" column="2">
+     <widget class="QCheckBox" name="checkBoxAwb">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string>TTS2</string>
+      </property>
+     </widget>
+    </item>
+    <item row="20" column="0">
+     <widget class="QLabel" name="label_5">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>Stream ID</string>
+      </property>
+     </widget>
+    </item>
+    <item row="12" column="2">
+     <widget class="QRadioButton" name="m17VoiceFull">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>73</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="toolTip">
+       <string>M17 3200 Voice</string>
+      </property>
+      <property name="text">
+       <string>M17 3200</string>
+      </property>
+     </widget>
+    </item>
+    <item row="30" column="0" colspan="4">
+     <widget class="QLineEdit" name="TTSEdit">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="placeholderText">
+       <string>Text to speech text</string>
+      </property>
+     </widget>
+    </item>
+    <item row="21" column="0">
+     <widget class="QLabel" name="label_6">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>User txt</string>
+      </property>
+     </widget>
+    </item>
+    <item row="7" column="2">
+     <widget class="QLineEdit" name="rptr1Edit">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="toolTip">
+       <string>Dstar RPTR1</string>
+      </property>
+      <property name="placeholderText">
+       <string>Rptr1</string>
+      </property>
+     </widget>
+    </item>
+    <item row="21" column="1" colspan="5">
+     <widget class="QLabel" name="usertxt">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
+    <item row="4" column="1" colspan="3">
+     <widget class="QComboBox" name="hostCombo">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>230</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="toolTip">
+       <string>Select Refector / Repeater / Server</string>
+      </property>
+     </widget>
+    </item>
+    <item row="18" column="0">
+     <widget class="QLabel" name="label_3">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>RPTR1</string>
+      </property>
+     </widget>
+    </item>
+    <item row="6" column="2">
+     <widget class="QLineEdit" name="essidEdit">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>40</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="toolTip">
+       <string>DMR ESSID (0 - 99)</string>
+      </property>
+      <property name="placeholderText">
+       <string>ESSID</string>
+      </property>
+     </widget>
+    </item>
+    <item row="11" column="0">
+     <widget class="QLineEdit" name="dmrtgEdit">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="toolTip">
+       <string>DMR Talkgroup</string>
+      </property>
+      <property name="placeholderText">
+       <string>Talkgroup</string>
+      </property>
+     </widget>
+    </item>
+    <item row="18" column="1" colspan="4">
+     <widget class="QLabel" name="rptr1">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
+    <item row="12" column="1">
+     <widget class="QCheckBox" name="checkBoxSWTX">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>73</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="toolTip">
+       <string>Use software encoding</string>
+      </property>
+      <property name="text">
+       <string>SWTX</string>
+      </property>
+     </widget>
+    </item>
+    <item row="24" column="0" colspan="4">
+     <widget class="QPushButton" name="txButton">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>TX</string>
+      </property>
+     </widget>
+    </item>
+    <item row="19" column="0">
+     <widget class="QLabel" name="label_4">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="text">
+       <string>RPTR2</string>
+      </property>
+     </widget>
+    </item>
+    <item row="19" column="1" colspan="5">
+     <widget class="QLabel" name="rptr2">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
+    <item row="13" column="0" colspan="4">
      <widget class="QPushButton" name="connectButton">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -453,27 +638,8 @@
       </property>
      </widget>
     </item>
-    <item row="7" column="2">
-     <widget class="QLineEdit" name="rptr1Edit">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>80</width>
-        <height>16777215</height>
-       </size>
-      </property>
-      <property name="placeholderText">
-       <string>Rptr1</string>
-      </property>
-     </widget>
-    </item>
     <item row="16" column="0">
-     <widget class="QLabel" name="label_3">
+     <widget class="QLabel" name="label_1">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
         <horstretch>0</horstretch>
@@ -482,159 +648,56 @@
       </property>
       <property name="maximumSize">
        <size>
-        <width>80</width>
+        <width>16777215</width>
         <height>16777215</height>
        </size>
       </property>
       <property name="text">
-       <string>RPTR1</string>
+       <string>MYCALL</string>
       </property>
      </widget>
     </item>
-    <item row="18" column="0">
-     <widget class="QLabel" name="label_5">
+    <item row="14" column="3">
+     <widget class="QPushButton" name="muteButton">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
-      <property name="maximumSize">
-       <size>
-        <width>80</width>
-        <height>16777215</height>
-       </size>
-      </property>
-      <property name="text">
-       <string>Stream ID</string>
-      </property>
-     </widget>
-    </item>
-    <item row="9" column="3">
-     <widget class="QCheckBox" name="checkBoxDMRPC">
       <property name="toolTip">
-       <string>Select for DMR private call, i.e. when using parrot</string>
-      </property>
-      <property name="text">
-       <string>Private</string>
-      </property>
-     </widget>
-    </item>
-    <item row="13" column="3">
-     <widget class="QPushButton" name="inmuteButton">
-      <property name="toolTip">
-       <string>Mute input</string>
+       <string>Mute output</string>
       </property>
       <property name="text">
        <string>Mute</string>
       </property>
      </widget>
     </item>
-    <item row="16" column="1" colspan="3">
-     <widget class="QLabel" name="rptr1">
+    <item row="4" column="0">
+     <widget class="QComboBox" name="modeCombo"/>
+    </item>
+    <item row="12" column="3">
+     <widget class="QRadioButton" name="m17VoiceData">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
-      <property name="text">
-       <string/>
-      </property>
-     </widget>
-    </item>
-    <item row="19" column="0">
-     <widget class="QLabel" name="label_6">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="maximumSize">
+      <property name="minimumSize">
        <size>
-        <width>80</width>
-        <height>16777215</height>
-       </size>
-      </property>
-      <property name="text">
-       <string>User txt</string>
-      </property>
-     </widget>
-    </item>
-    <item row="9" column="2">
-     <widget class="QLineEdit" name="dmrslotEdit">
-      <property name="maximumSize">
-       <size>
-        <width>40</width>
-        <height>16777215</height>
+        <width>73</width>
+        <height>0</height>
        </size>
       </property>
       <property name="toolTip">
-       <string>Enter DMR slot (optional, default = 2)</string>
-      </property>
-      <property name="placeholderText">
-       <string>Slot</string>
-      </property>
-     </widget>
-    </item>
-    <item row="12" column="0" colspan="3">
-     <widget class="QSlider" name="volumeSlider">
-      <property name="toolTip">
-       <string>Output volume</string>
-      </property>
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-     </widget>
-    </item>
-    <item row="13" column="0" colspan="3">
-     <widget class="QSlider" name="involSlider">
-      <property name="toolTip">
-       <string>Input volume</string>
-      </property>
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-     </widget>
-    </item>
-    <item row="23" column="2">
-     <widget class="QCheckBox" name="checkBoxAwb">
-      <property name="text">
-       <string>TTS3</string>
-      </property>
-     </widget>
-    </item>
-    <item row="24" column="2">
-     <widget class="QCheckBox" name="checkBoxTTSOff">
-      <property name="text">
-       <string>Mic In</string>
-      </property>
-     </widget>
-    </item>
-    <item row="6" column="1">
-     <widget class="QLineEdit" name="dmridEdit">
-      <property name="toolTip">
-       <string>Enter DMR ID</string>
-      </property>
-      <property name="echoMode">
-       <enum>QLineEdit::Normal</enum>
-      </property>
-      <property name="placeholderText">
-       <string>DMR ID</string>
-      </property>
-     </widget>
-    </item>
-    <item row="15" column="1" colspan="3">
-     <widget class="QLabel" name="urcall">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
+       <string>M17 1600 Voice/Data</string>
       </property>
       <property name="text">
-       <string/>
+       <string>M17 1600</string>
       </property>
      </widget>
     </item>
@@ -648,7 +711,7 @@
       </property>
       <property name="maximumSize">
        <size>
-        <width>160</width>
+        <width>154</width>
         <height>16777215</height>
        </size>
       </property>
@@ -657,8 +720,43 @@
       </property>
      </widget>
     </item>
-    <item row="10" column="1">
-     <widget class="QCheckBox" name="checkBoxSWTX">
+    <item row="12" column="0">
+     <widget class="QCheckBox" name="checkBoxSWRX">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>73</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="toolTip">
+       <string>Use software decoding</string>
+      </property>
+      <property name="text">
+       <string>SWRX</string>
+      </property>
+     </widget>
+    </item>
+    <item row="17" column="1" colspan="5">
+     <widget class="QLabel" name="urcall">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </item>
+    <item row="6" column="1">
+     <widget class="QLineEdit" name="dmridEdit">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
         <horstretch>0</horstretch>
@@ -666,30 +764,68 @@
        </sizepolicy>
       </property>
       <property name="toolTip">
-       <string>Use software encoding</string>
+       <string>Enter DMR ID</string>
       </property>
-      <property name="text">
-       <string>SWTX</string>
+      <property name="echoMode">
+       <enum>QLineEdit::Normal</enum>
       </property>
-     </widget>
-    </item>
-    <item row="10" column="2">
-     <widget class="QRadioButton" name="m17VoiceFull">
-      <property name="enabled">
-       <bool>true</bool>
-      </property>
-      <property name="text">
-       <string>3200 Voice</string>
+      <property name="placeholderText">
+       <string>DMR ID</string>
       </property>
      </widget>
     </item>
-    <item row="10" column="3">
-     <widget class="QRadioButton" name="m17VoiceData">
-      <property name="enabled">
-       <bool>true</bool>
+    <item row="8" column="0">
+     <widget class="QComboBox" name="comboMod">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="toolTip">
+       <string>Select D-Star module</string>
+      </property>
+     </widget>
+    </item>
+    <item row="8" column="1" colspan="3">
+     <widget class="QLineEdit" name="usertxtEdit">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="toolTip">
+       <string>Dstar user text</string>
+      </property>
+      <property name="placeholderText">
+       <string>D-STAR user text 20 chars</string>
+      </property>
+     </widget>
+    </item>
+    <item row="25" column="1">
+     <widget class="QCheckBox" name="checkBoxKal">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
       </property>
       <property name="text">
-       <string>1600 V/D</string>
+       <string>TTS1</string>
+      </property>
+     </widget>
+    </item>
+    <item row="25" column="0">
+     <widget class="QCheckBox" name="checkBoxTTSOff">
+      <property name="text">
+       <string>Mic In</string>
       </property>
      </widget>
     </item>
@@ -700,7 +836,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>360</width>
+     <width>332</width>
      <height>18</height>
     </rect>
    </property>

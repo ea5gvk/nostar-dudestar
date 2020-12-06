@@ -142,7 +142,6 @@ private:
 	cst_voice *voice_slt;
 	cst_voice *voice_kal;
 	cst_voice *voice_awb;
-	cst_voice *voice_rms;
 	cst_wave *tts_audio;
 #endif
 	QString m_gateway;

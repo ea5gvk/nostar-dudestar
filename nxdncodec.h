@@ -33,7 +33,6 @@ extern "C" {
 extern cst_voice * register_cmu_us_slt(const char *);
 extern cst_voice * register_cmu_us_kal16(const char *);
 extern cst_voice * register_cmu_us_awb(const char *);
-extern cst_voice * register_cmu_us_rms(const char *);
 }
 #endif
 
@@ -133,7 +132,6 @@ private:
 	cst_voice *voice_slt;
 	cst_voice *voice_kal;
 	cst_voice *voice_awb;
-	cst_voice *voice_rms;
 	cst_wave *tts_audio;
 #endif
 	void encode_header();
