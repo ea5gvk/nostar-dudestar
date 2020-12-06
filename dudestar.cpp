@@ -1215,9 +1215,13 @@ void DudeStar::process_connect()
 		port = sl.at(1).toInt();
 		callsign = ui->callsignEdit->text().toUpper();
 		ui->callsignEdit->setText(callsign);
+		ui->mycallEdit->setText(ui->mycallEdit->text().toUpper());
+		ui->urcallEdit->setText(ui->urcallEdit->text().toUpper());
+		ui->rptr1Edit->setText(ui->rptr1Edit->text().toUpper());
 		module = ui->comboMod->currentText().toStdString()[0];
 		m_protocol = ui->modeCombo->currentText();
 		hostname = ui->hostCombo->currentText().simplified();
+		ui->rptr2Edit->setText(hostname + " " + module);
 
 		if(m_protocol == "REF"){
 			m_ref = new REFCodec(callsign, hostname, host, port, ui->AmbeCombo->currentData().toString().simplified(), ui->AudioInCombo->currentText(), ui->AudioOutCombo->currentText());

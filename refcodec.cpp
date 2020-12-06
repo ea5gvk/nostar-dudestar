@@ -338,6 +338,24 @@ void REFCodec::send_disconnect()
 #endif
 }
 
+void REFCodec::format_callsign(QString &s)
+{
+	QStringList l = s.simplified().split(' ');
+
+	if(l.size() > 1){
+		s = l.at(0).simplified();
+		while(s.size() < 7){
+			s.append(' ');
+		}
+		s += l.at(1).simplified();
+	}
+	else{
+		while(s.size() < 8){
+			s.append(' ');
+		}
+	}
+}
+
 void REFCodec::start_tx()
 {
 	//std::cerr << "Pressed TX buffersize == " << audioin->bufferSize() << std::endl;
@@ -353,6 +371,10 @@ void REFCodec::start_tx()
 	m_streamid = 0;
 	m_txcnt = 0;
 	m_ttscnt = 0;
+	format_callsign(m_txmycall);
+	format_callsign(m_txurcall);
+	format_callsign(m_txrptr1);
+	format_callsign(m_txrptr2);
 #ifdef USE_FLITE
 	if(m_ttsid == 1){
 		tts_audio = flite_text_to_wave(m_ttstext.toStdString().c_str(), voice_kal);
