@@ -1,5 +1,12 @@
 #include "audioengine.h"
 #include <QDebug>
+
+#ifdef Q_OS_MACOS
+#define SRM 6
+#else
+#define SRM 1
+#endif
+
 //AudioEngine::AudioEngine(QObject *parent) : QObject(parent)
 AudioEngine::AudioEngine(QString in, QString out) :
 	m_outputdevice(out),
@@ -92,6 +99,7 @@ void AudioEngine::init()
 			tempformat = format;
 		}
 		//fprintf(stderr, "Using recording device %s\n", info.deviceName().toStdString().c_str());fflush(stderr);
+		format.setSampleRate(8000 * SRM);
 		m_in = new QAudioInput(info, format, this);
 	}
 }
@@ -137,7 +145,7 @@ void AudioEngine::input_data_received()
 		fprintf(stderr, "\n");
 		fflush(stderr);
 */
-		for(int i = 0; i < len; i+=2){
+		for(int i = 0; i < len; i += (2*SRM)){
 			m_audioinq.enqueue(((data.data()[i+1] << 8) & 0xff00) | (data.data()[i] & 0xff));
 		}
 	}

@@ -98,8 +98,8 @@ void DudeStar::about()
 {
     QMessageBox::about(this, tr("About DUDE-Star"),
 					   tr("DUDE-Star git build %1\nCopyright (C) 2019 Doug McLain AD8DP\n\n"
-                          "This program is free software; you can redistribute it"
-                          "and/or modify it under the terms of the GNU General Public "
+						  "This program is free software; you can redistribute it "
+						  "and/or modify it under the terms of the GNU General Public "
                           "License as published by the Free Software Foundation; "
                           "version 2.\n\nThis program is distributed in the hope that it "
                           "will be useful, but WITHOUT ANY WARRANTY; without even "
