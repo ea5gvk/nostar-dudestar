@@ -37,6 +37,7 @@ private:
 	QIODevice *m_outdev;
 	QIODevice *m_indev;
 	QQueue<int16_t> m_audioinq;
+    uint8_t m_srm; // sample rate multiplier for macOS HACK
 
 private slots:
 	void input_data_received();
