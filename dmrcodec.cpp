@@ -45,10 +45,14 @@ extern cst_voice * register_cmu_us_awb(const char *);
 }
 #endif
 
-DMRCodec::DMRCodec(QString callsign, uint32_t dmrid, uint8_t essid, QString password, uint32_t dstid, QString host, uint32_t port, QString vocoder, QString audioin, QString audioout) :
+DMRCodec::DMRCodec(QString callsign, uint32_t dmrid, uint8_t essid, QString password, QString lat, QString lon, QString location, QString desc, QString options, uint32_t dstid, QString host, uint32_t port, QString vocoder, QString audioin, QString audioout) :
 	m_callsign(callsign),
 	m_dmrid(dmrid),
 	m_password(password),
+	m_lat(lat),
+	m_lon(lon),
+	m_location(location),
+	m_desc(desc),
 	m_srcid(0),
 	m_dstid(0),
 	m_txdstid(dstid),
@@ -59,13 +63,15 @@ DMRCodec::DMRCodec(QString callsign, uint32_t dmrid, uint8_t essid, QString pass
 	m_tx(false),
 	m_txcnt(0),
 	m_rxcnt(0),
+	m_cnt(0),
 	m_vocoder(vocoder),
 	m_ambedev(nullptr),
 	m_hwrx(false),
 	m_hwtx(false),
 	m_pc(false),
 	m_audioin(audioin),
-	m_audioout(audioout)
+	m_audioout(audioout),
+	m_options(options)
 {
 	m_dmrcnt = 0;
 	m_colorcode = 1;
@@ -158,41 +164,34 @@ void DMRCodec::process_udp()
 
 			m_status = DMR_CONF;
 			char latitude[20U];
-			::sprintf(latitude, "00.00000");
-
 			char longitude[20U];
-			::sprintf(longitude, "00.000000");
+			sprintf(latitude, "%2.5f", m_lat.toFloat());
+			sprintf(longitude, "%2.6f", m_lon.toFloat());
+
 			::sprintf(buffer + 8U, "%-8.8s%09u%09u%02u%02u%8.8s%9.9s%03d%-20.20s%-19.19s%c%-124.124s%-40.40s%-40.40s", m_callsign.toStdString().c_str(),
-					438800000, 438800000, 1, 1, latitude, longitude, 0, "Nowhere","ABC", '4', "www.qrz.com", "20200101", "MMDVM_DVMEGA");
+					438800000, 438800000, 1, 1, latitude, longitude, 0, m_location.toStdString().c_str(), m_desc.toStdString().c_str(), '4', "www.qrz.com", "20200101", "MMDVM_DVMEGA");
 			out.append(buffer, 302);
 			break;
 		case DMR_CONF:
-			m_status = CONNECTED_RW;
-			m_mbedec = new MBEDecoder();
-			m_mbedec->setAutoGain(true);
-			m_mbeenc = new MBEEncoder();
-			m_mbeenc->set_dmr_mode();
-			m_mbeenc->set_gain_adjust(2.5);
-			m_txtimer = new QTimer();
-			connect(m_txtimer, SIGNAL(timeout()), this, SLOT(transmit()));
-			m_rxtimer = new QTimer();
-			connect(m_rxtimer, SIGNAL(timeout()), this, SLOT(process_rx_data()));
-			m_ping_timer = new QTimer();
-			connect(m_ping_timer, SIGNAL(timeout()), this, SLOT(send_ping()));
-			m_ping_timer->start(5000);
-			if(m_vocoder != ""){
-				m_hwrx = true;
-				m_hwtx = true;
-				m_ambedev = new SerialAMBE("DMR");
-				m_ambedev->connect_to_serial(m_vocoder);
-				connect(m_ambedev, SIGNAL(data_ready()), this, SLOT(get_ambe()));
+			if(m_options.size()){
+				out.clear();
+				out.append('R');
+				out.append('P');
+				out.append('T');
+				out.append('O');
+				out.append((m_essid >> 24) & 0xff);
+				out.append((m_essid >> 16) & 0xff);
+				out.append((m_essid >> 8) & 0xff);
+				out.append((m_essid >> 0) & 0xff);
+				out.append(m_options.toUtf8());
+				m_status = DMR_OPTS;
 			}
 			else{
-				m_hwrx = false;
-				m_hwtx = false;
+				setup_connection();
 			}
-			m_audio = new AudioEngine(m_audioin, m_audioout);
-			m_audio->init();
+			break;
+		case DMR_OPTS:
+			setup_connection();
 			break;
 		default:
 			break;
@@ -247,6 +246,36 @@ void DMRCodec::process_udp()
 		fflush(stderr);
 	}
 #endif
+}
+
+void DMRCodec::setup_connection()
+{
+	m_status = CONNECTED_RW;
+	m_mbedec = new MBEDecoder();
+	m_mbedec->setAutoGain(true);
+	m_mbeenc = new MBEEncoder();
+	m_mbeenc->set_dmr_mode();
+	m_mbeenc->set_gain_adjust(2.5);
+	m_txtimer = new QTimer();
+	connect(m_txtimer, SIGNAL(timeout()), this, SLOT(transmit()));
+	m_rxtimer = new QTimer();
+	connect(m_rxtimer, SIGNAL(timeout()), this, SLOT(process_rx_data()));
+	m_ping_timer = new QTimer();
+	connect(m_ping_timer, SIGNAL(timeout()), this, SLOT(send_ping()));
+	m_ping_timer->start(5000);
+	if(m_vocoder != ""){
+		m_hwrx = true;
+		m_hwtx = true;
+		m_ambedev = new SerialAMBE("DMR");
+		m_ambedev->connect_to_serial(m_vocoder);
+		connect(m_ambedev, SIGNAL(data_ready()), this, SLOT(get_ambe()));
+	}
+	else{
+		m_hwrx = false;
+		m_hwtx = false;
+	}
+	m_audio = new AudioEngine(m_audioin, m_audioout);
+	m_audio->init();
 }
 
 void DMRCodec::hostname_lookup(QHostInfo i)
@@ -327,7 +356,7 @@ void DMRCodec::send_disconnect()
 
 void DMRCodec::start_tx()
 {
-	//qDebug() << "start_tx() " << m_ttsid << " " << m_ttstext << " " << m_txdstid;
+	qDebug() << "start_tx() " << m_ttsid << " " << m_ttstext << " " << m_txdstid << " " << m_pc;
 	m_tx = true;
 	m_txcnt = 0;
 	m_rxtimer->stop();

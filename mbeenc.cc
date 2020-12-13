@@ -30,7 +30,7 @@
 
 #include "mbeenc.h"
 #include "Golay24128.h"
-#include "ambe3600x2250_const.h"
+#include "ambe3600x2450_const.h"
 #include "ambe3600x2400_const.h"
 #include "vocoder_tables.h"
 

@@ -120,7 +120,6 @@ private:
     const unsigned char header[5] = {0x80,0x44,0x53,0x56,0x54}; //DVSI packet header
 	QButtonGroup *tts_voices;
 private slots:
-    void about();
     void process_connect();
 	void process_mode_change(const QString &m);
 	void process_host_change(const QString &);
@@ -142,8 +141,8 @@ private slots:
 	void handleStateChanged(QAudio::State);
 	void process_mute_button();
 	void process_volume_changed(int);
-	void process_input_volume_changed(int);
-	void process_input_mute_button();
+	void process_mic_gain_changed(int);
+	void process_mic_mute_button();
 	void process_ref_hosts();
 	void process_dcs_hosts();
 	void process_xrf_hosts();
