@@ -49,7 +49,7 @@ public:
 	uint32_t get_gw() { return m_gwid; }
 	QString get_host() { return m_host; }
 	int get_port() { return m_port; }
-	int get_fn() { return m_fn; }
+	uint8_t get_fn() { return m_fn; }
 	int get_cnt() { return m_cnt; }
 	bool get_hwrx() { return m_hwrx; }
 	bool get_hwtx() { return m_hwtx; }
@@ -103,7 +103,7 @@ private:
 	QString m_hostname;
 	QString m_host;
 	int m_port;
-	uint16_t m_fn;
+	uint8_t m_fn;
 	bool m_tx;
 	uint16_t m_txcnt;
 	uint32_t m_rxcnt;
