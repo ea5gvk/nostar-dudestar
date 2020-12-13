@@ -513,10 +513,10 @@ void DMRCodec::build_frame()
 	m_dmrFrame[8U]  = m_txdstid >> 16;
 	m_dmrFrame[9U]  = m_txdstid >> 8;
 	m_dmrFrame[10U] = m_txdstid >> 0;
-	m_dmrFrame[11U]  = m_dmrid >> 24;
-	m_dmrFrame[12U]  = m_dmrid >> 16;
-	m_dmrFrame[13U]  = m_dmrid >> 8;
-	m_dmrFrame[14U]  = m_dmrid >> 0;
+	m_dmrFrame[11U]  = m_essid >> 24;
+	m_dmrFrame[12U]  = m_essid >> 16;
+	m_dmrFrame[13U]  = m_essid >> 8;
+	m_dmrFrame[14U]  = m_essid >> 0;
 
 	m_dmrFrame[15U] = (m_slot == 1U) ? 0x00U : 0x80U;
 	m_dmrFrame[15U] |= (m_flco == FLCO_GROUP) ? 0x00U : 0x40U;
