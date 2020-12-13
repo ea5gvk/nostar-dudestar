@@ -7,7 +7,7 @@ TEMPLATE = app
 VERSION_BUILD='$(shell cd $$PWD;git rev-parse --short HEAD)'
 DEFINES += QT_DEPRECATED_WARNINGS
 DEFINES += VERSION_NUMBER=\"\\\"$${VERSION_BUILD}\\\"\"
-#DEFINES += USE_FLITE
+DEFINES += USE_FLITE
 DEFINES += USE_SWTX
 CONFIG += c++11
 
@@ -19,6 +19,8 @@ SOURCES += \
         YSFConvolution.cpp \
         YSFFICH.cpp \
         ambe.c \
+        ambe3600x2400.c \
+        ambe3600x2450.c \
         audioengine.cpp \
         cbptc19696.cpp \
         cgolay2087.cpp \
@@ -35,7 +37,9 @@ SOURCES += \
         dcscodec.cpp \
         dmrcodec.cpp \
         dudestar.cpp \
+        ecc.c \
         httpmanager.cpp \
+        imbe7200x4400.c \
         imbe_vocoder/aux_sub.cc \
         imbe_vocoder/basicop2.cc \
         imbe_vocoder/ch_decode.cc \
@@ -62,6 +66,7 @@ SOURCES += \
         main.cpp \
         mbedec.cpp \
         mbeenc.cc \
+        mbelib.c \
         nxdncodec.cpp \
         p25codec.cpp \
         refcodec.cpp \
@@ -78,8 +83,8 @@ HEADERS += \
         YSFConvolution.h \
         YSFFICH.h \
         ambe.h \
-        ambe3600x2250_const.h \
         ambe3600x2400_const.h \
+        ambe3600x2450_const.h \
         audioengine.h \
         cbptc19696.h \
         cgolay2087.h \
@@ -96,7 +101,9 @@ HEADERS += \
         dcscodec.h \
         dmrcodec.h \
         dudestar.h \
+        ecc_const.h \
         httpmanager.h \
+        imbe7200x4400_const.h \
         imbe_vocoder/aux_sub.h \
         imbe_vocoder/basic_op.h \
         imbe_vocoder/ch_decode.h \
@@ -126,6 +133,7 @@ HEADERS += \
         m17codec.h \
         mbedec.h \
         mbeenc.h \
+        mbelib_const.h \
         mbelib_parms.h \
         nxdncodec.h \
         p25codec.h \
@@ -142,7 +150,6 @@ win32:QMAKE_LFLAGS += -static
 
 QMAKE_LFLAGS_WINDOWS += --enable-stdcall-fixup
 
-LIBS += -LC:\Qt\mbelib\build_x32 -LC:\Qt\mbelib\build_x64 -lmbe
 contains(DEFINES, USE_FLITE){
 	LIBS += -lflite_cmu_us_slt -lflite_cmu_us_kal16 -lflite_cmu_us_awb -lflite_cmu_us_rms -lflite_usenglish -lflite_cmulex -lflite -lasound
 }

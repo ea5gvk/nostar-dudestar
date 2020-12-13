@@ -35,7 +35,7 @@ class DMRCodec : public QObject
 {
 	Q_OBJECT
 public:
-	DMRCodec(QString callsign, uint32_t dmrid, uint8_t essid, QString password, uint32_t dstid, QString host, uint32_t port, QString vocoder, QString audioin, QString audioout);
+	DMRCodec(QString callsign, uint32_t dmrid, uint8_t essid, QString password, QString lat, QString lon, QString location, QString desc, QString options, uint32_t dstid, QString host, uint32_t port, QString vocoder, QString audioin, QString audioout);
 	~DMRCodec();
 	unsigned char * get_eot();
 	uint8_t get_status(){ return m_status; }
@@ -92,6 +92,10 @@ private:
 	uint32_t m_dmrid;
 	uint32_t m_essid;
 	QString m_password;
+	QString m_lat;
+	QString m_lon;
+	QString m_location;
+	QString m_desc;
 	uint32_t m_srcid;
 	uint32_t m_dstid;
 	uint32_t m_txdstid;
@@ -146,6 +150,7 @@ private:
 	bool m_data[72U];
 	QString m_audioin;
 	QString m_audioout;
+	QString m_options;
 
 	void byteToBitsBE(uint8_t byte, bool* bits);
 	void bitsToByteBE(const bool* bits, uint8_t& byte);
@@ -164,6 +169,7 @@ private:
 	void full_lc_encode(uint8_t* data, uint8_t type);
 	void addDMRDataSync(uint8_t* data, bool duplex);
 	void addDMRAudioSync(uint8_t* data, bool duplex);
+	void setup_connection();
 };
 
 #endif // DMRCODEC_H
