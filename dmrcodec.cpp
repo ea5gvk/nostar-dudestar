@@ -173,6 +173,7 @@ void DMRCodec::process_udp()
 			out.append(buffer, 302);
 			break;
 		case DMR_CONF:
+			setup_connection();
 			if(m_options.size()){
 				out.clear();
 				out.append('R');
@@ -184,14 +185,11 @@ void DMRCodec::process_udp()
 				out.append((m_essid >> 8) & 0xff);
 				out.append((m_essid >> 0) & 0xff);
 				out.append(m_options.toUtf8());
-				m_status = DMR_OPTS;
-			}
-			else{
-				setup_connection();
+				//m_status = DMR_OPTS;
 			}
 			break;
 		case DMR_OPTS:
-			setup_connection();
+			//setup_connection();
 			break;
 		default:
 			break;

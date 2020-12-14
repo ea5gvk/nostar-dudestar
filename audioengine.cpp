@@ -118,7 +118,8 @@ void AudioEngine::init()
         fprintf(stderr, "Using recording device %s\n", info.deviceName().toStdString().c_str());fflush(stderr);
         int sr = 8000;
         if(MACHAK){
-            if(info.deviceName() == "Built-in Microphone"){
+			if( (info.deviceName() == "Built-in Microphone") ||
+				(info.deviceName() == "MacBook Pro Microphone") ){
                 sr = 44100;
                 m_srm = 5;
             }
