@@ -124,8 +124,10 @@ void DudeStar::init_gui()
 	m_levelmeter = new LevelMeter(this);
 	m_labeldb = new QLabel();
 	m_labeldb->setMaximumWidth(40);
+	m_labeldb->setMaximumHeight(20);
 	m_labeldb->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-	m_labeldb->setStyleSheet("QLabel { background-color : #191919; padding: 2;}");
+	m_labeldb->setStyleSheet("QLabel { background-color : #353535; padding: 2;}");
+	ui->labelCodecGain->setStyleSheet("QLabel { background-color : #353535; padding: 2;}");
 	ui->levelmeterLayout->addWidget(m_levelmeter);
 	ui->levelmeterLayout->addWidget(m_labeldb);
 	m_levelmeter->setLevel(0.0);
@@ -272,7 +274,7 @@ void DudeStar::update_ui()
 			m_labeldb->setStyleSheet("QLabel { background-color : red; padding: 2; }");
 		}
 		else {
-			m_labeldb->setStyleSheet("QLabel { background-color : #191919; padding: 2;}");
+			m_labeldb->setStyleSheet("QLabel { background-color : #353535; padding: 2;}");
 		}
 		m_labeldb->setText(QString::asprintf("%02.2f", db));//QString("  %1").arg(db, 1, 'g', 2));
 	}

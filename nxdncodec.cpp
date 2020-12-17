@@ -80,7 +80,9 @@ void NXDNCodec::out_audio_vol_changed(qreal v){
 
 void NXDNCodec::decoder_gain_changed(qreal v)
 {
-	m_ambedev->set_decode_gain(v);
+	if(m_hwrx){
+		m_ambedev->set_decode_gain(v);
+	}
 	m_mbedec->setVolume(v);
 }
 
