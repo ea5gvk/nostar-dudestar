@@ -124,7 +124,8 @@ void DudeStar::init_gui()
 	m_levelmeter = new LevelMeter(this);
 	m_labeldb = new QLabel();
 	m_labeldb->setMaximumWidth(40);
-	m_labeldb->setAlignment(Qt::AlignRight);
+	m_labeldb->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+	m_labeldb->setStyleSheet("QLabel { background-color : #191919; padding: 2;}");
 	ui->levelmeterLayout->addWidget(m_levelmeter);
 	ui->levelmeterLayout->addWidget(m_labeldb);
 	m_levelmeter->setLevel(0.0);
@@ -246,6 +247,8 @@ void DudeStar::update_ui()
 		if(m_rxcnt == last_rxcnt){
 			m_outlevel = 0;
 			m_rxcnt = 0;
+			qreal db = 10 * log10f(0);
+			m_labeldb->setText(QString::asprintf("%02.2f", db));
 			//qDebug() << "EOT or TIMEOUT";
 		}
 		else{
@@ -265,6 +268,12 @@ void DudeStar::update_ui()
 		max = m_outlevel;
 		l = (qreal)max / 32767.0;
 		qreal db = 10 * log10f(l);
+		if(db > -0.2){
+			m_labeldb->setStyleSheet("QLabel { background-color : red; padding: 2; }");
+		}
+		else {
+			m_labeldb->setStyleSheet("QLabel { background-color : #191919; padding: 2;}");
+		}
 		m_labeldb->setText(QString::asprintf("%02.2f", db));//QString("  %1").arg(db, 1, 'g', 2));
 	}
 }
