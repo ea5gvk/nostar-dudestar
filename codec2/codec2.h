@@ -57,6 +57,7 @@ public:
 	bool codec2_get_mode() {return (c2.mode == 3200); };
 	int  codec2_samples_per_frame();
 	int  codec2_bits_per_frame();
+	void set_decode_gain(float g){ m_decode_gain = g; }
 
 private:
 	// merged from other files
@@ -95,6 +96,7 @@ private:
 	Cnlp nlp;
 	CQuantize qt;
 	CODEC2 c2;
+	float m_decode_gain;
 };
 
 #endif

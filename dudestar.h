@@ -25,6 +25,7 @@
 #include <flite/flite.h>
 #endif
 #include "httpmanager.h"
+#include "levelmeter.h"
 #include "mbedec.h"
 #include "mbeenc.h"
 #include "refcodec.h"
@@ -54,9 +55,13 @@ signals:
 	void rate_changed(int);
 	void out_audio_vol_changed(qreal);
 	void in_audio_vol_changed(qreal);
+	void codec_gain_changed(qreal);
 private:
     void init_gui();
     Ui::DudeStar *ui;
+	LevelMeter *m_levelmeter;
+	QLabel *m_labeldb;
+	QTimer *m_uitimer;
 	QButtonGroup *m17rates;
 
 	enum{
@@ -119,6 +124,8 @@ private:
 	QMap<uint16_t, QString> nxdnids;
     const unsigned char header[5] = {0x80,0x44,0x53,0x56,0x54}; //DVSI packet header
 	QButtonGroup *tts_voices;
+	uint16_t m_outlevel;
+	uint64_t m_rxcnt;
 private slots:
     void process_connect();
 	void process_mode_change(const QString &m);
@@ -139,6 +146,7 @@ private slots:
 	void update_m17_data();
 	void m17_rate_changed(int);
 	void handleStateChanged(QAudio::State);
+	void process_codecgain_changed(int);
 	void process_mute_button();
 	void process_volume_changed(int);
 	void process_mic_gain_changed(int);
@@ -161,6 +169,8 @@ private slots:
     void process_settings();
 	void download_file(QString);
 	void file_downloaded(QString);
+	void update_ui();
+	void update_output_level(unsigned short l){ m_outlevel = l;}
 };
 
 #endif // DUDESTAR_H

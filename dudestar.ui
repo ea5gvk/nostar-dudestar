@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>363</width>
-    <height>419</height>
+    <width>318</width>
+    <height>459</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,84 +25,133 @@
        <number>0</number>
       </property>
       <widget class="QWidget" name="tabMain">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <attribute name="title">
         <string>Main</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout">
-        <item row="13" column="4">
-         <widget class="QRadioButton" name="radioTTS3">
-          <property name="text">
-           <string>TTS3</string>
+        <item row="8" column="2" colspan="2">
+         <widget class="QSlider" name="sliderMic">
+          <property name="toolTip">
+           <string>Audio capture device gain adjust .</string>
           </property>
-         </widget>
-        </item>
-        <item row="3" column="3">
-         <widget class="QCheckBox" name="checkPrivate">
-          <property name="text">
-           <string>Private</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="1">
-         <widget class="QLabel" name="labelTalkgroup">
-          <property name="text">
-           <string>Talkgroup</string>
-          </property>
-         </widget>
-        </item>
-        <item row="12" column="2" colspan="3">
-         <widget class="QLabel" name="data6">
-          <property name="text">
-           <string/>
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
           </property>
          </widget>
         </item>
         <item row="9" column="1">
-         <widget class="QLabel" name="label3">
+         <widget class="QLabel" name="label1">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="text">
-           <string>RPTR1</string>
+           <string>MYCALL</string>
           </property>
          </widget>
         </item>
-        <item row="13" column="2">
+        <item row="0" column="3" colspan="2">
+         <widget class="QPushButton" name="pushConnect">
+          <property name="text">
+           <string>Connect</string>
+          </property>
+         </widget>
+        </item>
+        <item row="15" column="2">
          <widget class="QRadioButton" name="radioTTS1">
           <property name="text">
            <string>TTS1</string>
           </property>
          </widget>
         </item>
-        <item row="10" column="1">
+        <item row="10" column="2" colspan="3">
+         <widget class="QLabel" name="data2">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QLabel" name="labelModule">
+          <property name="text">
+           <string>Module</string>
+          </property>
+         </widget>
+        </item>
+        <item row="11" column="2" colspan="3">
+         <widget class="QLabel" name="data3">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QLabel" name="labelTalkgroup">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Talkgroup</string>
+          </property>
+         </widget>
+        </item>
+        <item row="12" column="1">
          <widget class="QLabel" name="label4">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="text">
            <string>RPTR2</string>
           </property>
          </widget>
         </item>
-        <item row="2" column="4">
-         <widget class="QCheckBox" name="checkSWTX">
+        <item row="0" column="1">
+         <widget class="QLabel" name="labelMode">
           <property name="text">
-           <string>SWTX</string>
+           <string>Mode</string>
           </property>
          </widget>
         </item>
-        <item row="7" column="2" colspan="3">
-         <widget class="QLabel" name="data1">
+        <item row="12" column="2" colspan="3">
+         <widget class="QLabel" name="data4">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="text">
            <string/>
           </property>
          </widget>
         </item>
-        <item row="11" column="2" colspan="3">
-         <widget class="QLabel" name="data5">
-          <property name="text">
-           <string/>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="2">
-         <widget class="QComboBox" name="comboMode"/>
-        </item>
-        <item row="15" column="1" colspan="4">
+        <item row="17" column="1" colspan="4">
          <widget class="QPushButton" name="pushTX">
           <property name="text">
            <string>TX</string>
@@ -110,30 +159,154 @@
          </widget>
         </item>
         <item row="5" column="1">
-         <widget class="QLabel" name="labelVolume">
+         <widget class="QLabel" name="label">
           <property name="text">
-           <string>Volume</string>
+           <string>Codec Gain</string>
           </property>
          </widget>
         </item>
-        <item row="13" column="1">
+        <item row="8" column="1">
+         <widget class="QLabel" name="micLabel">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Mic Gain</string>
+          </property>
+         </widget>
+        </item>
+        <item row="15" column="1">
          <widget class="QRadioButton" name="radioMic">
           <property name="text">
            <string>Mic In</string>
           </property>
          </widget>
         </item>
-        <item row="13" column="3">
-         <widget class="QRadioButton" name="radioTTS2">
+        <item row="2" column="2">
+         <widget class="QComboBox" name="comboModule"/>
+        </item>
+        <item row="5" column="4">
+         <layout class="QHBoxLayout" name="horizontalLayout">
+          <item>
+           <widget class="QLabel" name="labelCodecGain">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="15" column="4">
+         <widget class="QRadioButton" name="radioTTS3">
           <property name="text">
-           <string>TTS2</string>
+           <string>TTS3</string>
+          </property>
+         </widget>
+        </item>
+        <item row="11" column="1">
+         <widget class="QLabel" name="label3">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>RPTR1</string>
+          </property>
+         </widget>
+        </item>
+        <item row="13" column="1">
+         <widget class="QLabel" name="label5">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>StreamID</string>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="2" colspan="2">
+         <widget class="QSlider" name="sliderVolume">
+          <property name="toolTip">
+           <string>Codec output gain adjust.  This is not an audio device volume control.  0 = no adjustment to codec output.</string>
+          </property>
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="tickPosition">
+           <enum>QSlider::NoTicks</enum>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="QComboBox" name="comboMode"/>
+        </item>
+        <item row="16" column="1" colspan="4">
+         <widget class="QLineEdit" name="editTTSTXT"/>
+        </item>
+        <item row="2" column="4">
+         <widget class="QCheckBox" name="checkSWTX">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>SWTX</string>
+          </property>
+         </widget>
+        </item>
+        <item row="9" column="2" colspan="3">
+         <widget class="QLabel" name="data1">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string/>
           </property>
          </widget>
         </item>
         <item row="7" column="1">
-         <widget class="QLabel" name="label1">
+         <widget class="QLabel" name="labelVolume">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="text">
-           <string>MYCALL</string>
+           <string>Volume</string>
+          </property>
+         </widget>
+        </item>
+        <item row="13" column="2" colspan="3">
+         <widget class="QLabel" name="data5">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="3">
+         <widget class="QCheckBox" name="checkSWRX">
+          <property name="text">
+           <string>SWRX</string>
           </property>
          </widget>
         </item>
@@ -147,39 +320,21 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="3" colspan="2">
-         <widget class="QPushButton" name="pushConnect">
-          <property name="text">
-           <string>Connect</string>
+        <item row="14" column="2" colspan="3">
+         <widget class="QLabel" name="data6">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
           </property>
-         </widget>
-        </item>
-        <item row="12" column="1">
-         <widget class="QLabel" name="label6">
-          <property name="text">
-           <string>TextLabel</string>
-          </property>
-         </widget>
-        </item>
-        <item row="10" column="2" colspan="3">
-         <widget class="QLabel" name="data4">
           <property name="text">
            <string/>
           </property>
          </widget>
         </item>
-        <item row="11" column="1">
-         <widget class="QLabel" name="label5">
-          <property name="text">
-           <string>StreamID</string>
-          </property>
-         </widget>
-        </item>
         <item row="1" column="2" colspan="3">
          <widget class="QComboBox" name="comboHost"/>
-        </item>
-        <item row="14" column="1" colspan="4">
-         <widget class="QLineEdit" name="editTTSTXT"/>
         </item>
         <item row="1" column="1">
          <widget class="QLabel" name="labelHost">
@@ -188,85 +343,73 @@
           </property>
          </widget>
         </item>
-        <item row="2" column="2">
-         <widget class="QComboBox" name="comboModule"/>
-        </item>
-        <item row="8" column="2" colspan="3">
-         <widget class="QLabel" name="data2">
-          <property name="text">
-           <string/>
-          </property>
-         </widget>
-        </item>
-        <item row="8" column="1">
+        <item row="10" column="1">
          <widget class="QLabel" name="label2">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="text">
            <string>URCALL</string>
           </property>
          </widget>
         </item>
-        <item row="9" column="2" colspan="3">
-         <widget class="QLabel" name="data3">
-          <property name="text">
-           <string/>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="QLabel" name="labelModule">
-          <property name="text">
-           <string>Module</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QLabel" name="labelMode">
-          <property name="text">
-           <string>Mode</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="3">
-         <widget class="QCheckBox" name="checkSWRX">
-          <property name="text">
-           <string>SWRX</string>
-          </property>
-         </widget>
-        </item>
-        <item row="6" column="1">
-         <widget class="QLabel" name="micLabel">
-          <property name="text">
-           <string>Mic Gain</string>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="2" colspan="2">
-         <widget class="QSlider" name="sliderVolume">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-         </widget>
-        </item>
-        <item row="6" column="2" colspan="2">
-         <widget class="QSlider" name="sliderMic">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="4">
+        <item row="7" column="4">
          <widget class="QPushButton" name="pushVolMute">
           <property name="text">
            <string>Mute</string>
           </property>
          </widget>
         </item>
-        <item row="6" column="4">
+        <item row="3" column="3">
+         <widget class="QCheckBox" name="checkPrivate">
+          <property name="text">
+           <string>Private</string>
+          </property>
+         </widget>
+        </item>
+        <item row="14" column="1">
+         <widget class="QLabel" name="label6">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="2" colspan="2">
+         <widget class="QSlider" name="sliderCodecGain">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+        <item row="15" column="3">
+         <widget class="QRadioButton" name="radioTTS2">
+          <property name="text">
+           <string>TTS2</string>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="4">
          <widget class="QPushButton" name="pushMicMute">
           <property name="text">
            <string>Mute</string>
           </property>
          </widget>
+        </item>
+        <item row="4" column="1" colspan="4">
+         <layout class="QHBoxLayout" name="levelmeterLayout">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+         </layout>
         </item>
        </layout>
       </widget>
@@ -288,7 +431,7 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>312</width>
+             <width>293</width>
              <height>551</height>
             </rect>
            </property>

@@ -95,12 +95,20 @@ DMRCodec::~DMRCodec()
 {
 }
 
-void DMRCodec::in_audio_vol_changed(qreal v){
+void DMRCodec::in_audio_vol_changed(qreal v)
+{
 	m_audio->set_input_volume(v);
 }
 
-void DMRCodec::out_audio_vol_changed(qreal v){
+void DMRCodec::out_audio_vol_changed(qreal v)
+{
 	m_audio->set_output_volume(v);
+}
+
+void DMRCodec::decoder_gain_changed(qreal v)
+{
+	m_ambedev->set_decode_gain(v);
+	m_mbedec->setVolume(v);
 }
 
 void DMRCodec::process_udp()
@@ -250,7 +258,7 @@ void DMRCodec::setup_connection()
 {
 	m_status = CONNECTED_RW;
 	m_mbedec = new MBEDecoder();
-	m_mbedec->setAutoGain(true);
+	//m_mbedec->setAutoGain(true);
 	m_mbeenc = new MBEEncoder();
 	m_mbeenc->set_dmr_mode();
 	m_mbeenc->set_gain_adjust(2.5);
@@ -851,6 +859,7 @@ void DMRCodec::process_rx_data()
 
 		if(m_ambedev->get_audio(audio)){
 			m_audio->write(audio, 160);
+			emit update_output_level(m_audio->level());
 		}
 	}
 	else{
@@ -858,6 +867,7 @@ void DMRCodec::process_rx_data()
 		audioSamples = m_mbedec->getAudio(nbAudioSamples);
 		m_audio->write(audioSamples, nbAudioSamples);
 		m_mbedec->resetAudio();
+		emit update_output_level(m_audio->level());
 	}
 }
 

@@ -78,6 +78,12 @@ void NXDNCodec::out_audio_vol_changed(qreal v){
 	m_audio->set_output_volume(v);
 }
 
+void NXDNCodec::decoder_gain_changed(qreal v)
+{
+	m_ambedev->set_decode_gain(v);
+	m_mbedec->setVolume(v);
+}
+
 void NXDNCodec::process_udp()
 {
 	QByteArray buf;
@@ -105,7 +111,7 @@ void NXDNCodec::process_udp()
 			m_ping_timer = new QTimer();
 			connect(m_ping_timer, SIGNAL(timeout()), this, SLOT(send_ping()));
 			m_mbedec = new MBEDecoder();
-			m_mbedec->setAutoGain(true);
+			//m_mbedec->setAutoGain(true);
 			m_mbeenc = new MBEEncoder();
 			m_mbeenc->set_49bit_mode();
 			m_mbeenc->set_gain_adjust(2.5);

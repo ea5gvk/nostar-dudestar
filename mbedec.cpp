@@ -86,8 +86,8 @@ MBEDecoder::MBEDecoder() :
     m_audio_out_idx = 0;
     m_audio_out_idx2 = 0;
 
-	m_aout_gain = 25;
-    m_volume = 1.0f;
+	m_aout_gain = 100;
+	m_volume = 1.0f;
 	m_auto_gain = false;
     m_stereo = false;
     m_channels = 3; // both channels by default if stereo is set
@@ -110,7 +110,7 @@ void MBEDecoder::initMbeParms()
 	m_err_str[0] = 0;
 
     if (m_auto_gain){
-        m_aout_gain = 25;
+		m_aout_gain = 100;
     }
 }
 
@@ -378,14 +378,15 @@ void MBEDecoder::processAudio()
     m_audio_out_float_buf_p = m_audio_out_float_buf;
 
     for (n = 0; n < 160; n++){
-       if (*m_audio_out_temp_buf_p > static_cast<float>(32760)){
+		*m_audio_out_temp_buf_p *= m_volume;
+	   if (*m_audio_out_temp_buf_p > static_cast<float>(32760)){
             *m_audio_out_temp_buf_p = static_cast<float>(32760);
         }
-        else if (*m_audio_out_temp_buf_p < static_cast<float>(-32760)){
+		else if (*m_audio_out_temp_buf_p < static_cast<float>(-32760)){
             *m_audio_out_temp_buf_p = static_cast<float>(-32760);
         }
 
-        *m_audio_out_buf_p = static_cast<short>(*m_audio_out_temp_buf_p);
+		*m_audio_out_buf_p = static_cast<short>(*m_audio_out_temp_buf_p);
         m_audio_out_buf_p++;
 
         if (m_stereo){

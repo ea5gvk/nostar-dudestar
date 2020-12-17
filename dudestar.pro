@@ -1,4 +1,4 @@
-QT       += core gui serialport network multimedia
+QT       += core gui network serialport multimedia
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -62,6 +62,7 @@ SOURCES += \
         imbe_vocoder/uv_synt.cc \
         imbe_vocoder/v_synt.cc \
         imbe_vocoder/v_uv_det.cc \
+        levelmeter.cpp \
         m17codec.cpp \
         main.cpp \
         mbedec.cpp \
@@ -130,6 +131,7 @@ HEADERS += \
         imbe_vocoder/uv_synt.h \
         imbe_vocoder/v_synt.h \
         imbe_vocoder/v_uv_det.h \
+        levelmeter.h \
         m17codec.h \
         mbedec.h \
         mbeenc.h \

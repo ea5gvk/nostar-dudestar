@@ -47,7 +47,9 @@ DudeStar::DudeStar(QWidget *parent) :
 	m_update_host_files(false),
 	m_dmrcc(1),
 	m_dmrslot(2),
-	m_dmrcalltype(0)
+	m_dmrcalltype(0),
+	m_outlevel(0),
+	m_rxcnt(0)
 {
 	muted = false;
 	config_path = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation);
@@ -119,6 +121,13 @@ void DudeStar::init_gui()
 	palette.setColor(QPalette::Highlight, QColor(42, 130, 218));
 	palette.setColor(QPalette::HighlightedText, Qt::black);
 	qApp->setPalette(palette);
+	m_levelmeter = new LevelMeter(this);
+	m_labeldb = new QLabel();
+	m_labeldb->setMaximumWidth(40);
+	m_labeldb->setAlignment(Qt::AlignRight);
+	ui->levelmeterLayout->addWidget(m_levelmeter);
+	ui->levelmeterLayout->addWidget(m_labeldb);
+	m_levelmeter->setLevel(0.0);
 	status_txt = new QLabel("Not connected");
 	tts_voices = new QButtonGroup();
 	tts_voices->addButton(ui->radioMic, 0);
@@ -140,6 +149,8 @@ void DudeStar::init_gui()
 	ui->pushTX->setStyleSheet("QPushButton:enabled { background-color: rgb(128, 195, 66); color: rgb(0,0,0); } QPushButton:pressed { background-color: rgb(180, 0, 0); color: rgb(0,0,0); }");
 	ui->pushTX->update();
 	ui->radioMic->setChecked(true);
+	ui->sliderCodecGain->setRange(100, 800);
+	ui->sliderCodecGain->setValue(100);
 	ui->sliderVolume->setRange(0, 100);
 	ui->sliderVolume->setValue(100);
 	ui->sliderMic->setRange(0, 100);
@@ -152,6 +163,7 @@ void DudeStar::init_gui()
 	connect(m17rates, SIGNAL(buttonClicked(int)), this, SLOT(m17_rate_changed(int)));
 	connect(ui->editTG, SIGNAL(textChanged(QString)), this, SLOT(tgid_text_changed(QString)));
 	connect(ui->pushConnect, SIGNAL(clicked()), this, SLOT(process_connect()));
+	connect(ui->sliderCodecGain, SIGNAL(valueChanged(int)), this, SLOT(process_codecgain_changed(int)));
 	connect(ui->pushVolMute, SIGNAL(clicked()), this, SLOT(process_mute_button()));
 	connect(ui->sliderVolume, SIGNAL(valueChanged(int)), this, SLOT(process_volume_changed(int)));
 	connect(ui->pushMicMute, SIGNAL(clicked()), this, SLOT(process_mic_mute_button()));
@@ -219,6 +231,42 @@ void DudeStar::init_gui()
 							  "more details.\n\nYou should have received a copy of the GNU "
 							  "General Public License along with this program. "
 							  "If not, see <a href=\"http://www.gnu.org/licenses/\">http://www.gnu.org/licenses/</a></p>").arg(VERSION_NUMBER));
+	m_uitimer = new QTimer();
+	connect(m_uitimer, SIGNAL(timeout()), this, SLOT(update_ui()));
+	m_uitimer->start(10);
+}
+
+void DudeStar::update_ui()
+{
+	static uint8_t cnt = 0;
+	static uint64_t last_rxcnt = 0;
+	static uint16_t max = 0;
+
+	if (cnt >= 25){
+		if(m_rxcnt == last_rxcnt){
+			m_outlevel = 0;
+			m_rxcnt = 0;
+			//qDebug() << "EOT or TIMEOUT";
+		}
+		else{
+			last_rxcnt = m_rxcnt;
+		}
+		max = 0;
+		cnt = 0;
+	}
+	else{
+		++cnt;
+	}
+
+	qreal l = (qreal)m_outlevel / 32767.0;
+	m_levelmeter->setLevel(l);
+
+	if(m_outlevel > max){
+		max = m_outlevel;
+		l = (qreal)max / 32767.0;
+		qreal db = 10 * log10f(l);
+		m_labeldb->setText(QString::asprintf("%02.2f", db));//QString("  %1").arg(db, 1, 'g', 2));
+	}
 }
 
 void DudeStar::download_file(QString f)
@@ -1200,6 +1248,9 @@ void DudeStar::process_connect()
 	//fprintf(stderr, "process_connect() called connect_status == %d\n", connect_status);fflush(stderr);
     if(connect_status != DISCONNECTED){
 		connect_status = DISCONNECTED;
+		//m_uitimer->stop();
+		//m_levelmeter->setLevel(0);
+		m_outlevel = 0;
 		m_modethread->quit();
 		//delete m_modethread;
 		ui->pushConnect->setText("Connect");
@@ -1260,6 +1311,7 @@ void DudeStar::process_connect()
 			m_modethread = new QThread;
 			m_ref->moveToThread(m_modethread);
 			connect(m_ref, SIGNAL(update()), this, SLOT(update_ref_data()));
+			connect(m_ref, SIGNAL(update_output_level(unsigned short)), this, SLOT(update_output_level(unsigned short)));
 			connect(m_modethread, SIGNAL(started()), m_ref, SLOT(send_connect()));
 			connect(m_modethread, SIGNAL(finished()), m_ref, SLOT(deleteLater()));
 			//connect(m_modethread, SIGNAL(finished()), m_modethread, SLOT(deleteLater()));
@@ -1275,6 +1327,7 @@ void DudeStar::process_connect()
 			connect(ui->pushTX, SIGNAL(released()), m_ref, SLOT(stop_tx()));
 			connect(this, SIGNAL(out_audio_vol_changed(qreal)), m_ref, SLOT(out_audio_vol_changed(qreal)));
 			connect(this, SIGNAL(in_audio_vol_changed(qreal)), m_ref, SLOT(in_audio_vol_changed(qreal)));
+			connect(this, SIGNAL(codec_gain_changed(qreal)), m_ref, SLOT(decoder_gain_changed(qreal)));
 			ui->editRPTR2->setText(hostname + " " + module);
 			emit input_source_changed(tts_voices->checkedId(), ui->editTTSTXT->text());
 			emit ui->comboModule->currentIndexChanged(ui->comboModule->currentIndex());
@@ -1289,6 +1342,7 @@ void DudeStar::process_connect()
 			m_modethread = new QThread;
 			m_dcs->moveToThread(m_modethread);
 			connect(m_dcs, SIGNAL(update()), this, SLOT(update_dcs_data()));
+			connect(m_dcs, SIGNAL(update_output_level(unsigned short)), this, SLOT(update_output_level(unsigned short)));
 			connect(m_modethread, SIGNAL(started()), m_dcs, SLOT(send_connect()));
 			connect(m_modethread, SIGNAL(finished()), m_dcs, SLOT(deleteLater()));
 			connect(this, SIGNAL(input_source_changed(int, QString)), m_dcs, SLOT(input_src_changed(int, QString)));
@@ -1303,6 +1357,7 @@ void DudeStar::process_connect()
 			connect(ui->pushTX, SIGNAL(released()), m_dcs, SLOT(stop_tx()));
 			connect(this, SIGNAL(out_audio_vol_changed(qreal)), m_dcs, SLOT(out_audio_vol_changed(qreal)));
 			connect(this, SIGNAL(in_audio_vol_changed(qreal)), m_dcs, SLOT(in_audio_vol_changed(qreal)));
+			connect(this, SIGNAL(codec_gain_changed(qreal)), m_dcs, SLOT(decoder_gain_changed(qreal)));
 			ui->editRPTR2->setText(hostname + " " + module);
 			emit input_source_changed(tts_voices->checkedId(), ui->editTTSTXT->text());
 			emit ui->comboModule->currentIndexChanged(ui->comboModule->currentIndex());
@@ -1317,6 +1372,7 @@ void DudeStar::process_connect()
 			m_modethread = new QThread;
 			m_xrf->moveToThread(m_modethread);
 			connect(m_xrf, SIGNAL(update()), this, SLOT(update_xrf_data()));
+			connect(m_xrf, SIGNAL(update_output_level(unsigned short)), this, SLOT(update_output_level(unsigned short)));
 			connect(m_modethread, SIGNAL(started()), m_xrf, SLOT(send_connect()));
 			connect(m_modethread, SIGNAL(finished()), m_xrf, SLOT(deleteLater()));
 			connect(this, SIGNAL(input_source_changed(int, QString)), m_xrf, SLOT(input_src_changed(int, QString)));
@@ -1331,6 +1387,7 @@ void DudeStar::process_connect()
 			connect(ui->pushTX, SIGNAL(released()), m_xrf, SLOT(stop_tx()));
 			connect(this, SIGNAL(out_audio_vol_changed(qreal)), m_xrf, SLOT(out_audio_vol_changed(qreal)));
 			connect(this, SIGNAL(in_audio_vol_changed(qreal)), m_xrf, SLOT(in_audio_vol_changed(qreal)));
+			connect(this, SIGNAL(codec_gain_changed(qreal)), m_xrf, SLOT(decoder_gain_changed(qreal)));
 			ui->editRPTR2->setText(hostname + " " + module);
 			emit input_source_changed(tts_voices->checkedId(), ui->editTTSTXT->text());
 			emit ui->comboModule->currentIndexChanged(ui->comboModule->currentIndex());
@@ -1345,6 +1402,7 @@ void DudeStar::process_connect()
 			m_modethread = new QThread;
 			m_ysf->moveToThread(m_modethread);
 			connect(m_ysf, SIGNAL(update()), this, SLOT(update_ysf_data()));
+			connect(m_ysf, SIGNAL(update_output_level(unsigned short)), this, SLOT(update_output_level(unsigned short)));
 			connect(m_modethread, SIGNAL(started()), m_ysf, SLOT(send_connect()));
 			connect(m_modethread, SIGNAL(finished()), m_ysf, SLOT(deleteLater()));
 			connect(this, SIGNAL(input_source_changed(int, QString)), m_ysf, SLOT(input_src_changed(int, QString)));
@@ -1354,6 +1412,7 @@ void DudeStar::process_connect()
 			connect(ui->pushTX, SIGNAL(released()), m_ysf, SLOT(stop_tx()));
 			connect(this, SIGNAL(out_audio_vol_changed(qreal)), m_ysf, SLOT(out_audio_vol_changed(qreal)));
 			connect(this, SIGNAL(in_audio_vol_changed(qreal)), m_ysf, SLOT(in_audio_vol_changed(qreal)));
+			connect(this, SIGNAL(codec_gain_changed(qreal)), m_ysf, SLOT(decoder_gain_changed(qreal)));
 			emit input_source_changed(tts_voices->checkedId(), ui->editTTSTXT->text());
 			m_modethread->start();
 		}
@@ -1369,6 +1428,7 @@ void DudeStar::process_connect()
 			m_modethread = new QThread;
 			m_dmr->moveToThread(m_modethread);
 			connect(m_dmr, SIGNAL(update()), this, SLOT(update_dmr_data()));
+			connect(m_dmr, SIGNAL(update_output_level(unsigned short)), this, SLOT(update_output_level(unsigned short)));
 			connect(m_modethread, SIGNAL(started()), m_dmr, SLOT(send_connect()));
 			connect(m_modethread, SIGNAL(finished()), m_dmr, SLOT(deleteLater()));
 			connect(this, SIGNAL(input_source_changed(int, QString)), m_dmr, SLOT(input_src_changed(int, QString)));
@@ -1381,6 +1441,7 @@ void DudeStar::process_connect()
 			connect(ui->pushTX, SIGNAL(released()), m_dmr, SLOT(stop_tx()));
 			connect(this, SIGNAL(out_audio_vol_changed(qreal)), m_dmr, SLOT(out_audio_vol_changed(qreal)));
 			connect(this, SIGNAL(in_audio_vol_changed(qreal)), m_dmr, SLOT(in_audio_vol_changed(qreal)));
+			connect(this, SIGNAL(codec_gain_changed(qreal)), m_dmr, SLOT(decoder_gain_changed(qreal)));
 			emit input_source_changed(tts_voices->checkedId(), ui->editTTSTXT->text());
 			m_modethread->start();
 		}
@@ -1391,6 +1452,7 @@ void DudeStar::process_connect()
 			m_modethread = new QThread;
 			m_p25->moveToThread(m_modethread);
 			connect(m_p25, SIGNAL(update()), this, SLOT(update_p25_data()));
+			connect(m_p25, SIGNAL(update_output_level(unsigned short)), this, SLOT(update_output_level(unsigned short)));
 			connect(m_modethread, SIGNAL(started()), m_p25, SLOT(send_connect()));
 			connect(m_modethread, SIGNAL(finished()), m_p25, SLOT(deleteLater()));
 			connect(this, SIGNAL(input_source_changed(int, QString)), m_p25, SLOT(input_src_changed(int, QString)));
@@ -1399,6 +1461,7 @@ void DudeStar::process_connect()
 			connect(ui->pushTX, SIGNAL(released()), m_p25, SLOT(stop_tx()));
 			connect(this, SIGNAL(out_audio_vol_changed(qreal)), m_p25, SLOT(out_audio_vol_changed(qreal)));
 			connect(this, SIGNAL(in_audio_vol_changed(qreal)), m_p25, SLOT(in_audio_vol_changed(qreal)));
+			connect(this, SIGNAL(codec_gain_changed(qreal)), m_p25, SLOT(decoder_gain_changed(qreal)));
 			emit input_source_changed(tts_voices->checkedId(), ui->editTTSTXT->text());
 			m_modethread->start();
 		}
@@ -1409,6 +1472,7 @@ void DudeStar::process_connect()
 			m_modethread = new QThread;
 			m_nxdn->moveToThread(m_modethread);
 			connect(m_nxdn, SIGNAL(update()), this, SLOT(update_nxdn_data()));
+			connect(m_nxdn, SIGNAL(update_output_level(unsigned short)), this, SLOT(update_output_level(unsigned short)));
 			connect(m_modethread, SIGNAL(started()), m_nxdn, SLOT(send_connect()));
 			connect(m_modethread, SIGNAL(finished()), m_nxdn, SLOT(deleteLater()));
 			connect(this, SIGNAL(input_source_changed(int, QString)), m_nxdn, SLOT(input_src_changed(int, QString)));
@@ -1418,6 +1482,7 @@ void DudeStar::process_connect()
 			connect(ui->pushTX, SIGNAL(released()), m_nxdn, SLOT(stop_tx()));
 			connect(this, SIGNAL(out_audio_vol_changed(qreal)), m_nxdn, SLOT(out_audio_vol_changed(qreal)));
 			connect(this, SIGNAL(in_audio_vol_changed(qreal)), m_nxdn, SLOT(in_audio_vol_changed(qreal)));
+			connect(this, SIGNAL(codec_gain_changed(qreal)), m_nxdn, SLOT(decoder_gain_changed(qreal)));
 			emit input_source_changed(tts_voices->checkedId(), ui->editTTSTXT->text());
 			m_modethread->start();
 		}
@@ -1426,6 +1491,7 @@ void DudeStar::process_connect()
 			m_modethread = new QThread;
 			m_m17->moveToThread(m_modethread);
 			connect(m_m17, SIGNAL(update()), this, SLOT(update_m17_data()));
+			connect(m_m17, SIGNAL(update_output_level(unsigned short)), this, SLOT(update_output_level(unsigned short)));
 			connect(this, SIGNAL(rate_changed(int)), m_m17, SLOT(rate_changed(int)));
 			connect(m_modethread, SIGNAL(started()), m_m17, SLOT(send_connect()));
 			connect(m_modethread, SIGNAL(finished()), m_m17, SLOT(deleteLater()));
@@ -1434,10 +1500,20 @@ void DudeStar::process_connect()
 			connect(ui->pushTX, SIGNAL(released()), m_m17, SLOT(stop_tx()));
 			connect(this, SIGNAL(out_audio_vol_changed(qreal)), m_m17, SLOT(out_audio_vol_changed(qreal)));
 			connect(this, SIGNAL(in_audio_vol_changed(qreal)), m_m17, SLOT(in_audio_vol_changed(qreal)));
+			connect(this, SIGNAL(codec_gain_changed(qreal)), m_m17, SLOT(decoder_gain_changed(qreal)));
 			emit input_source_changed(tts_voices->checkedId(), ui->editTTSTXT->text());
 			m_modethread->start();
 		}
     }
+}
+
+void DudeStar::process_codecgain_changed(int v)
+{
+	qreal vf = v / 100.0;
+	qreal db = 10 * log10f(vf);
+	ui->labelCodecGain->setText(QString("%1dB").arg(db, 1, 'g', 2));
+	emit codec_gain_changed(vf);
+	//qDebug("volume == %2.3f : %2.3f", vf, db);
 }
 
 void DudeStar::process_volume_changed(int v)
@@ -1446,7 +1522,6 @@ void DudeStar::process_volume_changed(int v)
 	if(!muted){
 		emit out_audio_vol_changed(linear_vol);
 	}
-	//qDebug("volume == %d : %4.2f", v, linear_vol);
 }
 
 void DudeStar::process_mute_button()
@@ -1455,13 +1530,11 @@ void DudeStar::process_mute_button()
 	qreal linear_vol = QAudio::convertVolume(v / qreal(100.0),QAudio::LogarithmicVolumeScale,QAudio::LinearVolumeScale);
 	if(muted){
 		muted = false;
-		ui->pushVolMute->setText("Mute");
 		emit out_audio_vol_changed(linear_vol);
 		//audio->setVolume(linear_vol);
 	}
 	else{
 		muted = true;
-		ui->pushVolMute->setText("Unmute");
 		emit out_audio_vol_changed(0.0);
 		//audio->setVolume(0.0);
 	}
@@ -1482,13 +1555,11 @@ void DudeStar::process_mic_mute_button()
 	qreal linear_vol = QAudio::convertVolume(v / qreal(100.0),QAudio::LogarithmicVolumeScale,QAudio::LinearVolumeScale);
 	if(input_muted){
 		input_muted = false;
-		ui->pushMicMute->setText("Mute");
 		emit in_audio_vol_changed(linear_vol);
 		//audioin->setVolume(linear_vol);
 	}
 	else{
 		input_muted = true;
-		ui->pushMicMute->setText("Unmute");
 		emit in_audio_vol_changed(linear_vol);
 		//audioin->setVolume(0.0);
 	}
@@ -1521,6 +1592,7 @@ void DudeStar::update_m17_data()
 		ui->checkSWTX->setChecked(true);
 		ui->checkSWRX->setEnabled(false);
 		ui->checkSWTX->setEnabled(false);
+		process_codecgain_changed(ui->sliderCodecGain->value());
 	}
 	status_txt->setText(" Host: " + m_m17->get_host() + ":" + QString::number( m_m17->get_port()) + " Ping: " + QString::number(m_m17->get_cnt()));
 	ui->data1->setText(m_m17->get_src());
@@ -1533,6 +1605,7 @@ void DudeStar::update_m17_data()
 	if(m_m17->get_streamid()){
 		ui->data5->setText(QString::number(m_m17->get_streamid(), 16));
 	}
+	++m_rxcnt;
 }
 
 void DudeStar::update_ysf_data()
@@ -1562,6 +1635,7 @@ void DudeStar::update_ysf_data()
 		if(!(m_ysf->get_hwtx())){
 			ui->checkSWTX->setEnabled(false);
 		}
+		process_codecgain_changed(ui->sliderCodecGain->value());
 	}
 
 	status_txt->setText(" Host: " + m_ysf->get_host() + ":" + QString::number( m_ysf->get_port()) + " Ping: " + QString::number(m_ysf->get_cnt()));
@@ -1587,6 +1661,7 @@ void DudeStar::update_ysf_data()
 		ui->data5->setText(m_ysf->get_path()  ? "Internet" : "Local");
 		ui->data6->setText(QString::number(m_ysf->get_fn()) + "/" + QString::number(m_ysf->get_ft()));
 	}
+	++m_rxcnt;
 }
 
 void DudeStar::update_nxdn_data()
@@ -1616,6 +1691,7 @@ void DudeStar::update_nxdn_data()
 		if(!(m_nxdn->get_hwtx())){
 			ui->checkSWTX->setEnabled(false);
 		}
+		process_codecgain_changed(ui->sliderCodecGain->value());
 	}
 	status_txt->setText(" Host: " + m_nxdn->get_host() + ":" + QString::number( m_nxdn->get_port()) + " Ping: " + QString::number(m_nxdn->get_cnt()));
 	if(m_nxdn->get_src()){
@@ -1627,6 +1703,7 @@ void DudeStar::update_nxdn_data()
 		QString n = QString("%1").arg(m_nxdn->get_fn(), 2, 16, QChar('0'));
 		ui->data5->setText(n);
 	}
+	++m_rxcnt;
 }
 
 void DudeStar::update_p25_data()
@@ -1652,6 +1729,7 @@ void DudeStar::update_p25_data()
 		ui->checkSWTX->setChecked(true);
 		ui->checkSWRX->setEnabled(false);
 		ui->checkSWTX->setEnabled(false);
+		process_codecgain_changed(ui->sliderCodecGain->value());
 	}
 	status_txt->setText(" Host: " + m_p25->get_host() + ":" + QString::number( m_p25->get_port()) + " Ping: " + QString::number(m_p25->get_cnt()));
 	if(m_p25->get_src()){
@@ -1664,6 +1742,7 @@ void DudeStar::update_p25_data()
 		QString n = QString("%1").arg(m_p25->get_fn(), 2, 16, QChar('0'));
 		ui->data5->setText(n);
 	}
+	++m_rxcnt;
 }
 
 void DudeStar::update_dmr_data()
@@ -1700,6 +1779,7 @@ void DudeStar::update_dmr_data()
 		if(!(m_dmr->get_hwtx())){
 			ui->checkSWTX->setEnabled(false);
 		}
+		process_codecgain_changed(ui->sliderCodecGain->value());
 	}
 	status_txt->setText(" Host: " + m_dmr->get_host() + ":" + QString::number( m_dmr->get_port()) + " Ping: " + QString::number(m_dmr->get_cnt()));
 	if(m_dmr->get_src()){
@@ -1712,6 +1792,7 @@ void DudeStar::update_dmr_data()
 		QString n = QString("%1").arg(m_dmr->get_fn(), 2, 16, QChar('0'));
 		ui->data5->setText(n);
 	}
+	++m_rxcnt;
 }
 
 void DudeStar::update_ref_data()
@@ -1742,6 +1823,7 @@ void DudeStar::update_ref_data()
 		if(!(m_ref->get_hwtx())){
 			ui->checkSWTX->setEnabled(false);
 		}
+		process_codecgain_changed(ui->sliderCodecGain->value());
 	}
 	ui->data1->setText(m_ref->get_mycall());
 	ui->data2->setText(m_ref->get_urcall());
@@ -1750,6 +1832,7 @@ void DudeStar::update_ref_data()
 	ui->data5->setText(QString::number(m_ref->get_streamid(), 16) + " " + QString::number(m_ref->get_fn(), 16));
 	ui->data6->setText(m_ref->get_usertxt());
 	status_txt->setText(" Host: " + m_ref->get_host() + ":" + QString::number( m_ref->get_port()) + " Ping: " + QString::number(m_ref->get_cnt()));
+	++m_rxcnt;
 }
 
 void DudeStar::update_dcs_data()
@@ -1781,6 +1864,7 @@ void DudeStar::update_dcs_data()
 		if(!(m_dcs->get_hwtx())){
 			ui->checkSWTX->setEnabled(false);
 		}
+		process_codecgain_changed(ui->sliderCodecGain->value());
 	}
 	ui->data1->setText(m_dcs->get_mycall());
 	ui->data2->setText(m_dcs->get_urcall());
@@ -1789,6 +1873,7 @@ void DudeStar::update_dcs_data()
 	ui->data5->setText(QString::number(m_dcs->get_streamid(), 16) + " " + QString::number(m_dcs->get_fn(), 16));
 	ui->data6->setText(m_dcs->get_usertxt());
 	status_txt->setText(" Host: " + m_dcs->get_host() + ":" + QString::number( m_dcs->get_port()) + " Ping: " + QString::number(m_dcs->get_cnt()));
+	++m_rxcnt;
 }
 
 void DudeStar::update_xrf_data()
@@ -1819,6 +1904,7 @@ void DudeStar::update_xrf_data()
 		if(!(m_xrf->get_hwtx())){
 			ui->checkSWTX->setEnabled(false);
 		}
+		process_codecgain_changed(ui->sliderCodecGain->value());
 	}
 	ui->data1->setText(m_xrf->get_mycall());
 	ui->data2->setText(m_xrf->get_urcall());
@@ -1827,6 +1913,7 @@ void DudeStar::update_xrf_data()
 	ui->data5->setText(QString::number(m_xrf->get_streamid(), 16) + " " + QString::number(m_xrf->get_fn(), 16));
 	ui->data6->setText(m_xrf->get_usertxt());
 	status_txt->setText(" Host: " + m_xrf->get_host() + ":" + QString::number( m_xrf->get_port()) + " Ping: " + QString::number(m_xrf->get_cnt()));
+	++m_rxcnt;
 }
 
 void DudeStar::handleStateChanged(QAudio::State)

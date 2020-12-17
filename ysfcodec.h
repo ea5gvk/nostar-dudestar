@@ -85,6 +85,7 @@ public:
 	void set_fcs_mode(bool y, std::string f = "        "){ m_fcs = y; m_fcsname = f; }
 signals:
 	void update();
+	void update_output_level(unsigned short);
 private slots:
 	void start_tx();
 	void stop_tx();
@@ -104,6 +105,7 @@ private slots:
 	void send_frame();
 	void in_audio_vol_changed(qreal);
 	void out_audio_vol_changed(qreal);
+	void decoder_gain_changed(qreal);
 private:
 	void decode(uint8_t* data);
 	void encode_header(bool eot = 0);

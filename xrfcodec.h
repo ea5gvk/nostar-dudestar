@@ -132,6 +132,7 @@ private slots:
 	void send_frame(uint8_t *);
 	void in_audio_vol_changed(qreal);
 	void out_audio_vol_changed(qreal);
+	void decoder_gain_changed(qreal);
 	void calcPFCS(char *d);
 };
 

@@ -26,7 +26,8 @@ M17Codec::M17Codec(QString callsign, char module, QString hostname, QString host
 	m_streamid(0),
 	m_audioin(audioin),
 	m_audioout(audioout),
-	m_txrate(1)
+	m_txrate(1),
+	m_rxcnt(0)
 {
 #ifdef USE_FLITE
 	flite_init();
@@ -47,6 +48,10 @@ void M17Codec::in_audio_vol_changed(qreal v){
 
 void M17Codec::out_audio_vol_changed(qreal v){
 	m_audio->set_output_volume(v);
+}
+
+void M17Codec::decoder_gain_changed(qreal v){
+	m_c2->set_decode_gain(v);
 }
 
 void M17Codec::encode_callsign(uint8_t *callsign)
@@ -129,6 +134,8 @@ void M17Codec::process_udp()
 			m_c2 = new CCodec2(true);
 			m_txtimer = new QTimer();
 			connect(m_txtimer, SIGNAL(timeout()), this, SLOT(transmit()));
+			m_rxtimer = new QTimer();
+			connect(m_rxtimer, SIGNAL(timeout()), this, SLOT(process_rx_data()));
 			m_ping_timer = new QTimer();
 			connect(m_ping_timer, SIGNAL(timeout()), this, SLOT(send_ping()));
 			m_ping_timer->start(8000);
@@ -157,14 +164,21 @@ void M17Codec::process_udp()
 		}
 		m_streamid = (buf.data()[4] << 8) | (buf.data()[5] & 0xff);
 		m_fn = (buf.data()[34] << 8) | (buf.data()[35] & 0xff);
-
-		int16_t pcm[320];
-		m_c2->codec2_decode(pcm, (uint8_t *)&buf.data()[36]);
-
-		if(get_mode()){
-			m_c2->codec2_decode(&pcm[160], (uint8_t *)&buf.data()[44]);
+		if(!m_tx && (m_rxcnt++ == 0)){
+			m_rxtimer->start(19);
 		}
-		m_audio->write(pcm, 320);
+		if(m_fn & 0x8000){ // EOT
+			m_rxtimer->stop();
+			m_rxcnt = 0;
+		}
+
+		int s = 8;
+		if(get_mode()){
+			s = 16;
+		}
+		for(int i = 0; i < s; ++i){
+			m_rxcodecq.append((uint8_t )buf.data()[36+i]);
+		}
 	}
 	emit update();
 }
@@ -262,6 +276,8 @@ void M17Codec::start_tx()
 	qDebug() << "start_tx() " << m_ttsid << " " << m_ttstext;
 	m_tx = true;
 	m_txcnt = 0;
+	m_rxtimer->stop();
+	m_rxcnt = 0;
 	m_c2->codec2_set_mode(m_txrate);
 #ifdef USE_FLITE
 
@@ -450,6 +466,24 @@ void M17Codec::transmit()
 		fprintf(stderr, "\n");
 		fflush(stderr);
 	}
+}
+
+void M17Codec::process_rx_data()
+{
+	int16_t pcm[320];
+	uint8_t codec2[8];
+
+	if((!m_tx) && (m_rxcodecq.size() > 7) ){
+		for(int i = 0; i < 8; ++i){
+			codec2[i] = m_rxcodecq.dequeue();
+		}
+	}
+	else return;
+
+	m_c2->codec2_decode(pcm, codec2);
+	int s = get_mode() ? 160 : 320;
+	m_audio->write(pcm, s);
+	emit update_output_level(m_audio->level());
 }
 
 void M17Codec::deleteLater()

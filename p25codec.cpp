@@ -89,6 +89,11 @@ void P25Codec::out_audio_vol_changed(qreal v){
 	m_audio->set_output_volume(v);
 }
 
+void P25Codec::decoder_gain_changed(qreal v)
+{
+	m_mbedec->setVolume(v);
+}
+
 void P25Codec::process_udp()
 {
 	QByteArray buf;
@@ -109,7 +114,7 @@ void P25Codec::process_udp()
 		if(m_status == CONNECTING){
 			m_status = CONNECTED_RW;
 			m_mbedec = new MBEDecoder();
-			m_mbedec->setAutoGain(true);
+			//m_mbedec->setAutoGain(true);
 			m_mbeenc = new MBEEncoder();
 			m_mbeenc->set_88bit_mode();
 			m_status = CONNECTED_RW;
@@ -495,6 +500,7 @@ void P25Codec::process_rx_data()
 		//fprintf(stderr, "audio sample size == %d\n", nbAudioSamples);
 		m_audio->write(audioSamples, nbAudioSamples);
 		m_mbedec->resetAudio();
+		emit update_output_level(m_audio->level());
 	}
 }
 

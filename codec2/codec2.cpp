@@ -139,6 +139,7 @@ CCodec2::CCodec2(bool is_3200)
 	// to a meaningful value
 
 	decode = NULL;
+	m_decode_gain = 1.0f;
 
 	if ( 3200 == c2.mode)
 	{
@@ -374,7 +375,7 @@ void CCodec2::codec2_decode_3200(short speech[], const unsigned char * bits)
 		lsp_to_lpc(&lsps[i][0], &ak[i][0], LPC_ORD);
 		qt.aks_to_M2(&(c2.fftr_fwd_cfg), &ak[i][0], LPC_ORD, &model[i], e[i], &snr, 0, c2.lpc_pf, c2.bass_boost, c2.beta, c2.gamma, Aw);
 		qt.apply_lpc_correction(&model[i]);
-		synthesise_one_frame(&speech[c2.n_samp*i], &model[i], Aw, 1.0);
+		synthesise_one_frame(&speech[c2.n_samp*i], &model[i], Aw, m_decode_gain);
 	}
 
 	/* update memories for next frame ----------------------------*/
@@ -556,7 +557,7 @@ void CCodec2::codec2_decode_1600(short speech[], const unsigned char * bits)
 		lsp_to_lpc(&lsps[i][0], &ak[i][0], LPC_ORD);
 		qt.aks_to_M2(&(c2.fftr_fwd_cfg), &ak[i][0], LPC_ORD, &model[i], e[i], &snr, 0, c2.lpc_pf, c2.bass_boost, c2.beta, c2.gamma, Aw);
 		qt.apply_lpc_correction(&model[i]);
-		synthesise_one_frame(&speech[c2.n_samp*i], &model[i], Aw, 1.0);
+		synthesise_one_frame(&speech[c2.n_samp*i], &model[i], Aw, m_decode_gain);
 	}
 
 	/* update memories for next frame ----------------------------*/
@@ -606,7 +607,6 @@ void CCodec2::synthesise_one_frame(short speech[], MODEL *model, std::complex<fl
 		else
 			speech[i] = c2.Sn_[i];
 	}
-
 }
 
 

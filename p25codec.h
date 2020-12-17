@@ -44,6 +44,7 @@ public:
 	int get_cnt() { return m_cnt; }
 signals:
 	void update();
+	void update_output_level(unsigned short);
 private:
 	int m_p25cnt;
 	bool m_tx;
@@ -105,6 +106,7 @@ private slots:
 	void input_src_changed(int id, QString t) { m_ttsid = id; m_ttstext = t; }
 	void in_audio_vol_changed(qreal);
 	void out_audio_vol_changed(qreal);
+	void decoder_gain_changed(qreal);
 };
 
 #endif // P25CODEC_H

@@ -82,7 +82,7 @@ void AudioEngine::init()
         fprintf(stderr, "Using playback device %s\n", info.deviceName().toStdString().c_str());fflush(stderr);
 
 		m_out = new QAudioOutput(info, tempformat, this);
-		m_out->setBufferSize(6400);
+		m_out->setBufferSize(1600);
 		m_outdev = m_out->start();
 	}
 
@@ -182,7 +182,13 @@ void AudioEngine::input_data_received()
 
 void AudioEngine::write(int16_t *pcm, size_t s)
 {
+	m_maxlevel = 0;
 	m_outdev->write((const char *) pcm, sizeof(int16_t) * s);
+	for(uint32_t i = 0; i < s; ++i){
+		if(pcm[i] > m_maxlevel){
+			m_maxlevel = pcm[i];
+		}
+	}
 }
 
 uint16_t AudioEngine::read(int16_t *pcm, int s)

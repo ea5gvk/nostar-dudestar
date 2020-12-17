@@ -55,6 +55,7 @@ public:
 	bool get_hwtx() { return m_hwtx; }
 signals:
 	void update();
+	void update_output_level(unsigned short);
 private slots:
 	void start_tx();
 	void stop_tx();
@@ -76,6 +77,7 @@ private slots:
 	void send_frame();
 	void in_audio_vol_changed(qreal);
 	void out_audio_vol_changed(qreal);
+	void decoder_gain_changed(qreal);
 private:
 	enum{
 		DISCONNECTED,

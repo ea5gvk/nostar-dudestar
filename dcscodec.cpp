@@ -65,6 +65,12 @@ void DCSCodec::out_audio_vol_changed(qreal v){
 	m_audio->set_output_volume(v);
 }
 
+void DCSCodec::decoder_gain_changed(qreal v)
+{
+	m_ambedev->set_decode_gain(v);
+	m_mbedec->setVolume(v);
+}
+
 void DCSCodec::process_udp()
 {
 	QByteArray buf;
@@ -93,7 +99,7 @@ void DCSCodec::process_udp()
 	if( (m_status == CONNECTING) && (buf.size() == 14) && (!memcmp(buf.data()+10, "ACK", 3)) ){
 		m_status = CONNECTED_RW;
 		m_mbedec = new MBEDecoder();
-		m_mbedec->setAutoGain(true);
+		//m_mbedec->setAutoGain(true);
 		m_mbeenc = new MBEEncoder();
 		m_mbeenc->set_dstar_mode();
 		m_mbeenc->set_gain_adjust(3);

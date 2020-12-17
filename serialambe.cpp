@@ -2,6 +2,7 @@
 #include <QMap>
 #include <QThread>
 #include <QDebug>
+#include <QtMath>
 #include "serialambe.h"
 
 #define ENDLINE "\n"
@@ -19,7 +20,8 @@ const uint8_t AMBE3000_2450_0000[17] = {0x61, 0x00, 0x0d, 0x00, 0x0a, 0x04U, 0x3
 const uint8_t AMBE3000_PARITY_DISABLE[8] = {0x61, 0x00, 0x04, 0x00, 0x3f, 0x00, 0x2f, 0x14};
 
 SerialAMBE::SerialAMBE(QString protocol) :
-	m_protocol(protocol)
+	m_protocol(protocol),
+	m_decode_gain(1.0)
 {
 }
 
@@ -242,6 +244,7 @@ bool SerialAMBE::get_audio(int16_t *audio)
 		for(int i = 0; i < 160; i++){
 			//Byte swap BE to LE
 			audio[i] =  ((m_serialdata.dequeue() << 8) & 0xff00) | (m_serialdata.dequeue() & 0xff);
+			audio[i] = (qreal)audio[i] * m_decode_gain;
 		}
 		r = true;
 	}
