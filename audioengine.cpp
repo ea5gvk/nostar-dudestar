@@ -1,3 +1,20 @@
+/*
+	Copyright (C) 2019-2021 Doug McLain
+
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 #include "audioengine.h"
 #include <QDebug>
 
@@ -203,4 +220,20 @@ uint16_t AudioEngine::read(int16_t *pcm, int s)
 		//fprintf(stderr, "audio frame not avail size == %d\n", m_audioinq.size());
 		return 0;
 	}
+}
+
+uint16_t AudioEngine::read(int16_t *pcm)
+{
+	int s;
+	if(m_audioinq.size() >= 160){
+		s = 160;
+	}
+	else{
+		s = m_audioinq.size();
+	}
+
+	for(int i = 0; i < s; ++i){
+		pcm[i] = m_audioinq.dequeue();
+	}
+	return s;
 }

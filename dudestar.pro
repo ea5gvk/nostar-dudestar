@@ -7,7 +7,7 @@ TEMPLATE = app
 VERSION_BUILD='$(shell cd $$PWD;git rev-parse --short HEAD)'
 DEFINES += QT_DEPRECATED_WARNINGS
 DEFINES += VERSION_NUMBER=\"\\\"$${VERSION_BUILD}\\\"\"
-#DEFINES += USE_FLITE
+DEFINES += USE_FLITE
 DEFINES += USE_SWTX
 CONFIG += c++11
 
@@ -39,6 +39,7 @@ SOURCES += \
         dudestar.cpp \
         ecc.c \
         httpmanager.cpp \
+        iaxcodec.cpp \
         imbe7200x4400.c \
         imbe_vocoder/aux_sub.cc \
         imbe_vocoder/basicop2.cc \
@@ -104,6 +105,8 @@ HEADERS += \
         dudestar.h \
         ecc_const.h \
         httpmanager.h \
+        iaxcodec.h \
+        iaxdefines.h \
         imbe7200x4400_const.h \
         imbe_vocoder/aux_sub.h \
         imbe_vocoder/basic_op.h \
@@ -155,7 +158,7 @@ QMAKE_LFLAGS_WINDOWS += --enable-stdcall-fixup
 contains(DEFINES, USE_FLITE){
 	LIBS += -lflite_cmu_us_slt -lflite_cmu_us_kal16 -lflite_cmu_us_awb -lflite_cmu_us_rms -lflite_usenglish -lflite_cmulex -lflite -lasound
 }
-RC_ICONS = images/dstar.ico
+RC_ICONS = images/dudestar.ico
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

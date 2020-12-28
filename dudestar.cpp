@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2019 Doug McLain
+	Copyright (C) 2019-2021 Doug McLain
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -97,6 +97,11 @@ DudeStar::~DudeStar()
 	stream << "RPTR1:" << ui->editRPTR1->text().simplified() << ENDLINE;
 	stream << "RPTR2:" << ui->editRPTR2->text().simplified() << ENDLINE;
 	stream << "USRTXT:" << ui->editUserTxt->text() << ENDLINE;
+	stream << "IAXUSER:" << ui->editIAXUsername->text() << ENDLINE;
+	stream << "IAXPASS:" << ui->editIAXPassword->text() << ENDLINE;
+	stream << "IAXNODE:" << ui->editIAXNode->text() << ENDLINE;
+	stream << "IAXHOST:" << ui->editIAXHost->text() << ENDLINE;
+	stream << "IAXPORT:" << ui->editIAXPort->text() << ENDLINE;
 	f.close();
 	delete ui;
 }
@@ -176,6 +181,7 @@ void DudeStar::init_gui()
 	connect(ui->checkSWTX, SIGNAL(stateChanged(int)), this, SLOT(swtx_state_changed(int)));
 	connect(ui->pushUpdateHostFiles, SIGNAL(clicked()), this, SLOT(update_host_files()));
 	connect(ui->pushUpdateDMRIDs, SIGNAL(clicked()), this, SLOT(update_dmr_ids()));
+	connect(ui->pushIAXDTMF, SIGNAL(clicked()), this, SLOT(process_dtmf()));
 	ui->data1->setTextInteractionFlags(Qt::TextSelectableByMouse);
 	ui->data2->setTextInteractionFlags(Qt::TextSelectableByMouse);
 	ui->data3->setTextInteractionFlags(Qt::TextSelectableByMouse);
@@ -190,6 +196,7 @@ void DudeStar::init_gui()
 	ui->comboMode->addItem("P25");
 	ui->comboMode->addItem("NXDN");
 	ui->comboMode->addItem("M17");
+	ui->comboMode->addItem("IAX");
 
 	for(uint8_t cc = 1; cc < 8; ++cc){
 		ui->comboCC->addItem(QString::number(cc));
@@ -223,7 +230,8 @@ void DudeStar::init_gui()
 	ui->comboModule->setStyleSheet("combobox-popup: 0;");
 	//ui->comboPlayback->setStyleSheet("combobox-popup: 0;");
 	//ui->comboCapture->setStyleSheet("combobox-popup: 0;");
-	ui->textAbout->setHtml(tr("<p>DUDE-Star git build %1</p><p>Copyright (C) 2019 Doug McLain AD8DP</p>"
+	ui->textAbout->setHtml(tr("<p>DUDE-Star git build %1</p><p>Copyright (C) 2019-2021 Doug McLain AD8DP</p>"
+							  "<P>Logo copyright (C) 2020 Austin Grubbs KY4DAG</p>"
 							  "<p>This program is free software; you can redistribute it "
 							  "and/or modify it under the terms of the GNU General Public "
 							  "License as published by the Free Software Foundation; "
@@ -358,6 +366,9 @@ void DudeStar::process_host_change(const QString &h)
 	if(ui->comboMode->currentText().simplified() == "M17"){
 		saved_m17host = h.simplified();
 	}
+	if(ui->comboMode->currentText().simplified() == "IAX"){
+		saved_iaxhost = h.simplified();
+	}
 }
 
 void DudeStar::process_mode_change(const QString &m)
@@ -379,6 +390,11 @@ void DudeStar::process_mode_change(const QString &m)
 		ui->editUserTxt->setEnabled(true);
 		ui->radioButtonM173200->setEnabled(false);
 		ui->radioButtonM171600->setEnabled(false);
+		ui->labelHost->setVisible(true);
+		ui->comboHost->setVisible(true);
+		ui->labelIAXDTMF->setVisible(false);
+		ui->editIAXDTMF->setVisible(false);
+		ui->pushIAXDTMF->setVisible(false);
 		ui->label1->setText("MYCALL");
 		ui->label2->setText("URCALL");
 		ui->label3->setText("RPTR1");
@@ -403,6 +419,11 @@ void DudeStar::process_mode_change(const QString &m)
 		ui->editUserTxt->setEnabled(true);
 		ui->radioButtonM173200->setEnabled(false);
 		ui->radioButtonM171600->setEnabled(false);
+		ui->labelHost->setVisible(true);
+		ui->comboHost->setVisible(true);
+		ui->labelIAXDTMF->setVisible(false);
+		ui->editIAXDTMF->setVisible(false);
+		ui->pushIAXDTMF->setVisible(false);
 		ui->label1->setText("MYCALL");
 		ui->label2->setText("URCALL");
 		ui->label3->setText("RPTR1");
@@ -427,6 +448,11 @@ void DudeStar::process_mode_change(const QString &m)
 		ui->editUserTxt->setEnabled(true);
 		ui->radioButtonM173200->setEnabled(false);
 		ui->radioButtonM171600->setEnabled(false);
+		ui->labelHost->setVisible(true);
+		ui->comboHost->setVisible(true);
+		ui->labelIAXDTMF->setVisible(false);
+		ui->editIAXDTMF->setVisible(false);
+		ui->pushIAXDTMF->setVisible(false);
 		ui->label1->setText("MYCALL");
 		ui->label2->setText("URCALL");
 		ui->label3->setText("RPTR1");
@@ -451,6 +477,11 @@ void DudeStar::process_mode_change(const QString &m)
 		ui->editUserTxt->setEnabled(false);
 		ui->radioButtonM173200->setEnabled(false);
 		ui->radioButtonM171600->setEnabled(false);
+		ui->labelHost->setVisible(true);
+		ui->comboHost->setVisible(true);
+		ui->labelIAXDTMF->setVisible(false);
+		ui->editIAXDTMF->setVisible(false);
+		ui->pushIAXDTMF->setVisible(false);
 		ui->label1->setText("Gateway");
 		ui->label2->setText("Callsign");
 		ui->label3->setText("Dest");
@@ -475,6 +506,11 @@ void DudeStar::process_mode_change(const QString &m)
 		ui->editUserTxt->setEnabled(false);
 		ui->radioButtonM173200->setEnabled(false);
 		ui->radioButtonM171600->setEnabled(false);
+		ui->labelHost->setVisible(true);
+		ui->comboHost->setVisible(true);
+		ui->labelIAXDTMF->setVisible(false);
+		ui->editIAXDTMF->setVisible(false);
+		ui->pushIAXDTMF->setVisible(false);
 		ui->label1->setText("Callsign");
 		ui->label2->setText("SrcID");
 		ui->label3->setText("DestID");
@@ -499,6 +535,11 @@ void DudeStar::process_mode_change(const QString &m)
 		ui->editUserTxt->setEnabled(false);
 		ui->radioButtonM173200->setEnabled(false);
 		ui->radioButtonM171600->setEnabled(false);
+		ui->labelHost->setVisible(true);
+		ui->comboHost->setVisible(true);
+		ui->labelIAXDTMF->setVisible(false);
+		ui->editIAXDTMF->setVisible(false);
+		ui->pushIAXDTMF->setVisible(false);
 		ui->label1->setText("Callsign");
 		ui->label2->setText("SrcID");
 		ui->label3->setText("DestID");
@@ -522,6 +563,11 @@ void DudeStar::process_mode_change(const QString &m)
 		ui->editUserTxt->setEnabled(false);
 		ui->radioButtonM173200->setEnabled(false);
 		ui->radioButtonM171600->setEnabled(false);
+		ui->labelHost->setVisible(true);
+		ui->comboHost->setVisible(true);
+		ui->labelIAXDTMF->setVisible(false);
+		ui->editIAXDTMF->setVisible(false);
+		ui->pushIAXDTMF->setVisible(false);
 		ui->label1->setText("Callsign");
 		ui->label2->setText("SrcID");
 		ui->label3->setText("DestID");
@@ -545,11 +591,44 @@ void DudeStar::process_mode_change(const QString &m)
 		ui->editUserTxt->setEnabled(false);
 		ui->radioButtonM173200->setEnabled(true);
 		ui->radioButtonM171600->setEnabled(true);
+		ui->labelHost->setVisible(true);
+		ui->comboHost->setVisible(true);
+		ui->labelIAXDTMF->setVisible(false);
+		ui->editIAXDTMF->setVisible(false);
+		ui->pushIAXDTMF->setVisible(false);
 		ui->label1->setText("SrcID");
 		ui->label2->setText("DstID");
 		ui->label3->setText("Type");
 		ui->label4->setText("Frame #");
 		ui->label5->setText("Stream ID");
+		ui->label6->setText("");
+	}
+	else if(m == "IAX"){
+		//process_iax_hosts();
+		ui->comboModule->setEnabled(false);
+		ui->editDMRID->setEnabled(false);
+		ui->comboESSID->setEnabled(false);
+		ui->editTG->setEnabled(false);
+		ui->comboCC->setEnabled(false);
+		ui->comboSlot->setEnabled(false);
+		ui->checkPrivate->setEnabled(false);
+		ui->editMYCALL->setEnabled(false);
+		ui->editURCALL->setEnabled(false);
+		ui->editRPTR1->setEnabled(false);
+		ui->editRPTR2->setEnabled(false);
+		ui->editUserTxt->setEnabled(false);
+		ui->radioButtonM173200->setEnabled(false);
+		ui->radioButtonM171600->setEnabled(false);
+		ui->labelHost->setVisible(false);
+		ui->comboHost->setVisible(false);
+		ui->labelIAXDTMF->setVisible(true);
+		ui->editIAXDTMF->setVisible(true);
+		ui->pushIAXDTMF->setVisible(true);
+		ui->label1->setText("");
+		ui->label2->setText("");
+		ui->label3->setText("");
+		ui->label4->setText("");
+		ui->label5->setText("");
 		ui->label6->setText("");
 	}
 }
@@ -594,6 +673,12 @@ void DudeStar::swtx_state_changed(int s)
 	else{
 		hwtx = false;
 	}
+}
+
+void DudeStar::process_dtmf()
+{
+	QByteArray tx(ui->editIAXDTMF->text().simplified().toUtf8(), ui->editIAXDTMF->text().simplified().size());
+	emit send_dtmf(tx);
 }
 
 void DudeStar::process_ref_hosts()
@@ -1121,6 +1206,9 @@ void DudeStar::process_settings()
 					else if(i == 6){
 						process_nxdn_hosts();
 					}
+					else if(i == 7){
+						process_m17_hosts();
+					}
 				}
 				ui->comboMode->blockSignals(false);
 				ui->comboHost->blockSignals(true);
@@ -1234,6 +1322,21 @@ void DudeStar::process_settings()
 				if(sl.at(0) == "USRTXT"){
 					ui->editUserTxt->setText(sl.at(1).simplified());
 				}
+				if(sl.at(0) == "IAXUSER"){
+					ui->editIAXUsername->setText(sl.at(1).simplified());
+				}
+				if(sl.at(0) == "IAXPASS"){
+					ui->editIAXPassword->setText(sl.at(1).simplified());
+				}
+				if(sl.at(0) == "IAXNODE"){
+					ui->editIAXNode->setText(sl.at(1).simplified());
+				}
+				if(sl.at(0) == "IAXHOST"){
+					ui->editIAXHost->setText(sl.at(1).simplified());
+				}
+				if(sl.at(0) == "IAXPORT"){
+					ui->editIAXPort->setText(sl.at(1).simplified());
+				}
 				ui->comboHost->blockSignals(false);
 			}
 		}
@@ -1297,25 +1400,32 @@ void DudeStar::process_connect()
 			ui->comboModule->setEnabled(true);
 		}
     }
-	else if( (connect_status == DISCONNECTED) && (ui->comboHost->currentText().size() == 0) ){
+	else if( (connect_status == DISCONNECTED) &&
+			 (ui->comboHost->currentText().size() == 0) &&
+			 (ui->comboMode->currentText() != "IAX") )
+	{
 		QMessageBox::warning(this, tr("Select host"), tr("No host selected"));
 	}
     else{
-		QStringList sl = ui->comboHost->currentData().toString().simplified().split(':');
+
 		connect_status = CONNECTING;
 		status_txt->setText("Connecting...");
 		//ui->pushConnect->setEnabled(false);
 		ui->pushConnect->setText("Connecting");
-		host = sl.at(0).simplified();
-		port = sl.at(1).toInt();
+		m_protocol = ui->comboMode->currentText();
 		callsign = ui->editCallsign->text().toUpper();
 		ui->editCallsign->setText(callsign);
 		ui->editMYCALL->setText(ui->editMYCALL->text().toUpper());
 		ui->editURCALL->setText(ui->editURCALL->text().toUpper());
 		ui->editRPTR1->setText(ui->editRPTR1->text().toUpper());
 		module = ui->comboModule->currentText().toStdString()[0];
-		m_protocol = ui->comboMode->currentText();
 		hostname = ui->comboHost->currentText().simplified();
+		QStringList sl = ui->comboHost->currentData().toString().simplified().split(':');
+
+		if(m_protocol != "IAX"){
+			host = sl.at(0).simplified();
+			port = sl.at(1).toInt();
+		}
 
 		if(m_protocol == "REF"){
 			m_ref = new REFCodec(callsign, hostname, host, port, ui->comboVocoder->currentData().toString().simplified(), ui->comboCapture->currentText(), ui->comboPlayback->currentText());
@@ -1515,6 +1625,29 @@ void DudeStar::process_connect()
 			emit input_source_changed(tts_voices->checkedId(), ui->editTTSTXT->text());
 			m_modethread->start();
 		}
+		if(m_protocol == "IAX"){
+			m_iaxuser = ui->editIAXUsername->text();
+			m_iaxpassword = ui->editIAXPassword->text();
+			m_iaxnode = ui->editIAXNode->text();
+			m_iaxhost = ui->editIAXHost->text();
+			m_iaxport = ui->editIAXPort->text().toUInt();
+			m_iax = new IAXCodec(callsign, m_iaxuser, m_iaxpassword, m_iaxnode, m_iaxhost, m_iaxport, ui->comboCapture->currentText(), ui->comboPlayback->currentText());
+			m_modethread = new QThread;
+			m_iax->moveToThread(m_modethread);
+			connect(m_iax, SIGNAL(update()), this, SLOT(update_iax_data()));
+			connect(m_iax, SIGNAL(update_output_level(unsigned short)), this, SLOT(update_output_level(unsigned short)));
+			connect(m_modethread, SIGNAL(started()), m_iax, SLOT(send_connect()));
+			connect(m_modethread, SIGNAL(finished()), m_iax, SLOT(deleteLater()));
+			connect(this, SIGNAL(input_source_changed(int, QString)), m_iax, SLOT(input_src_changed(int, QString)));
+			connect(ui->pushTX, SIGNAL(pressed()), m_iax, SLOT(start_tx()));
+			connect(ui->pushTX, SIGNAL(released()), m_iax, SLOT(stop_tx()));
+			connect(this, SIGNAL(out_audio_vol_changed(qreal)), m_iax, SLOT(out_audio_vol_changed(qreal)));
+			connect(this, SIGNAL(in_audio_vol_changed(qreal)), m_iax, SLOT(in_audio_vol_changed(qreal)));
+			connect(this, SIGNAL(codec_gain_changed(qreal)), m_iax, SLOT(decoder_gain_changed(qreal)));
+			connect(this, SIGNAL(send_dtmf(QByteArray)), m_iax, SLOT(send_dtmf(QByteArray)));
+			emit input_source_changed(tts_voices->checkedId(), ui->editTTSTXT->text());
+			m_modethread->start();
+		}
     }
 }
 
@@ -1574,6 +1707,50 @@ void DudeStar::process_mic_mute_button()
 		emit in_audio_vol_changed(linear_vol);
 		//audioin->setVolume(0.0);
 	}
+}
+
+void DudeStar::update_iax_data()
+{
+	if(connect_status == DISCONNECTED){
+		qDebug() << "update_iax_data() called after disconnected";
+		return;
+	}
+	if((connect_status == CONNECTING) && (m_iax->get_status() == DISCONNECTED)){
+		process_connect();
+		QMessageBox::warning(this, tr("Connection refused"), tr("M17 connection refused.  Check callsign and confirm this callsign or IP is not already connected to this reflector"));
+		return;
+	}
+	if( (connect_status == CONNECTING) && ( m_iax->get_status() == CONNECTED_RW)){
+		connect_status = CONNECTED_RW;
+		ui->pushConnect->setText("Disconnect");
+		ui->pushConnect->setEnabled(true);
+		ui->comboVocoder->setEnabled(false);
+		ui->comboPlayback->setEnabled(false);
+		ui->comboCapture->setEnabled(false);
+		ui->comboMode->setEnabled(false);
+		ui->comboHost->setEnabled(false);
+		ui->editCallsign->setEnabled(false);
+		ui->comboModule->setEnabled(false);
+		ui->pushTX->setDisabled(false);
+		ui->checkSWRX->setChecked(true);
+		ui->checkSWTX->setChecked(true);
+		ui->checkSWRX->setEnabled(false);
+		ui->checkSWTX->setEnabled(false);
+		process_codecgain_changed(ui->sliderCodecGain->value());
+	}
+	status_txt->setText(" Host: " + m_iax->get_host() + ":" + QString::number( m_iax->get_port()) + " Ping: " + QString::number(m_iax->get_cnt()));
+	//status_txt->setText(" Host: " + m_m17->get_host() + ":" + QString::number( m_m17->get_port()) + " Ping: " + QString::number(m_m17->get_cnt()));
+	//ui->data1->setText(m_m17->get_src());
+	//ui->data2->setText(m_m17->get_dst());
+	//ui->data3->setText(m_m17->get_type());
+	//if(m_m17->get_fn()){
+		//QString n = QString("%1").arg(m_m17->get_fn(), 4, 16, QChar('0'));
+		//ui->data4->setText(n);
+	//}
+	//if(m_m17->get_streamid()){
+		//ui->data5->setText(QString::number(m_m17->get_streamid(), 16));
+	//}
+	++m_rxcnt;
 }
 
 void DudeStar::update_m17_data()

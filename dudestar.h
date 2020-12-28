@@ -1,18 +1,18 @@
 /*
-    Copyright (C) 2019 Doug McLain
+	Copyright (C) 2019-2021 Doug McLain
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #ifndef DUDESTAR_H
@@ -36,6 +36,7 @@
 #include "p25codec.h"
 #include "nxdncodec.h"
 #include "m17codec.h"
+#include "iaxcodec.h"
 
 namespace Ui {
 class DudeStar;
@@ -56,6 +57,7 @@ signals:
 	void out_audio_vol_changed(qreal);
 	void in_audio_vol_changed(qreal);
 	void codec_gain_changed(qreal);
+	void send_dtmf(QByteArray);
 private:
     void init_gui();
     Ui::DudeStar *ui;
@@ -95,6 +97,7 @@ private:
 	QString saved_p25host;
 	QString saved_nxdnhost;
 	QString saved_m17host;
+	QString saved_iaxhost;
     char module;
 	uint32_t dmrid;
 	uint32_t dmr_srcid;
@@ -113,7 +116,13 @@ private:
 	P25Codec *m_p25;
 	NXDNCodec *m_nxdn;
 	M17Codec *m_m17;
+	IAXCodec *m_iax;
     QByteArray user_data;
+	QString m_iaxuser;
+	QString m_iaxpassword;
+	QString m_iaxnode;
+	QString m_iaxhost;
+	int m_iaxport;
 	bool muted;
 	bool input_muted;
 	bool tx;
@@ -144,6 +153,7 @@ private slots:
 	void update_p25_data();
 	void update_nxdn_data();
 	void update_m17_data();
+	void update_iax_data();
 	void m17_rate_changed(int);
 	void handleStateChanged(QAudio::State);
 	void process_codecgain_changed(int);
@@ -171,6 +181,7 @@ private slots:
 	void file_downloaded(QString);
 	void update_ui();
 	void update_output_level(unsigned short l){ m_outlevel = l;}
+	void process_dtmf();
 };
 
 #endif // DUDESTAR_H

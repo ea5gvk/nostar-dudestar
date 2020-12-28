@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2019 Doug McLain
+	Copyright (C) 2019-2021 Doug McLain
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -14,7 +14,6 @@
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-
 #include <iostream>
 #include <cstring>
 #include "dcscodec.h"
