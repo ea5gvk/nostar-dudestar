@@ -60,5 +60,5 @@ sudo apt-get install pulseaudio
 ```
 
 # Builds
-A 32 bit Windows executable is available from the releases section.  This is a statically linked, stand-alone executable. It does not need to be installed.  Just run it and go.
+64 and 32 bit Windows builds are available from the releases section.  These are statically linked, stand-alone executables, no install required.  *NO support for Windows builds, either building or using.*
 
