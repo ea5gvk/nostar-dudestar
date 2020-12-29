@@ -517,7 +517,7 @@ void IAXCodec::process_udp()
 	buf.resize(m_udp->pendingDatagramSize());
 	m_udp->readDatagram(buf.data(), buf.size(), &sender, &senderPort);
 #ifdef DEBUG
-	if(buf.data()[0] & 0x8000){
+	if(buf.data()[0] & 0x80){
 	fprintf(stderr, "RECV: ");
 	for(int i = 0; i < buf.size(); ++i){
 		fprintf(stderr, "%02x ", (unsigned char)buf.data()[i]);
@@ -526,7 +526,7 @@ void IAXCodec::process_udp()
 	fflush(stderr);
 	}
 #endif
-	if( (buf.data()[0] & 0x8000) &&
+	if( (buf.data()[0] & 0x80) &&
 		(buf.data()[10] == AST_FRAME_IAX) &&
 		(buf.data()[11] == IAX_COMMAND_REGAUTH) &&
 		(buf.data()[12] == IAX_IE_AUTHMETHODS) &&
@@ -538,7 +538,7 @@ void IAXCodec::process_udp()
 		m_md5seed.append(buf.mid(18, buf.data()[17]));
 		send_registration(dcallno);
 	}
-	else if((buf.data()[0] & 0x8000) &&
+	else if((buf.data()[0] & 0x80) &&
 		(buf.data()[10] == AST_FRAME_IAX) &&
 		(buf.data()[11] == IAX_COMMAND_REGACK) )
 	{
@@ -549,7 +549,7 @@ void IAXCodec::process_udp()
 			send_call();
 		}
 	}
-	else if( (buf.data()[0] & 0x8000) &&
+	else if( (buf.data()[0] & 0x80) &&
 		(buf.data()[10] == AST_FRAME_IAX) &&
 		(buf.data()[11] == IAX_COMMAND_AUTHREQ) &&
 		(buf.data()[12] == IAX_IE_AUTHMETHODS) &&
@@ -565,7 +565,7 @@ void IAXCodec::process_udp()
 		m_oseq = buf.data()[9];
 		send_call_auth();
 	}
-	else if( (buf.data()[0] & 0x8000) &&
+	else if( (buf.data()[0] & 0x80) &&
 		(buf.data()[10] == AST_FRAME_IAX) &&
 		(buf.data()[11] == IAX_COMMAND_ACK) )
 	{
@@ -577,7 +577,7 @@ void IAXCodec::process_udp()
 			m_oseq = buf.data()[9];
 		}
 	}
-	else if( (buf.data()[0] & 0x8000) &&
+	else if( (buf.data()[0] & 0x80) &&
 		(buf.data()[10] == AST_FRAME_IAX) &&
 		(buf.data()[11] == IAX_COMMAND_ACCEPT) )
 	{
@@ -588,7 +588,7 @@ void IAXCodec::process_udp()
 		m_oseq = buf.data()[9];
 		send_ack(m_scallno, m_dcallno, m_oseq, m_iseq);
 	}
-	else if( (buf.data()[0] & 0x8000) &&
+	else if( (buf.data()[0] & 0x80) &&
 		(buf.data()[10] == AST_FRAME_CONTROL) &&
 		(buf.data()[11] == AST_CONTROL_RINGING) )
 	{
@@ -602,7 +602,7 @@ void IAXCodec::process_udp()
 		send_ack(m_scallno, m_dcallno, m_oseq, m_iseq);
 		send_voice_frame(zeropcm);
 	}
-	else if( (buf.data()[0] & 0x8000) &&
+	else if( (buf.data()[0] & 0x80) &&
 		(buf.data()[10] == AST_FRAME_CONTROL) &&
 		(buf.data()[11] == AST_CONTROL_ANSWER) )
 	{
@@ -629,7 +629,7 @@ void IAXCodec::process_udp()
 		m_oseq = buf.data()[9];
 		send_ack(m_scallno, m_dcallno, m_oseq, m_iseq);
 	}
-	else if( (buf.data()[0] & 0x8000) &&
+	else if( (buf.data()[0] & 0x80) &&
 		(buf.data()[10] == AST_FRAME_IAX) &&
 		(buf.data()[11] == IAX_COMMAND_PING) )
 	{
@@ -642,7 +642,7 @@ void IAXCodec::process_udp()
 		send_ack(m_scallno, m_dcallno, m_oseq, m_iseq);
 		send_pong();
 	}
-	else if( (buf.data()[0] & 0x8000) &&
+	else if( (buf.data()[0] & 0x80) &&
 		(buf.data()[10] == AST_FRAME_IAX) &&
 		(buf.data()[11] == IAX_COMMAND_PONG) )
 	{
@@ -653,7 +653,7 @@ void IAXCodec::process_udp()
 		m_oseq = buf.data()[9];
 		send_ack(m_scallno, m_dcallno, m_oseq, m_iseq);
 	}
-	else if( (buf.data()[0] & 0x8000) &&
+	else if( (buf.data()[0] & 0x80) &&
 		(buf.data()[10] == AST_FRAME_VOICE) &&
 		(buf.data()[11] == AST_FORMAT_ULAW) )
 	{
@@ -667,7 +667,7 @@ void IAXCodec::process_udp()
 			m_audioq.append(ulaw_decode(buf.data()[12+i]));
 		}
 	}
-	else if( (buf.data()[0] & 0x8000) &&
+	else if( (buf.data()[0] & 0x80) &&
 		(buf.data()[10] == AST_FRAME_TEXT) )
 	{
 		++m_rxframes;
@@ -677,7 +677,7 @@ void IAXCodec::process_udp()
 		m_oseq = buf.data()[9];
 		send_ack(m_scallno, m_dcallno, m_oseq, m_iseq);
 	}
-	else if( (buf.data()[0] & 0x8000) &&
+	else if( (buf.data()[0] & 0x80) &&
 		(buf.data()[10] == AST_FRAME_IAX) &&
 		(buf.data()[11] == IAX_COMMAND_LAGRQ) )
 	{
@@ -689,7 +689,7 @@ void IAXCodec::process_udp()
 		send_ack(m_scallno, m_dcallno, m_oseq, m_iseq);
 		send_lag_response();
 	}
-	else if(!(buf.data()[0] & 0x8000)){
+	else if(!(buf.data()[0] & 0x80)){
 		uint16_t dcallno = ((buf.data()[0] << 8) | ((uint8_t)buf.data()[1]));
 		if(dcallno == m_dcallno){
 			for(int i = 0; i < buf.size() - 4; ++i){
