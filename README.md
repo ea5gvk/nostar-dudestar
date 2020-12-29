@@ -40,7 +40,7 @@ Host: hostname or IP address of node.
 
 Port: UDP port of node, usually 4569.
 
-Add DTMF commands like *3node, *1node, *70, etc in the IAX DTMF box and hit send to send the DTMF string.  Details on various commands can be found at the AllStar wiki and others.
+Add DTMF commands like *3node, *1node, *70, etc in the IAX DTMF box and hit send to send the DTMF string.  The asterisk (*) character is already added on the Droidstar app, so only input the numeric portion of the command (70 instead of *70, etc). Details on various commands can be found at the AllStar wiki and others.
 
 # Compiling on Linux
 This software is written in C++ on Linux and requires mbelib and QT5, and natually the devel packages to build.  With these requirements met, run the following:
