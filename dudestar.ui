@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>338</width>
+    <width>340</width>
     <height>471</height>
    </rect>
   </property>
@@ -22,7 +22,7 @@
     <item row="0" column="0">
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tabMain">
        <property name="sizePolicy">
@@ -447,8 +447,8 @@
            <property name="geometry">
             <rect>
              <x>0</x>
-             <y>-289</y>
-             <width>293</width>
+             <y>-316</y>
+             <width>308</width>
              <height>704</height>
             </rect>
            </property>
@@ -645,13 +645,6 @@
               </property>
              </widget>
             </item>
-            <item row="28" column="0" colspan="2">
-             <widget class="QPushButton" name="pushUpdateHostFiles">
-              <property name="text">
-               <string>Update host files</string>
-              </property>
-             </widget>
-            </item>
             <item row="16" column="1">
              <widget class="QLineEdit" name="editMYCALL">
               <property name="maximumSize">
@@ -709,13 +702,6 @@
                 <width>60</width>
                 <height>16777215</height>
                </size>
-              </property>
-             </widget>
-            </item>
-            <item row="28" column="2" colspan="2">
-             <widget class="QPushButton" name="pushUpdateDMRIDs">
-              <property name="text">
-               <string>Update DMRIDs</string>
               </property>
              </widget>
             </item>
@@ -929,6 +915,27 @@
             </item>
             <item row="26" column="1" colspan="2">
              <widget class="QLineEdit" name="editIAXPort"/>
+            </item>
+            <item row="28" column="0">
+             <widget class="QPushButton" name="pushUpdateHostFiles">
+              <property name="text">
+               <string>Update host files</string>
+              </property>
+             </widget>
+            </item>
+            <item row="28" column="1">
+             <widget class="QPushButton" name="pushUpdateDMRIDs">
+              <property name="text">
+               <string>Update DMRIDs</string>
+              </property>
+             </widget>
+            </item>
+            <item row="28" column="2" colspan="2">
+             <widget class="QPushButton" name="pushUpdateNXDNIDs">
+              <property name="text">
+               <string>Update NXDNIDs</string>
+              </property>
+             </widget>
             </item>
            </layout>
           </widget>

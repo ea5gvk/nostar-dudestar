@@ -41,7 +41,7 @@ class NXDNCodec : public QObject
 {
 	Q_OBJECT
 public:
-	NXDNCodec(QString callsign, uint32_t dmr_destid, QString host, int port, QString vocoder, QString audioin, QString audioout);
+	NXDNCodec(QString callsign, uint16_t nxdnid, uint32_t dmr_destid, QString host, int port, QString vocoder, QString audioin, QString audioout);
 	~NXDNCodec();
 	uint8_t get_status(){ return m_status; }
 	unsigned char * get_frame();
@@ -93,6 +93,7 @@ private:
 	QUdpSocket *m_udp = nullptr;
 	QHostAddress m_address;
 	QString m_callsign;
+	uint16_t m_nxdnid;
 	uint16_t m_srcid;
 	uint16_t m_dstid;
 	int m_hostname;

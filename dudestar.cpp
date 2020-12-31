@@ -181,6 +181,7 @@ void DudeStar::init_gui()
 	connect(ui->checkSWTX, SIGNAL(stateChanged(int)), this, SLOT(swtx_state_changed(int)));
 	connect(ui->pushUpdateHostFiles, SIGNAL(clicked()), this, SLOT(update_host_files()));
 	connect(ui->pushUpdateDMRIDs, SIGNAL(clicked()), this, SLOT(update_dmr_ids()));
+	connect(ui->pushUpdateNXDNIDs, SIGNAL(clicked()), this, SLOT(update_nxdn_ids()));
 	connect(ui->pushIAXDTMF, SIGNAL(clicked()), this, SLOT(process_dtmf()));
 	ui->data1->setTextInteractionFlags(Qt::TextSelectableByMouse);
 	ui->data2->setTextInteractionFlags(Qt::TextSelectableByMouse);
@@ -1108,8 +1109,10 @@ void DudeStar::process_dmr_ids()
 					continue;
 				}
 				QStringList ll = l.simplified().split(' ');
+				if(ll.size() > 1){
 				//qDebug() << ll.at(0).simplified() << " " <<  ll.at(2) + ":" + ll.at(4);
-				m_dmrids[ll.at(0).toUInt()] = ll.at(1);
+					m_dmrids[ll.at(0).toUInt()] = ll.at(1);
+				}
 			}
 		}
 		f.close();
@@ -1161,7 +1164,7 @@ void DudeStar::update_nxdn_ids()
 		QFile f(config_path + "/NXDN.csv");
 		f.remove();
 	}
-	process_dmr_ids();
+	process_nxdn_ids();
 }
 
 void DudeStar::process_settings()
@@ -1587,9 +1590,8 @@ void DudeStar::process_connect()
 			m_modethread->start();
 		}
 		if(m_protocol == "NXDN"){
-			dmrid = nxdnids.key(callsign);
 			dmr_destid = ui->comboHost->currentText().toUInt();
-			m_nxdn = new NXDNCodec(callsign, dmr_destid, host, port, ui->comboVocoder->currentData().toString().simplified(), ui->comboCapture->currentText(), ui->comboPlayback->currentText());
+			m_nxdn = new NXDNCodec(callsign, nxdnids.key(callsign), dmr_destid, host, port, ui->comboVocoder->currentData().toString().simplified(), ui->comboCapture->currentText(), ui->comboPlayback->currentText());
 			m_modethread = new QThread;
 			m_nxdn->moveToThread(m_modethread);
 			connect(m_nxdn, SIGNAL(update()), this, SLOT(update_nxdn_data()));
@@ -1883,7 +1885,7 @@ void DudeStar::update_nxdn_data()
 	}
 	status_txt->setText(" Host: " + m_nxdn->get_host() + ":" + QString::number( m_nxdn->get_port()) + " Ping: " + QString::number(m_nxdn->get_cnt()));
 	if(m_nxdn->get_src()){
-		ui->data1->setText(m_dmrids[m_nxdn->get_src()]);
+		ui->data1->setText(nxdnids[m_nxdn->get_src()]);
 		ui->data2->setText(QString::number(m_nxdn->get_src()));
 	}
 	ui->data3->setText(m_nxdn->get_dst() ? QString::number(m_nxdn->get_dst()) : "");

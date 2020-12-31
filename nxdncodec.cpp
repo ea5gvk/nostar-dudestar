@@ -39,8 +39,10 @@ const unsigned char BIT_MASK_TABLE[] = { 0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04
 #define WRITE_BIT1(p,i,b) p[(i)>>3] = (b) ? (p[(i)>>3] | BIT_MASK_TABLE[(i)&7]) : (p[(i)>>3] & ~BIT_MASK_TABLE[(i)&7])
 #define READ_BIT1(p,i)    (p[(i)>>3] & BIT_MASK_TABLE[(i)&7])
 
-NXDNCodec::NXDNCodec(QString callsign, uint32_t dstid, QString host, int port, QString vocoder, QString audioin, QString audioout) :
+NXDNCodec::NXDNCodec(QString callsign, uint16_t nxdnid, uint32_t dstid, QString host, int port, QString vocoder, QString audioin, QString audioout) :
 	m_callsign(callsign),
+	m_nxdnid(nxdnid),
+	m_srcid(0),
 	m_dstid(dstid),
 	m_host(host),
 	m_port(port),
@@ -419,8 +421,8 @@ void NXDNCodec::send_frame()
 uint8_t * NXDNCodec::get_frame()
 {
 	memcpy(m_nxdnframe, "NXDND", 5);
-	m_nxdnframe[5U] = (m_srcid >> 8) & 0xFFU;
-	m_nxdnframe[6U] = (m_srcid >> 0) & 0xFFU;
+	m_nxdnframe[5U] = (m_nxdnid >> 8) & 0xFFU;
+	m_nxdnframe[6U] = (m_nxdnid >> 0) & 0xFFU;
 	m_nxdnframe[7U] = (m_dstid >> 8) & 0xFFU;
 	m_nxdnframe[8U] = (m_dstid >> 0) & 0xFFU;
 	m_nxdnframe[9U] = 0x01U;
@@ -474,7 +476,7 @@ void NXDNCodec::encode_header()
 	else{
 		set_layer3_msgtype(NXDN_MESSAGE_TYPE_VCALL);
 	}
-	set_layer3_srcid(m_srcid);
+	set_layer3_srcid(m_nxdnid);
 	set_layer3_dstid(m_dstid);
 	set_layer3_grp(true);
 	set_layer3_blks(0U);
@@ -497,7 +499,7 @@ void NXDNCodec::encode_data()
 	set_sacch_ran(0x01);
 
 	set_layer3_msgtype(NXDN_MESSAGE_TYPE_VCALL);
-	set_layer3_srcid(m_srcid);
+	set_layer3_srcid(m_nxdnid);
 	set_layer3_dstid(m_dstid);
 	set_layer3_grp(true);
 	set_layer3_blks(0U);
