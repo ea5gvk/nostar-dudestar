@@ -59,6 +59,7 @@ public:
 	bool get_hwtx() { return m_hwtx; }
 signals:
 	void update();
+	void update_output_level(unsigned short);
 private slots:
 	void start_tx();
 	void stop_tx();

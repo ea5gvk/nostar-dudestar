@@ -731,6 +731,7 @@ void NXDNCodec::process_rx_data()
 
 		if(m_ambedev->get_audio(audio)){
 			m_audio->write(audio, 160);
+			emit update_output_level(m_audio->level());
 		}
 	}
 	else{
@@ -738,6 +739,7 @@ void NXDNCodec::process_rx_data()
 		audioSamples = m_mbedec->getAudio(nbAudioSamples);
 		m_audio->write(audioSamples, nbAudioSamples);
 		m_mbedec->resetAudio();
+		emit update_output_level(m_audio->level());
 	}
 }
 

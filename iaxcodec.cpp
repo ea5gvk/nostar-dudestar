@@ -127,7 +127,6 @@ void IAXCodec::out_audio_vol_changed(qreal v){
 }
 
 void IAXCodec::decoder_gain_changed(qreal v){
-	//m_c2->set_decode_gain(v);
 }
 
 void IAXCodec::send_call()
@@ -560,7 +559,6 @@ void IAXCodec::process_udp()
 		m_dcallno = (((buf.data()[0] & 0x7f) << 8) | ((uint8_t)buf.data()[1]));
 		m_md5seed.clear();
 		m_md5seed.append(buf.mid(18, buf.data()[17]));
-		//++m_oseq;
 		m_iseq = buf.data()[8] + 1;
 		m_oseq = buf.data()[9];
 		send_call_auth();
@@ -572,7 +570,6 @@ void IAXCodec::process_udp()
 		uint16_t scall = ((buf.data()[2] << 8) | ((uint8_t)buf.data()[3]));
 		if(scall == m_scallno){
 			m_dcallno = (((buf.data()[0] & 0x7f) << 8) | ((uint8_t)buf.data()[1]));
-			//++m_oseq;
 			m_iseq = buf.data()[8] + 1;
 			m_oseq = buf.data()[9];
 		}
@@ -583,7 +580,6 @@ void IAXCodec::process_udp()
 	{
 		++m_rxframes;
 		m_dcallno = (((buf.data()[0] & 0x7f) << 8) | ((uint8_t)buf.data()[1]));
-		//++m_oseq;
 		m_iseq = buf.data()[8] + 1;
 		m_oseq = buf.data()[9];
 		send_ack(m_scallno, m_dcallno, m_oseq, m_iseq);
@@ -596,7 +592,6 @@ void IAXCodec::process_udp()
 		memset(zeropcm, 0, 160 * sizeof(int16_t));
 		++m_rxframes;
 		m_dcallno = (((buf.data()[0] & 0x7f) << 8) | ((uint8_t)buf.data()[1]));
-		//++m_oseq;
 		m_iseq = buf.data()[8] + 1;
 		m_oseq = buf.data()[9];
 		send_ack(m_scallno, m_dcallno, m_oseq, m_iseq);
@@ -624,7 +619,6 @@ void IAXCodec::process_udp()
 		}
 		++m_rxframes;
 		m_dcallno = (((buf.data()[0] & 0x7f) << 8) | ((uint8_t)buf.data()[1]));
-		//++m_oseq;
 		m_iseq = buf.data()[8] + 1;
 		m_oseq = buf.data()[9];
 		send_ack(m_scallno, m_dcallno, m_oseq, m_iseq);
@@ -636,7 +630,6 @@ void IAXCodec::process_udp()
 		++m_rxframes;
 		++m_cnt;
 		m_dcallno = (((buf.data()[0] & 0x7f) << 8) | ((uint8_t)buf.data()[1]));
-		//++m_oseq;
 		m_iseq = buf.data()[8] + 1;
 		m_oseq = buf.data()[9];
 		send_ack(m_scallno, m_dcallno, m_oseq, m_iseq);
@@ -648,7 +641,6 @@ void IAXCodec::process_udp()
 	{
 		++m_rxframes;
 		m_dcallno = (((buf.data()[0] & 0x7f) << 8) | ((uint8_t)buf.data()[1]));
-		//++m_oseq;
 		m_iseq = buf.data()[8] + 1;
 		m_oseq = buf.data()[9];
 		send_ack(m_scallno, m_dcallno, m_oseq, m_iseq);
@@ -659,7 +651,6 @@ void IAXCodec::process_udp()
 	{
 		++m_rxframes;
 		m_dcallno = (((buf.data()[0] & 0x7f) << 8) | ((uint8_t)buf.data()[1]));
-		//++m_oseq;
 		m_iseq = buf.data()[8] + 1;
 		m_oseq = buf.data()[9];
 		send_ack(m_scallno, m_dcallno, m_oseq, m_iseq);
@@ -672,7 +663,6 @@ void IAXCodec::process_udp()
 	{
 		++m_rxframes;
 		m_dcallno = (((buf.data()[0] & 0x7f) << 8) | ((uint8_t)buf.data()[1]));
-		//++m_oseq;
 		m_iseq = buf.data()[8] + 1;
 		m_oseq = buf.data()[9];
 		send_ack(m_scallno, m_dcallno, m_oseq, m_iseq);
@@ -683,7 +673,6 @@ void IAXCodec::process_udp()
 	{
 		++m_rxframes;
 		m_dcallno = (((buf.data()[0] & 0x7f) << 8) | ((uint8_t)buf.data()[1]));
-		//++m_oseq;
 		m_iseq = buf.data()[8] + 1;
 		m_oseq = buf.data()[9];
 		send_ack(m_scallno, m_dcallno, m_oseq, m_iseq);

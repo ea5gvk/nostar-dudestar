@@ -181,7 +181,6 @@ void DudeStar::init_gui()
 	connect(ui->checkSWTX, SIGNAL(stateChanged(int)), this, SLOT(swtx_state_changed(int)));
 	connect(ui->pushUpdateHostFiles, SIGNAL(clicked()), this, SLOT(update_host_files()));
 	connect(ui->pushUpdateDMRIDs, SIGNAL(clicked()), this, SLOT(update_dmr_ids()));
-	connect(ui->pushUpdateNXDNIDs, SIGNAL(clicked()), this, SLOT(update_nxdn_ids()));
 	connect(ui->pushIAXDTMF, SIGNAL(clicked()), this, SLOT(process_dtmf()));
 	ui->data1->setTextInteractionFlags(Qt::TextSelectableByMouse);
 	ui->data2->setTextInteractionFlags(Qt::TextSelectableByMouse);
@@ -291,18 +290,20 @@ void DudeStar::update_ui()
 
 void DudeStar::download_file(QString f)
 {
-	HttpManager *http = new HttpManager(f);
+	HttpManager *http = new HttpManager("/"+f);
 	QThread *httpThread = new QThread;
 	http->moveToThread(httpThread);
 	connect(httpThread, SIGNAL(started()), http, SLOT(process()));
 	connect(http, SIGNAL(file_downloaded(QString)), this, SLOT(file_downloaded(QString)));
 	connect(httpThread, SIGNAL(finished()), http, SLOT(deleteLater()));
+	ui->textLog->append("Downloading " + f + " ...");
 	httpThread->start();
 }
 
 void DudeStar::file_downloaded(QString filename)
 {
 	qDebug() << "DudeStar::file_downloaded() " << filename;
+	ui->textLog->append("Downloaded " + filename);
 	QString m = ui->comboMode->currentText();
 	{
 		if(filename == "dplus.txt" && m == "REF"){
@@ -714,7 +715,7 @@ void DudeStar::process_ref_hosts()
 		ui->comboHost->blockSignals(false);
 	}
 	else{
-		download_file("/dplus.txt");
+		download_file("dplus.txt");
 	}
 }
 
@@ -750,7 +751,7 @@ void DudeStar::process_dcs_hosts()
 		ui->comboHost->blockSignals(false);
 	}
 	else{
-		download_file("/dcs.txt");
+		download_file("dcs.txt");
 	}
 }
 
@@ -786,7 +787,7 @@ void DudeStar::process_xrf_hosts()
 		ui->comboHost->blockSignals(false);
 	}
 	else{
-		download_file("/dextra.txt");
+		download_file("dextra.txt");
 	}
 }
 
@@ -825,7 +826,7 @@ void DudeStar::process_ysf_hosts()
 		process_fcs_rooms();
 	}
 	else{
-		download_file("/YSFHosts.txt");
+		download_file("YSFHosts.txt");
 	}
 }
 
@@ -863,7 +864,7 @@ void DudeStar::process_fcs_rooms()
 		ui->comboHost->blockSignals(false);
 	}
 	else{
-		download_file("/FCSHosts.txt");
+		download_file("FCSHosts.txt");
 	}
 }
 
@@ -906,7 +907,7 @@ void DudeStar::process_dmr_hosts()
 		ui->comboHost->blockSignals(false);
 	}
 	else{
-		download_file("/DMRHosts.txt");
+		download_file("DMRHosts.txt");
 	}
 }
 
@@ -944,7 +945,7 @@ void DudeStar::process_p25_hosts()
 		ui->comboHost->blockSignals(false);
 	}
 	else{
-		download_file("/P25Hosts.txt");
+		download_file("P25Hosts.txt");
 	}
 }
 
@@ -981,7 +982,7 @@ void DudeStar::process_nxdn_hosts()
 		ui->comboHost->blockSignals(false);
 	}
 	else{
-		download_file("/NXDNHosts.txt");
+		download_file("NXDNHosts.txt");
 	}
 }
 
@@ -1017,7 +1018,7 @@ void DudeStar::process_m17_hosts()
 		ui->comboHost->blockSignals(false);
 	}
 	else{
-		download_file("/M17Hosts.txt");
+		download_file("M17Hosts.txt");
 	}
 }
 
@@ -1035,52 +1036,52 @@ void DudeStar::check_host_files()
 
 	QFileInfo check_file(config_path + "/dplus.txt");
 	if( (!check_file.exists() && !(check_file.isFile())) || m_update_host_files ){
-		download_file("/dplus.txt");
+		download_file("dplus.txt");
 	}
 
 	check_file.setFile(config_path + "/dextra.txt");
 	if( (!check_file.exists() && !check_file.isFile() ) || m_update_host_files  ){
-		download_file("/dextra.txt");
+		download_file("dextra.txt");
 	}
 
 	check_file.setFile(config_path + "/dcs.txt");
 	if( (!check_file.exists() && !check_file.isFile()) || m_update_host_files ){
-		download_file( "/dcs.txt");
+		download_file( "dcs.txt");
 	}
 
 	check_file.setFile(config_path + "/YSFHosts.txt");
 	if( (!check_file.exists() && !check_file.isFile()) || m_update_host_files ){
-		download_file("/YSFHosts.txt");
+		download_file("YSFHosts.txt");
 	}
 
 	check_file.setFile(config_path + "/FCSHosts.txt");
 	if( (!check_file.exists() && !check_file.isFile()) || m_update_host_files ){
-		download_file("/FCSHosts.txt");
+		download_file("FCSHosts.txt");
 	}
 
 	check_file.setFile(config_path + "/DMRHosts.txt");
 	if( (!check_file.exists() && !check_file.isFile()) || m_update_host_files ){
-		download_file("/DMRHosts.txt");
+		download_file("DMRHosts.txt");
 	}
 
 	check_file.setFile(config_path + "/P25Hosts.txt");
 	if( (!check_file.exists() && !check_file.isFile()) || m_update_host_files ){
-		download_file("/P25Hosts.txt");
+		download_file("P25Hosts.txt");
 	}
 
 	check_file.setFile(config_path + "/NXDNHosts.txt");
 	if((!check_file.exists() && !check_file.isFile()) || m_update_host_files ){
-		download_file("/NXDNHosts.txt");
+		download_file("NXDNHosts.txt");
 	}
 
 	check_file.setFile(config_path + "/M17Hosts.txt");
 	if( (!check_file.exists() && !check_file.isFile()) || m_update_host_files ){
-		download_file("/M17Hosts.txt");
+		download_file("M17Hosts.txt");
 	}
 
 	check_file.setFile(config_path + "/DMRIDs.dat");
 	if(!check_file.exists() && !check_file.isFile()){
-		download_file("/DMRIDs.dat");
+		download_file("DMRIDs.dat");
 	}
 	else {
 		process_dmr_ids();
@@ -1088,7 +1089,7 @@ void DudeStar::check_host_files()
 
 	check_file.setFile(config_path + "/NXDN.csv");
 	if(!check_file.exists() && !check_file.isFile()){
-		download_file("/NXDN.csv");
+		download_file("NXDN.csv");
 	}
 	else{
 		process_nxdn_ids();
@@ -1118,7 +1119,7 @@ void DudeStar::process_dmr_ids()
 		f.close();
 	}
 	else{
-		download_file("/DMRIDs.dat");
+		download_file("DMRIDs.dat");
 	}
 }
 
@@ -1130,6 +1131,7 @@ void DudeStar::update_dmr_ids()
 		f.remove();
 	}
 	process_dmr_ids();
+	update_nxdn_ids();
 }
 
 void DudeStar::process_nxdn_ids()
@@ -1153,7 +1155,7 @@ void DudeStar::process_nxdn_ids()
 		f.close();
 	}
 	else{
-		download_file("/NXDN.csv");
+		download_file("NXDN.csv");
 	}
 }
 
@@ -1365,6 +1367,7 @@ void DudeStar::process_connect()
 	//fprintf(stderr, "process_connect() called connect_status == %d\n", connect_status);fflush(stderr);
     if(connect_status != DISCONNECTED){
 		connect_status = DISCONNECTED;
+		ui->textLog->append("Disconnected");
 		//m_uitimer->stop();
 		//m_levelmeter->setLevel(0);
 		m_outlevel = 0;
@@ -1429,7 +1432,7 @@ void DudeStar::process_connect()
 			host = sl.at(0).simplified();
 			port = sl.at(1).toInt();
 		}
-
+		ui->textLog->append("Connecting to " + host + ":" + QString::number(port) + "...");
 		if(m_protocol == "REF"){
 			m_ref = new REFCodec(callsign, hostname, host, port, ui->comboVocoder->currentData().toString().simplified(), ui->comboCapture->currentText(), ui->comboPlayback->currentText());
 			m_modethread = new QThread;
@@ -1783,6 +1786,7 @@ void DudeStar::update_m17_data()
 		ui->checkSWRX->setEnabled(false);
 		ui->checkSWTX->setEnabled(false);
 		process_codecgain_changed(ui->sliderCodecGain->value());
+		ui->textLog->append("Connected to " + m_m17->get_host() + ":" + QString::number( m_m17->get_port()));
 	}
 	status_txt->setText(" Host: " + m_m17->get_host() + ":" + QString::number( m_m17->get_port()) + " Ping: " + QString::number(m_m17->get_cnt()));
 	ui->data1->setText(m_m17->get_src());
@@ -1886,8 +1890,8 @@ void DudeStar::update_nxdn_data()
 	status_txt->setText(" Host: " + m_nxdn->get_host() + ":" + QString::number( m_nxdn->get_port()) + " Ping: " + QString::number(m_nxdn->get_cnt()));
 	if(m_nxdn->get_src()){
 		ui->data1->setText(nxdnids[m_nxdn->get_src()]);
-		ui->data2->setText(QString::number(m_nxdn->get_src()));
 	}
+	ui->data2->setText(QString::number(m_nxdn->get_src()));
 	ui->data3->setText(m_nxdn->get_dst() ? QString::number(m_nxdn->get_dst()) : "");
 	if(m_nxdn->get_fn()){
 		QString n = QString("%1").arg(m_nxdn->get_fn(), 2, 16, QChar('0'));
