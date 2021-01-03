@@ -12,7 +12,7 @@ I added Flite TTS TX capability to DUDE-Star so I didn't have to talk to myself 
 M17 support is preliminary and is a work in progress, as is the M17 protocol itself. The Codec2 library included in DUDE-Star is a C++ implementation of the original C library taken from the mvoice project.  More info on M17 can be found here: https://m17project.org/
 
 # Usage
-On first launch, DUDE-Star will attempt to download the DMR ID list and host files for all modes except IAX.  IAX node info is manually entered in the settings tab under 'IAX Settings'.
+On first launch, DUDE-Star will attempt to download the host files and ID files.  IAX has no host file, node info is manually entered in the settings tab under 'IAX Settings'.
 
 Host/Mod: Select the desired host and module (for D-STAR and M17) from the selections.
 

@@ -126,7 +126,9 @@ void IAXCodec::out_audio_vol_changed(qreal v){
 	m_audio->set_output_volume(v);
 }
 
-void IAXCodec::decoder_gain_changed(qreal v){
+void IAXCodec::decoder_gain_changed(qreal v)
+{
+	m_rxgain = v;
 }
 
 void IAXCodec::send_call()
@@ -695,7 +697,7 @@ void IAXCodec::process_rx_data()
 
 	if(m_audioq.size() > 160){
 		for(int i = 0; i < 160; ++i){
-			pcm[i] = m_audioq.dequeue();
+			pcm[i] = (qreal)m_audioq.dequeue() * m_rxgain;
 		}
 		m_audio->write(pcm, 160);
 		emit update_output_level(m_audio->level());
