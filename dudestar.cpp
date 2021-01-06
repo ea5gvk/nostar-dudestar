@@ -29,6 +29,10 @@
 #include <QSerialPortInfo>
 #include <time.h>
 
+#ifdef Q_OS_MACOS
+#include "micpermission.h"
+#endif
+
 #define ENDLINE "\n"
 
 #define LOBYTE(w)			((uint8_t)(uint16_t)(w & 0x00FF))
@@ -1413,7 +1417,11 @@ void DudeStar::process_connect()
 		QMessageBox::warning(this, tr("Select host"), tr("No host selected"));
 	}
     else{
-
+#ifdef Q_OS_MACOS
+        int r = MicPermission::check_permission();
+        fprintf(stderr, "check_permission() returned %d\n", r);
+        ui->textLog->append("check_permission() returned " + QString::number(r));
+#endif
 		connect_status = CONNECTING;
 		status_txt->setText("Connecting...");
 		//ui->pushConnect->setEnabled(false);

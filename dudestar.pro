@@ -2,6 +2,10 @@ QT       += core gui network serialport multimedia
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
+macx:LIBS += -framework AVFoundation
+macx: QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.14
+macx:QMAKE_INFO_PLIST = Info.plist
+
 TARGET = dudestar
 TEMPLATE = app
 VERSION_BUILD='$(shell cd $$PWD;git rev-parse --short HEAD)'
@@ -38,7 +42,7 @@ SOURCES += \
         dmrcodec.cpp \
         dudestar.cpp \
         ecc.c \
-        httpmanager.cpp \
+		httpmanager.cpp \
         iaxcodec.cpp \
         imbe7200x4400.c \
         imbe_vocoder/aux_sub.cc \
@@ -69,12 +73,14 @@ SOURCES += \
         mbedec.cpp \
         mbeenc.cc \
         mbelib.c \
+#        micpermission.mm \
         nxdncodec.cpp \
         p25codec.cpp \
         refcodec.cpp \
         serialambe.cpp \
         xrfcodec.cpp \
         ysfcodec.cpp
+macx:OBJECTIVE_SOURCES += micpermission.mm
 
 HEADERS += \
         CRCenc.h \
@@ -104,7 +110,7 @@ HEADERS += \
         dmrcodec.h \
         dudestar.h \
         ecc_const.h \
-        httpmanager.h \
+		httpmanager.h \
         iaxcodec.h \
         iaxdefines.h \
         imbe7200x4400_const.h \
@@ -140,6 +146,7 @@ HEADERS += \
         mbeenc.h \
         mbelib_const.h \
         mbelib_parms.h \
+#        micpermission.h \
         nxdncodec.h \
         p25codec.h \
         refcodec.h \
@@ -147,6 +154,7 @@ HEADERS += \
         vocoder_tables.h \
         xrfcodec.h \
         ysfcodec.h
+macx:HEADERS += micpermission.h
 
 FORMS += \
     dudestar.ui
