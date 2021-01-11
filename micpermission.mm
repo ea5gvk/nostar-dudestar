@@ -12,4 +12,3 @@ int MicPermission::check_permission()
     }
     return status;
 }
-

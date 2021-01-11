@@ -206,7 +206,7 @@ void YSFCodec::hostname_lookup(QHostInfo i)
 			out.append('F');
 			out.append('P');
 			out.append(m_callsign.toUtf8());
-			out.append(5, ' ');
+			out.append(10 - m_callsign.size(), ' ');
 		}
 		m_address = i.addresses().first();
 		m_udp = new QUdpSocket(this);
@@ -248,7 +248,7 @@ void YSFCodec::send_ping()
 		out.append('F');
 		out.append('P');
 		out.append(m_callsign.toUtf8());
-		out.append(5, ' ');
+		out.append(10 - m_callsign.size(), ' ');
 	}
 	m_udp->writeDatagram(out, m_address, m_port);
 #ifdef DEBUG
@@ -278,7 +278,7 @@ void YSFCodec::send_disconnect()
 		out.append('F');
 		out.append('U');
 		out.append(m_callsign.toUtf8());
-		out.append(5, ' ');
+		out.append(10 - m_callsign.size(), ' ');
 	}
 	m_udp->writeDatagram(out, m_address, m_port);
 #ifdef DEBUG

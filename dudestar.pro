@@ -73,7 +73,6 @@ SOURCES += \
         mbedec.cpp \
         mbeenc.cc \
         mbelib.c \
-#        micpermission.mm \
         nxdncodec.cpp \
         p25codec.cpp \
         refcodec.cpp \
@@ -146,7 +145,6 @@ HEADERS += \
         mbeenc.h \
         mbelib_const.h \
         mbelib_parms.h \
-#        micpermission.h \
         nxdncodec.h \
         p25codec.h \
         refcodec.h \
