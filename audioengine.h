@@ -37,13 +37,15 @@ public:
 	void init();
 	void start_capture();
 	void stop_capture();
+	void start_playback();
+	void stop_playback();
 	void write(int16_t *, size_t);
 	void set_output_buffer_size(uint32_t b) { m_out->setBufferSize(b); }
 	void set_input_buffer_size(uint32_t b) { m_in->setBufferSize(b); }
 	void set_output_volume(qreal);
 	void set_input_volume(qreal);
 	bool frame_available() { return (m_audioinq.size() >= 320) ? true : false; }
-	uint16_t read(int16_t *, int);
+	uint16_t read(int16_t *, int, int = 1);
 	uint16_t read(int16_t *);
 	uint16_t level() { return m_maxlevel; }
 signals:

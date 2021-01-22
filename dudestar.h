@@ -65,17 +65,7 @@ private:
 	QLabel *m_labeldb;
 	QTimer *m_uitimer;
 	QButtonGroup *m17rates;
-
-	enum{
-		DISCONNECTED,
-		CONNECTING,
-		DMR_AUTH,
-		DMR_CONF,
-		DMR_OPTS,
-		CONNECTED_RW,
-		CONNECTED_RO
-	} connect_status;
-
+	int connect_status;
 	uint16_t usb_pid;
 	uint16_t usb_vid;
 	QLabel *status_txt;
@@ -145,14 +135,14 @@ private slots:
 	void tts_text_changed(QString);
 	void tgid_text_changed(QString);
 	void discover_vocoders();
-	void update_ref_data();
-	void update_dcs_data();
-	void update_xrf_data();
-	void update_ysf_data();
-	void update_dmr_data();
-	void update_p25_data();
-	void update_nxdn_data();
-	void update_m17_data();
+	void update_ref_data(Codec::MODEINFO);
+	void update_dcs_data(Codec::MODEINFO);
+	void update_xrf_data(Codec::MODEINFO);
+	void update_ysf_data(Codec::MODEINFO);
+	void update_dmr_data(Codec::MODEINFO);
+	void update_p25_data(Codec::MODEINFO);
+	void update_nxdn_data(Codec::MODEINFO);
+	void update_m17_data(Codec::MODEINFO);
 	void update_iax_data();
 	void m17_rate_changed(int);
 	void handleStateChanged(QAudio::State);

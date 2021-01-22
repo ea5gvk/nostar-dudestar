@@ -29,6 +29,7 @@ SOURCES += \
         cbptc19696.cpp \
         cgolay2087.cpp \
         chamming.cpp \
+	codec.cpp \
         codec2/codebooks.cpp \
         codec2/codec2.cpp \
         codec2/kiss_fft.cpp \
@@ -96,6 +97,7 @@ HEADERS += \
         cbptc19696.h \
         cgolay2087.h \
         chamming.h \
+	codec.h \
         codec2/codec2.h \
         codec2/codec2_internal.h \
         codec2/defines.h \

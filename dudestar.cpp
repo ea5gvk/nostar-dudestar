@@ -55,6 +55,7 @@ DudeStar::DudeStar(QWidget *parent) :
 	m_outlevel(0),
 	m_rxcnt(0)
 {
+	qRegisterMetaType<Codec::MODEINFO>("Codec::MODEINFO");
 	muted = false;
 	config_path = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation);
 #ifndef Q_OS_WIN
@@ -62,7 +63,7 @@ DudeStar::DudeStar(QWidget *parent) :
 #endif
     ui->setupUi(this);
     init_gui();
-    connect_status = DISCONNECTED;
+	connect_status = Codec::DISCONNECTED;
 	user_data.resize(21);
 	check_host_files();
 	process_settings();
@@ -235,7 +236,6 @@ void DudeStar::init_gui()
 	//ui->comboPlayback->setStyleSheet("combobox-popup: 0;");
 	//ui->comboCapture->setStyleSheet("combobox-popup: 0;");
 	ui->textAbout->setHtml(tr("<p>DUDE-Star git build %1</p><p>Copyright (C) 2019-2021 Doug McLain AD8DP</p>"
-							  "<P>Logo copyright (C) 2020 Austin Grubbs KY4DAG</p>"
 							  "<p>This program is free software; you can redistribute it "
 							  "and/or modify it under the terms of the GNU General Public "
 							  "License as published by the Free Software Foundation; "
@@ -382,8 +382,8 @@ void DudeStar::process_mode_change(const QString &m)
 	if(m == "REF"){
 		process_ref_hosts();
 		ui->comboModule->setEnabled(true);
-		ui->editDMRID->setEnabled(false);
-		ui->comboESSID->setEnabled(false);
+		ui->editDMRID->setEnabled(true);
+		ui->comboESSID->setEnabled(true);
 		ui->editPassword->setEnabled(false);
 		ui->editTG->setEnabled(false);
 		ui->comboCC->setEnabled(false);
@@ -411,8 +411,8 @@ void DudeStar::process_mode_change(const QString &m)
 	if(m == "DCS"){
 		process_dcs_hosts();
 		ui->comboModule->setEnabled(true);
-		ui->editDMRID->setEnabled(false);
-		ui->comboESSID->setEnabled(false);
+		ui->editDMRID->setEnabled(true);
+		ui->comboESSID->setEnabled(true);
 		ui->editPassword->setEnabled(false);
 		ui->editTG->setEnabled(false);
 		ui->comboCC->setEnabled(false);
@@ -440,8 +440,8 @@ void DudeStar::process_mode_change(const QString &m)
 	if(m == "XRF"){
 		process_xrf_hosts();
 		ui->comboModule->setEnabled(true);
-		ui->editDMRID->setEnabled(false);
-		ui->comboESSID->setEnabled(false);
+		ui->editDMRID->setEnabled(true);
+		ui->comboESSID->setEnabled(true);
 		ui->editPassword->setEnabled(false);
 		ui->editTG->setEnabled(false);
 		ui->comboCC->setEnabled(false);
@@ -469,8 +469,8 @@ void DudeStar::process_mode_change(const QString &m)
 	else if(m == "YSF"){
 		process_ysf_hosts();
 		ui->comboModule->setEnabled(false);
-		ui->editDMRID->setEnabled(false);
-		ui->comboESSID->setEnabled(false);
+		ui->editDMRID->setEnabled(true);
+		ui->comboESSID->setEnabled(true);
 		ui->editPassword->setEnabled(false);
 		ui->editTG->setEnabled(false);
 		ui->comboCC->setEnabled(false);
@@ -528,7 +528,7 @@ void DudeStar::process_mode_change(const QString &m)
 		process_p25_hosts();
 		ui->comboModule->setEnabled(false);
 		ui->editDMRID->setEnabled(true);
-		ui->comboESSID->setEnabled(false);
+		ui->comboESSID->setEnabled(true);
 		ui->editPassword->setEnabled(false);
 		ui->editTG->setEnabled(true);
 		ui->comboCC->setEnabled(false);
@@ -557,7 +557,7 @@ void DudeStar::process_mode_change(const QString &m)
 		process_nxdn_hosts();
 		ui->comboModule->setEnabled(false);
 		ui->editDMRID->setEnabled(true);
-		ui->comboESSID->setEnabled(false);
+		ui->comboESSID->setEnabled(true);
 		ui->editTG->setEnabled(false);
 		ui->comboCC->setEnabled(false);
 		ui->comboSlot->setEnabled(false);
@@ -584,8 +584,8 @@ void DudeStar::process_mode_change(const QString &m)
 	else if(m == "M17"){
 		process_m17_hosts();
 		ui->comboModule->setEnabled(true);
-		ui->editDMRID->setEnabled(false);
-		ui->comboESSID->setEnabled(false);
+		ui->editDMRID->setEnabled(true);
+		ui->comboESSID->setEnabled(true);
 		ui->editTG->setEnabled(false);
 		ui->comboCC->setEnabled(false);
 		ui->comboSlot->setEnabled(false);
@@ -612,7 +612,7 @@ void DudeStar::process_mode_change(const QString &m)
 	else if(m == "IAX"){
 		//process_iax_hosts();
 		ui->comboModule->setEnabled(false);
-		ui->editDMRID->setEnabled(false);
+		ui->editDMRID->setEnabled(true);
 		ui->comboESSID->setEnabled(false);
 		ui->editTG->setEnabled(false);
 		ui->comboCC->setEnabled(false);
@@ -1369,8 +1369,8 @@ void DudeStar::discover_vocoders()
 void DudeStar::process_connect()
 {
 	//fprintf(stderr, "process_connect() called connect_status == %d\n", connect_status);fflush(stderr);
-    if(connect_status != DISCONNECTED){
-		connect_status = DISCONNECTED;
+	if(connect_status != Codec::DISCONNECTED){
+		connect_status = Codec::DISCONNECTED;
 		ui->textLog->append("Disconnected");
 		//m_uitimer->stop();
 		//m_levelmeter->setLevel(0);
@@ -1410,7 +1410,7 @@ void DudeStar::process_connect()
 			ui->comboModule->setEnabled(true);
 		}
     }
-	else if( (connect_status == DISCONNECTED) &&
+	else if( (connect_status == Codec::DISCONNECTED) &&
 			 (ui->comboHost->currentText().size() == 0) &&
 			 (ui->comboMode->currentText() != "IAX") )
 	{
@@ -1422,7 +1422,18 @@ void DudeStar::process_connect()
         fprintf(stderr, "check_permission() returned %d\n", r);
         ui->textLog->append("check_permission() returned " + QString::number(r));
 #endif
-		connect_status = CONNECTING;
+		callsign = ui->editCallsign->text().toUpper();
+		dmrid = ui->editDMRID->text().toUInt();
+
+		if(callsign != m_dmrids[dmrid]){
+			QMessageBox::warning(this, tr("Connection refused"), tr("A valid callsign and DMR ID are required to use Dudestar on any mode, and they must match. "
+																	"If you have entered a valid DMR ID that matches the entered callsign, and you are still seeing "
+																	"this message, then you either have to click update ID files button or wait until your DMR ID "
+																	"is added to the ID file and try again."));
+			return;
+		}
+
+		connect_status = Codec::CONNECTING;
 		status_txt->setText("Connecting...");
 		//ui->pushConnect->setEnabled(false);
 		ui->pushConnect->setText("Connecting");
@@ -1442,10 +1453,11 @@ void DudeStar::process_connect()
 		}
 		ui->textLog->append("Connecting to " + host + ":" + QString::number(port) + "...");
 		if(m_protocol == "REF"){
-			m_ref = new REFCodec(callsign, hostname, host, port, ui->comboVocoder->currentData().toString().simplified(), ui->comboCapture->currentText(), ui->comboPlayback->currentText());
+			const char m = ui->comboModule->currentIndex() + 0x41;
+			m_ref = new REFCodec(callsign, hostname, m, host, port, ui->comboVocoder->currentData().toString().simplified(), ui->comboCapture->currentText(), ui->comboPlayback->currentText());
 			m_modethread = new QThread;
 			m_ref->moveToThread(m_modethread);
-			connect(m_ref, SIGNAL(update()), this, SLOT(update_ref_data()));
+			connect(m_ref, SIGNAL(update(Codec::MODEINFO)), this, SLOT(update_ref_data(Codec::MODEINFO)));
 			connect(m_ref, SIGNAL(update_output_level(unsigned short)), this, SLOT(update_output_level(unsigned short)));
 			connect(m_modethread, SIGNAL(started()), m_ref, SLOT(send_connect()));
 			connect(m_modethread, SIGNAL(finished()), m_ref, SLOT(deleteLater()));
@@ -1465,7 +1477,7 @@ void DudeStar::process_connect()
 			connect(this, SIGNAL(codec_gain_changed(qreal)), m_ref, SLOT(decoder_gain_changed(qreal)));
 			ui->editRPTR2->setText(hostname + " " + module);
 			emit input_source_changed(tts_voices->checkedId(), ui->editTTSTXT->text());
-			emit ui->comboModule->currentIndexChanged(ui->comboModule->currentIndex());
+			//emit ui->comboModule->currentIndexChanged(ui->comboModule->currentIndex());
 			emit ui->editMYCALL->textChanged(ui->editMYCALL->text());
 			emit ui->editURCALL->textChanged(ui->editURCALL->text());
 			emit ui->editRPTR1->textChanged(ui->editRPTR1->text());
@@ -1473,10 +1485,11 @@ void DudeStar::process_connect()
 			m_modethread->start();
 		}
 		if(m_protocol == "DCS"){
-			m_dcs = new DCSCodec(callsign, hostname, host, port, ui->comboVocoder->currentData().toString().simplified(), ui->comboCapture->currentText(), ui->comboPlayback->currentText());
+			const char m = ui->comboModule->currentIndex() + 0x41;
+			m_dcs = new DCSCodec(callsign, hostname, m, host, port, ui->comboVocoder->currentData().toString().simplified(), ui->comboCapture->currentText(), ui->comboPlayback->currentText());
 			m_modethread = new QThread;
 			m_dcs->moveToThread(m_modethread);
-			connect(m_dcs, SIGNAL(update()), this, SLOT(update_dcs_data()));
+			connect(m_dcs, SIGNAL(update(Codec::MODEINFO)), this, SLOT(update_dcs_data(Codec::MODEINFO)));
 			connect(m_dcs, SIGNAL(update_output_level(unsigned short)), this, SLOT(update_output_level(unsigned short)));
 			connect(m_modethread, SIGNAL(started()), m_dcs, SLOT(send_connect()));
 			connect(m_modethread, SIGNAL(finished()), m_dcs, SLOT(deleteLater()));
@@ -1495,7 +1508,7 @@ void DudeStar::process_connect()
 			connect(this, SIGNAL(codec_gain_changed(qreal)), m_dcs, SLOT(decoder_gain_changed(qreal)));
 			ui->editRPTR2->setText(hostname + " " + module);
 			emit input_source_changed(tts_voices->checkedId(), ui->editTTSTXT->text());
-			emit ui->comboModule->currentIndexChanged(ui->comboModule->currentIndex());
+			//emit ui->comboModule->currentIndexChanged(ui->comboModule->currentIndex());
 			emit ui->editMYCALL->textChanged(ui->editMYCALL->text());
 			emit ui->editURCALL->textChanged(ui->editURCALL->text());
 			emit ui->editRPTR1->textChanged(ui->editRPTR1->text());
@@ -1503,15 +1516,16 @@ void DudeStar::process_connect()
 			m_modethread->start();
 		}
 		if(m_protocol == "XRF"){
-			m_xrf = new XRFCodec(callsign, hostname, host, port, ui->comboVocoder->currentData().toString().simplified(), ui->comboCapture->currentText(), ui->comboPlayback->currentText());
+			const char m = ui->comboModule->currentIndex() + 0x41;
+			m_xrf = new XRFCodec(callsign, hostname, m, host, port, ui->comboVocoder->currentData().toString().simplified(), ui->comboCapture->currentText(), ui->comboPlayback->currentText());
 			m_modethread = new QThread;
 			m_xrf->moveToThread(m_modethread);
-			connect(m_xrf, SIGNAL(update()), this, SLOT(update_xrf_data()));
+			connect(m_xrf, SIGNAL(update(Codec::MODEINFO)), this, SLOT(update_xrf_data(Codec::MODEINFO)));
 			connect(m_xrf, SIGNAL(update_output_level(unsigned short)), this, SLOT(update_output_level(unsigned short)));
 			connect(m_modethread, SIGNAL(started()), m_xrf, SLOT(send_connect()));
 			connect(m_modethread, SIGNAL(finished()), m_xrf, SLOT(deleteLater()));
 			connect(this, SIGNAL(input_source_changed(int, QString)), m_xrf, SLOT(input_src_changed(int, QString)));
-			connect(ui->comboModule, SIGNAL(currentIndexChanged(int)), m_xrf, SLOT(module_changed(int)));
+			//connect(ui->comboModule, SIGNAL(currentIndexChanged(int)), m_xrf, SLOT(module_changed(int)));
 			connect(ui->editMYCALL, SIGNAL(textChanged(QString)), m_xrf, SLOT(mycall_changed(QString)));
 			connect(ui->editURCALL, SIGNAL(textChanged(QString)), m_xrf, SLOT(urcall_changed(QString)));
 			connect(ui->editRPTR1, SIGNAL(textChanged(QString)), m_xrf, SLOT(rptr1_changed(QString)));
@@ -1525,7 +1539,7 @@ void DudeStar::process_connect()
 			connect(this, SIGNAL(codec_gain_changed(qreal)), m_xrf, SLOT(decoder_gain_changed(qreal)));
 			ui->editRPTR2->setText(hostname + " " + module);
 			emit input_source_changed(tts_voices->checkedId(), ui->editTTSTXT->text());
-			emit ui->comboModule->currentIndexChanged(ui->comboModule->currentIndex());
+			//emit ui->comboModule->currentIndexChanged(ui->comboModule->currentIndex());
 			emit ui->editMYCALL->textChanged(ui->editMYCALL->text());
 			emit ui->editURCALL->textChanged(ui->editURCALL->text());
 			emit ui->editRPTR1->textChanged(ui->editRPTR1->text());
@@ -1536,7 +1550,7 @@ void DudeStar::process_connect()
 			m_ysf = new YSFCodec(callsign, hostname, host, port, ui->comboVocoder->currentData().toString().simplified(), ui->comboCapture->currentText(), ui->comboPlayback->currentText());
 			m_modethread = new QThread;
 			m_ysf->moveToThread(m_modethread);
-			connect(m_ysf, SIGNAL(update()), this, SLOT(update_ysf_data()));
+			connect(m_ysf, SIGNAL(update(Codec::MODEINFO)), this, SLOT(update_ysf_data(Codec::MODEINFO)));
 			connect(m_ysf, SIGNAL(update_output_level(unsigned short)), this, SLOT(update_output_level(unsigned short)));
 			connect(m_modethread, SIGNAL(started()), m_ysf, SLOT(send_connect()));
 			connect(m_modethread, SIGNAL(finished()), m_ysf, SLOT(deleteLater()));
@@ -1562,7 +1576,7 @@ void DudeStar::process_connect()
 			m_dmr = new DMRCodec(callsign, dmrid, essid, dmr_password, ui->editLat->text(), ui->editLong->text(), ui->editLocation->text(), ui->editDesc->text(), opts, dmr_destid, host, port, ui->comboVocoder->currentData().toString().simplified(), ui->comboCapture->currentText(), ui->comboPlayback->currentText());
 			m_modethread = new QThread;
 			m_dmr->moveToThread(m_modethread);
-			connect(m_dmr, SIGNAL(update()), this, SLOT(update_dmr_data()));
+			connect(m_dmr, SIGNAL(update(Codec::MODEINFO)), this, SLOT(update_dmr_data(Codec::MODEINFO)));
 			connect(m_dmr, SIGNAL(update_output_level(unsigned short)), this, SLOT(update_output_level(unsigned short)));
 			connect(m_modethread, SIGNAL(started()), m_dmr, SLOT(send_connect()));
 			connect(m_modethread, SIGNAL(finished()), m_dmr, SLOT(deleteLater()));
@@ -1586,7 +1600,7 @@ void DudeStar::process_connect()
 			m_p25 = new P25Codec(callsign, dmrid, dmr_destid, host, port, ui->comboCapture->currentText(), ui->comboPlayback->currentText());
 			m_modethread = new QThread;
 			m_p25->moveToThread(m_modethread);
-			connect(m_p25, SIGNAL(update()), this, SLOT(update_p25_data()));
+			connect(m_p25, SIGNAL(update(Codec::MODEINFO)), this, SLOT(update_p25_data(Codec::MODEINFO)));
 			connect(m_p25, SIGNAL(update_output_level(unsigned short)), this, SLOT(update_output_level(unsigned short)));
 			connect(m_modethread, SIGNAL(started()), m_p25, SLOT(send_connect()));
 			connect(m_modethread, SIGNAL(finished()), m_p25, SLOT(deleteLater()));
@@ -1605,7 +1619,7 @@ void DudeStar::process_connect()
 			m_nxdn = new NXDNCodec(callsign, nxdnids.key(callsign), dmr_destid, host, port, ui->comboVocoder->currentData().toString().simplified(), ui->comboCapture->currentText(), ui->comboPlayback->currentText());
 			m_modethread = new QThread;
 			m_nxdn->moveToThread(m_modethread);
-			connect(m_nxdn, SIGNAL(update()), this, SLOT(update_nxdn_data()));
+			connect(m_nxdn, SIGNAL(update(Codec::MODEINFO)), this, SLOT(update_nxdn_data(Codec::MODEINFO)));
 			connect(m_nxdn, SIGNAL(update_output_level(unsigned short)), this, SLOT(update_output_level(unsigned short)));
 			connect(m_modethread, SIGNAL(started()), m_nxdn, SLOT(send_connect()));
 			connect(m_modethread, SIGNAL(finished()), m_nxdn, SLOT(deleteLater()));
@@ -1624,7 +1638,7 @@ void DudeStar::process_connect()
 			m_m17 = new M17Codec(callsign, module, hostname, host, port, ui->comboCapture->currentText(), ui->comboPlayback->currentText());
 			m_modethread = new QThread;
 			m_m17->moveToThread(m_modethread);
-			connect(m_m17, SIGNAL(update()), this, SLOT(update_m17_data()));
+			connect(m_m17, SIGNAL(update(Codec::MODEINFO)), this, SLOT(update_m17_data(Codec::MODEINFO)));
 			connect(m_m17, SIGNAL(update_output_level(unsigned short)), this, SLOT(update_output_level(unsigned short)));
 			connect(this, SIGNAL(rate_changed(int)), m_m17, SLOT(rate_changed(int)));
 			connect(m_modethread, SIGNAL(started()), m_m17, SLOT(send_connect()));
@@ -1724,17 +1738,17 @@ void DudeStar::process_mic_mute_button()
 
 void DudeStar::update_iax_data()
 {
-	if(connect_status == DISCONNECTED){
+	if(connect_status == Codec::DISCONNECTED){
 		qDebug() << "update_iax_data() called after disconnected";
 		return;
 	}
-	if((connect_status == CONNECTING) && (m_iax->get_status() == DISCONNECTED)){
+	if((connect_status == Codec::CONNECTING) && (m_iax->get_status() == Codec::DISCONNECTED)){
 		process_connect();
 		QMessageBox::warning(this, tr("Connection refused"), tr("M17 connection refused.  Check callsign and confirm this callsign or IP is not already connected to this reflector"));
 		return;
 	}
-	if( (connect_status == CONNECTING) && ( m_iax->get_status() == CONNECTED_RW)){
-		connect_status = CONNECTED_RW;
+	if( (connect_status == Codec::CONNECTING) && ( m_iax->get_status() == Codec::CONNECTED_RW)){
+		connect_status = Codec::CONNECTED_RW;
 		ui->pushConnect->setText("Disconnect");
 		ui->pushConnect->setEnabled(true);
 		ui->comboVocoder->setEnabled(false);
@@ -1766,19 +1780,19 @@ void DudeStar::update_iax_data()
 	++m_rxcnt;
 }
 
-void DudeStar::update_m17_data()
+void DudeStar::update_m17_data(Codec::MODEINFO info)
 {
-	if(connect_status == DISCONNECTED){
+	if(connect_status == Codec::DISCONNECTED){
 		qDebug() << "update_m17_data() called after disconnected";
 		return;
 	}
-	if((connect_status == CONNECTING) && (m_m17->get_status() == DISCONNECTED)){
+	if((connect_status == Codec::CONNECTING) && (info.status == Codec::DISCONNECTED)){
 		process_connect();
 		QMessageBox::warning(this, tr("Connection refused"), tr("M17 connection refused.  Check callsign and confirm this callsign or IP is not already connected to this reflector"));
 		return;
 	}
-	if( (connect_status == CONNECTING) && ( m_m17->get_status() == CONNECTED_RW)){
-		connect_status = CONNECTED_RW;
+	if( (connect_status == Codec::CONNECTING) && (info.status == Codec::CONNECTED_RW)){
+		connect_status = Codec::CONNECTED_RW;
 		ui->pushConnect->setText("Disconnect");
 		ui->pushConnect->setEnabled(true);
 		ui->comboVocoder->setEnabled(false);
@@ -1794,30 +1808,47 @@ void DudeStar::update_m17_data()
 		ui->checkSWRX->setEnabled(false);
 		ui->checkSWTX->setEnabled(false);
 		process_codecgain_changed(ui->sliderCodecGain->value());
-		ui->textLog->append("Connected to " + m_m17->get_host() + ":" + QString::number( m_m17->get_port()));
+		ui->textLog->append("Connected to " + info.host + ":" + QString::number( info.port));
 	}
-	status_txt->setText(" Host: " + m_m17->get_host() + ":" + QString::number( m_m17->get_port()) + " Ping: " + QString::number(m_m17->get_cnt()));
-	ui->data1->setText(m_m17->get_src());
-	ui->data2->setText(m_m17->get_dst());
-	ui->data3->setText(m_m17->get_type());
-	if(m_m17->get_fn()){
-		QString n = QString("%1").arg(m_m17->get_fn(), 4, 16, QChar('0'));
-		ui->data4->setText(n);
+	status_txt->setText(" Host: " + info.host + ":" + QString::number( info.port) + " Ping: " + QString::number(info.count));
+	if(info.streamid){
+		ui->data1->setText(info.src);
+		ui->data2->setText(info.dst);
+		ui->data3->setText(info.type ? "3200 Voice" : "1600 V/D");
+		if(info.frame_number){
+			QString n = QString("%1").arg(info.frame_number, 4, 16, QChar('0'));
+			ui->data4->setText(n);
+		}
+		ui->data5->setText(QString::number(info.streamid, 16));
 	}
-	if(m_m17->get_streamid()){
-		ui->data5->setText(QString::number(m_m17->get_streamid(), 16));
+	else{
+		ui->data1->clear();
+		ui->data2->clear();
+		ui->data3->clear();
+		ui->data4->clear();
+		ui->data5->clear();
+	}
+	QString t = QDateTime::fromMSecsSinceEpoch(info.ts).toString("yyyy.MM.dd hh:mm:ss.zzz");
+	if(info.stream_state == Codec::STREAM_NEW){
+		ui->textLog->append(t + " M17 RX started id: " + QString::number(info.streamid, 16) + " src: " + info.src + " dst: " + info.dst);
+	}
+	if(info.stream_state == Codec::STREAM_END){
+		ui->textLog->append(t + " M17 RX ended id: " + QString::number(info.streamid, 16) + " src: " + info.src + " dst: " + info.dst);
+	}
+	if(info.stream_state == Codec::STREAM_LOST){
+		ui->textLog->append(t + " M17 RX lost id: " + QString::number(info.streamid, 16) + " src: " + info.src + " dst: " + info.dst);
 	}
 	++m_rxcnt;
 }
 
-void DudeStar::update_ysf_data()
+void DudeStar::update_ysf_data(Codec::MODEINFO info)
 {
-	if(connect_status == DISCONNECTED){
+	if(connect_status == Codec::DISCONNECTED){
 		qDebug() << "update_ysf_data() called after disconnected";
 		return;
 	}
-	if( (connect_status == CONNECTING) && ( m_ysf->get_status() == CONNECTED_RW)){
-		connect_status = CONNECTED_RW;
+	if( (connect_status == Codec::CONNECTING) && (info.status == Codec::CONNECTED_RW)){
+		connect_status = Codec::CONNECTED_RW;
 		ui->pushConnect->setText("Disconnect");
 		ui->pushConnect->setEnabled(true);
 		ui->comboVocoder->setEnabled(false);
@@ -1840,40 +1871,61 @@ void DudeStar::update_ysf_data()
 		process_codecgain_changed(ui->sliderCodecGain->value());
 	}
 
-	status_txt->setText(" Host: " + m_ysf->get_host() + ":" + QString::number( m_ysf->get_port()) + " Ping: " + QString::number(m_ysf->get_cnt()));
-	ui->data1->setText(m_ysf->get_gateway());
-	ui->data2->setText(m_ysf->get_src());
-	ui->data3->setText(m_ysf->get_dst());
-	if(m_ysf->get_type() == 0){
-		ui->data4->setText("V/D mode 1");
-	}
-	else if(m_ysf->get_type() == 1){
-		ui->data4->setText("Data Full Rate");
-	}
-	else if(m_ysf->get_type() == 2){
-		ui->data4->setText("V/D mode 2");
-	}
-	else if(m_ysf->get_type() == 3){
-		ui->data4->setText("Voice Full Rate");
+	status_txt->setText(" Host: " + info.host + ":" + QString::number( info.port) + " Ping: " + QString::number(info.count));
+	if(info.stream_state == Codec::STREAM_IDLE){
+		ui->data1->clear();
+		ui->data2->clear();
+		ui->data3->clear();
+		ui->data4->clear();
+		ui->data5->clear();
+		ui->data6->clear();
 	}
 	else{
-		ui->data4->setText("");
+		ui->data1->setText(info.gw);
+		ui->data2->setText(info.src);
+		ui->data3->setText(info.dst);
+		if(info.type == 0){
+			ui->data4->setText("V/D mode 1");
+		}
+		else if(info.type == 1){
+			ui->data4->setText("Data Full Rate");
+		}
+		else if(info.type == 2){
+			ui->data4->setText("V/D mode 2");
+		}
+		else if(info.type == 3){
+			ui->data4->setText("Voice Full Rate");
+		}
+		else{
+			ui->data4->setText("");
+		}
+		if(info.type >= 0){
+			ui->data5->setText(info.path  ? "Internet" : "Local");
+			ui->data6->setText(QString::number(info.frame_number) + "/" + QString::number(info.frame_total));
+		}
 	}
-	if(m_ysf->get_type() >= 0){
-		ui->data5->setText(m_ysf->get_path()  ? "Internet" : "Local");
-		ui->data6->setText(QString::number(m_ysf->get_fn()) + "/" + QString::number(m_ysf->get_ft()));
+
+	QString t = QDateTime::fromMSecsSinceEpoch(info.ts).toString("yyyy.MM.dd hh:mm:ss.zzz");
+	if(info.stream_state == Codec::STREAM_NEW){
+		ui->textLog->append(t + " YSF RX started");
+	}
+	if(info.stream_state == Codec::STREAM_END){
+		ui->textLog->append(t + " YSF RX ended");
+	}
+	if(info.stream_state == Codec::STREAM_LOST){
+		ui->textLog->append(t + " YSF RX lost");
 	}
 	++m_rxcnt;
 }
 
-void DudeStar::update_nxdn_data()
+void DudeStar::update_nxdn_data(Codec::MODEINFO info)
 {
-	if(connect_status == DISCONNECTED){
+	if(connect_status == Codec::DISCONNECTED){
 		qDebug() << "update_nxdn_data() called after disconnected";
 		return;
 	}
-	if( (connect_status == CONNECTING) && ( m_nxdn->get_status() == CONNECTED_RW)){
-		connect_status = CONNECTED_RW;
+	if( (connect_status == Codec::CONNECTING) && ( info.status == Codec::CONNECTED_RW)){
+		connect_status = Codec::CONNECTED_RW;
 		ui->pushConnect->setText("Disconnect");
 		ui->pushConnect->setEnabled(true);
 		ui->comboVocoder->setEnabled(false);
@@ -1895,27 +1947,47 @@ void DudeStar::update_nxdn_data()
 		}
 		process_codecgain_changed(ui->sliderCodecGain->value());
 	}
-	status_txt->setText(" Host: " + m_nxdn->get_host() + ":" + QString::number( m_nxdn->get_port()) + " Ping: " + QString::number(m_nxdn->get_cnt()));
-	if(m_nxdn->get_src()){
-		ui->data1->setText(nxdnids[m_nxdn->get_src()]);
+	status_txt->setText(" Host: " + info.host + ":" + QString::number( info.port) + " Ping: " + QString::number(info.count));
+	if(info.stream_state == Codec::STREAM_IDLE){
+		ui->data1->clear();
+		ui->data2->clear();
+		ui->data3->clear();
+		ui->data4->clear();
+		ui->data5->clear();
+		ui->data6->clear();
 	}
-	ui->data2->setText(QString::number(m_nxdn->get_src()));
-	ui->data3->setText(m_nxdn->get_dst() ? QString::number(m_nxdn->get_dst()) : "");
-	if(m_nxdn->get_fn()){
-		QString n = QString("%1").arg(m_nxdn->get_fn(), 2, 16, QChar('0'));
-		ui->data5->setText(n);
+	else{
+		if(info.srcid){
+			ui->data1->setText(nxdnids[info.srcid]);
+		}
+		ui->data2->setText(QString::number(info.srcid));
+		ui->data3->setText(info.dstid ? QString::number(info.dstid) : "");
+		if(info.frame_number){
+			QString n = QString("%1").arg(info.frame_number, 2, 16, QChar('0'));
+			ui->data5->setText(n);
+		}
+	}
+	QString t = QDateTime::fromMSecsSinceEpoch(info.ts).toString("yyyy.MM.dd hh:mm:ss.zzz");
+	if(info.stream_state == Codec::STREAM_NEW){
+		ui->textLog->append(t + " NXDN RX started src: " + info.srcid + " dst: " + info.dstid);
+	}
+	if(info.stream_state == Codec::STREAM_END){
+		ui->textLog->append(t + " NXDN RX ended src: " + info.srcid + " dst: " + info.dstid);
+	}
+	if(info.stream_state == Codec::STREAM_LOST){
+		ui->textLog->append(t + " NXDN RX lost src: " + info.srcid + " dst: " + info.dstid);
 	}
 	++m_rxcnt;
 }
 
-void DudeStar::update_p25_data()
+void DudeStar::update_p25_data(Codec::MODEINFO info)
 {
-	if(connect_status == DISCONNECTED){
+	if(connect_status == Codec::DISCONNECTED){
 		qDebug() << "update_p25_data() called after disconnected";
 		return;
 	}
-	if( (connect_status == CONNECTING) && ( m_p25->get_status() == CONNECTED_RW)){
-		connect_status = CONNECTED_RW;
+	if( (connect_status == Codec::CONNECTING) && ( info.status == Codec::CONNECTED_RW)){
+		connect_status = Codec::CONNECTED_RW;
 		ui->pushConnect->setText("Disconnect");
 		ui->pushConnect->setEnabled(true);
 		ui->comboVocoder->setEnabled(false);
@@ -1933,33 +2005,53 @@ void DudeStar::update_p25_data()
 		ui->checkSWTX->setEnabled(false);
 		process_codecgain_changed(ui->sliderCodecGain->value());
 	}
-	status_txt->setText(" Host: " + m_p25->get_host() + ":" + QString::number( m_p25->get_port()) + " Ping: " + QString::number(m_p25->get_cnt()));
-	if(m_p25->get_src()){
-		ui->data1->setText(m_dmrids[m_p25->get_src()]);
-		ui->data2->setText(QString::number(m_p25->get_src()));
-		ui->data4->setText(QString::number(m_p25->get_src()));
+	status_txt->setText(" Host: " + info.host + ":" + QString::number( info.port) + " Ping: " + QString::number(info.count));
+	if(info.stream_state == Codec::STREAM_IDLE){
+		ui->data1->clear();
+		ui->data2->clear();
+		ui->data3->clear();
+		ui->data4->clear();
+		ui->data5->clear();
+		ui->data6->clear();
 	}
-	ui->data3->setText(m_p25->get_dst() ? QString::number(m_p25->get_dst()) : "");
-	if(m_p25->get_fn()){
-		QString n = QString("%1").arg(m_p25->get_fn(), 2, 16, QChar('0'));
-		ui->data5->setText(n);
+	else{
+		if(info.srcid){
+			ui->data1->setText(m_dmrids[info.srcid]);
+			ui->data2->setText(QString::number(info.srcid));
+			ui->data4->setText(QString::number(info.srcid));
+		}
+		ui->data3->setText(info.dstid ? QString::number(info.dstid) : "");
+		if(info.frame_number){
+			QString n = QString("%1").arg(info.frame_number, 2, 16, QChar('0'));
+			ui->data5->setText(n);
+		}
+	}
+	QString t = QDateTime::fromMSecsSinceEpoch(info.ts).toString("yyyy.MM.dd hh:mm:ss.zzz");
+	if(info.stream_state == Codec::STREAM_NEW){
+		ui->textLog->append(t + " DMR RX started src: " + QString::number(info.srcid) + " dst: " + QString::number(info.dstid));
+	}
+	if(info.stream_state == Codec::STREAM_END){
+		ui->textLog->append(t + " DMR RX ended src: " + QString::number(info.srcid) + " dst: " + QString::number(info.dstid));
+	}
+	if(info.stream_state == Codec::STREAM_LOST){
+		ui->textLog->append(t + " DMR RX lost src: " + QString::number(info.srcid) + " dst: " + QString::number(info.dstid));
 	}
 	++m_rxcnt;
 }
 
-void DudeStar::update_dmr_data()
+void DudeStar::update_dmr_data(Codec::MODEINFO info)
 {
-	if(connect_status == DISCONNECTED){
+	if(connect_status == Codec::DISCONNECTED){
 		qDebug() << "update_dmr_data() called after disconnected";
 		return;
 	}
-	if((connect_status == CONNECTING) && (m_dmr->get_status() == DISCONNECTED)){
+	if((connect_status == Codec::CONNECTING) && (info.status == Codec::DISCONNECTED)){
 		process_connect();
-		QMessageBox::warning(this, tr("Connection refused"), tr("DMR connection refused.  Check callsign, DMR ID, or password"));
+		QMessageBox::warning(this, tr("Connection refused"), tr("DMR connection refused.  Check callsign, DMR ID, ESSID, and hotspot security password.  Some servers require specific information for Lat/Long/Location/Description.  It's up to you to determine this information from the server you are attempting to connect to."));
 		return;
 	}
-	if((connect_status == CONNECTING) && (m_dmr->get_status() == CONNECTED_RW)){
-		connect_status = CONNECTED_RW;
+	if((connect_status == Codec::CONNECTING) && (info.status == Codec::CONNECTED_RW)){
+		connect_status = Codec::CONNECTED_RW;
 		ui->pushConnect->setText("Disconnect");
 		ui->pushConnect->setEnabled(true);
 		ui->comboVocoder->setEnabled(false);
@@ -1983,28 +2075,48 @@ void DudeStar::update_dmr_data()
 		}
 		process_codecgain_changed(ui->sliderCodecGain->value());
 	}
-	status_txt->setText(" Host: " + m_dmr->get_host() + ":" + QString::number( m_dmr->get_port()) + " Ping: " + QString::number(m_dmr->get_cnt()));
-	if(m_dmr->get_src()){
-		ui->data1->setText(m_dmrids[m_dmr->get_src()]);
-		ui->data2->setText(QString::number(m_dmr->get_src()));
+	status_txt->setText(" Host: " + info.host + ":" + QString::number(info.port) + " Ping: " + QString::number(info.count));
+	if(info.stream_state == Codec::STREAM_IDLE){
+		ui->data1->clear();
+		ui->data2->clear();
+		ui->data3->clear();
+		ui->data4->clear();
+		ui->data5->clear();
+		ui->data6->clear();
 	}
-	ui->data3->setText(m_dmr->get_dst() ? QString::number(m_dmr->get_dst()) : "");
-	ui->data4->setText(m_dmr->get_gw() ? QString::number(m_dmr->get_gw()) : "");
-	if(m_dmr->get_fn()){
-		QString n = QString("%1").arg(m_dmr->get_fn(), 2, 16, QChar('0'));
-		ui->data5->setText(n);
+	else{
+		if(info.srcid){
+			ui->data1->setText(m_dmrids[info.srcid]);
+			ui->data2->setText(QString::number(info.srcid));
+		}
+		ui->data3->setText(info.dstid ? QString::number(info.dstid) : "");
+		ui->data4->setText(info.gwid ? QString::number(info.gwid) : "");
+		if(info.frame_number){
+			QString n = QString("%1").arg(info.frame_number, 2, 16, QChar('0'));
+			ui->data5->setText(n);
+		}
+	}
+	QString t = QDateTime::fromMSecsSinceEpoch(info.ts).toString("yyyy.MM.dd hh:mm:ss.zzz");
+	if(info.stream_state == Codec::STREAM_NEW){
+		ui->textLog->append(t + " DMR RX started src: " + QString::number(info.srcid) + " dst: " + QString::number(info.dstid));
+	}
+	if(info.stream_state == Codec::STREAM_END){
+		ui->textLog->append(t + " DMR RX ended src: " + QString::number(info.srcid) + " dst: " + QString::number(info.dstid));
+	}
+	if(info.stream_state == Codec::STREAM_LOST){
+		ui->textLog->append(t + " DMR RX lost src: " + QString::number(info.srcid) + " dst: " + QString::number(info.dstid));
 	}
 	++m_rxcnt;
 }
 
-void DudeStar::update_ref_data()
+void DudeStar::update_ref_data(Codec::MODEINFO info)
 {
-	if(connect_status == DISCONNECTED){
+	if(connect_status == Codec::DISCONNECTED){
 		qDebug() << "update_ref_data() called after disconnected";
 		return;
 	}
-	if((connect_status == CONNECTING) && (m_ref->get_status() == CONNECTED_RW)){
-		connect_status = CONNECTED_RW;
+	if((connect_status == Codec::CONNECTING) && (info.status == Codec::CONNECTED_RW)){
+		connect_status = Codec::CONNECTED_RW;
 		ui->pushConnect->setText("Disconnect");
 		ui->pushConnect->setEnabled(true);
 		ui->comboVocoder->setEnabled(false);
@@ -2027,24 +2139,44 @@ void DudeStar::update_ref_data()
 		}
 		process_codecgain_changed(ui->sliderCodecGain->value());
 	}
-	ui->data1->setText(m_ref->get_mycall());
-	ui->data2->setText(m_ref->get_urcall());
-	ui->data3->setText(m_ref->get_rptr1());
-	ui->data4->setText(m_ref->get_rptr2());
-	ui->data5->setText(QString::number(m_ref->get_streamid(), 16) + " " + QString::number(m_ref->get_fn(), 16));
-	ui->data6->setText(m_ref->get_usertxt());
-	status_txt->setText(" Host: " + m_ref->get_host() + ":" + QString::number( m_ref->get_port()) + " Ping: " + QString::number(m_ref->get_cnt()));
+	status_txt->setText(" Host: " + info.host + ":" + QString::number(info.port) + " Ping: " + QString::number(info.count));
+	if(info.streamid){
+		ui->data1->setText(info.src);
+		ui->data2->setText(info.dst);
+		ui->data3->setText(info.gw);
+		ui->data4->setText(info.gw2);
+		ui->data5->setText(QString::number(info.streamid, 16) + " " + QString::number(info.frame_number, 16));
+		ui->data6->setText(info.usertxt);
+	}
+	else{
+		ui->data1->clear();
+		ui->data2->clear();
+		ui->data3->clear();
+		ui->data4->clear();
+		ui->data5->clear();
+		ui->data6->clear();
+	}
+	QString t = QDateTime::fromMSecsSinceEpoch(info.ts).toString("yyyy.MM.dd hh:mm:ss.zzz");
+	if(info.stream_state == Codec::STREAM_NEW){
+		ui->textLog->append(t + " REF RX started src: " + info.src + " dst: " + info.gw2);
+	}
+	if(info.stream_state == Codec::STREAM_END){
+		ui->textLog->append(t + " REF RX ended src: " + info.src  + " dst: " + info.gw2);
+	}
+	if(info.stream_state == Codec::STREAM_LOST){
+		ui->textLog->append(t + " REF RX lost src: " + info.src  + " dst: " + info.gw2);
+	}
 	++m_rxcnt;
 }
 
-void DudeStar::update_dcs_data()
+void DudeStar::update_dcs_data(Codec::MODEINFO info)
 {
-	if(connect_status == DISCONNECTED){
+	if(connect_status == Codec::DISCONNECTED){
 		qDebug() << "update_dcs_data() called after disconnected";
 		return;
 	}
-	if((connect_status == CONNECTING) && (m_dcs->get_status() == CONNECTED_RW)){
-		connect_status = CONNECTED_RW;
+	if((connect_status == Codec::CONNECTING) && (info.status == Codec::CONNECTED_RW)){
+		connect_status = Codec::CONNECTED_RW;
 		ui->pushConnect->setText("Disconnect");
 		ui->pushConnect->setEnabled(true);
 		ui->comboVocoder->setEnabled(false);
@@ -2068,24 +2200,47 @@ void DudeStar::update_dcs_data()
 		}
 		process_codecgain_changed(ui->sliderCodecGain->value());
 	}
-	ui->data1->setText(m_dcs->get_mycall());
-	ui->data2->setText(m_dcs->get_urcall());
-	ui->data3->setText(m_dcs->get_rptr1());
-	ui->data4->setText(m_dcs->get_rptr2());
-	ui->data5->setText(QString::number(m_dcs->get_streamid(), 16) + " " + QString::number(m_dcs->get_fn(), 16));
-	ui->data6->setText(m_dcs->get_usertxt());
-	status_txt->setText(" Host: " + m_dcs->get_host() + ":" + QString::number( m_dcs->get_port()) + " Ping: " + QString::number(m_dcs->get_cnt()));
+	status_txt->setText(" Host: " + info.host + ":" + QString::number(info.port) + " Ping: " + QString::number(info.count));
+	if(info.streamid){
+		ui->data1->setText(info.src);
+		ui->data2->setText(info.dst);
+		ui->data3->setText(info.gw);
+		ui->data4->setText(info.gw2);
+		ui->data5->setText(QString::number(info.streamid, 16) + " " + QString::number(info.frame_number, 16));
+		ui->data6->setText(info.usertxt);
+	}
+	else{
+		ui->data1->clear();
+		ui->data2->clear();
+		ui->data3->clear();
+		ui->data4->clear();
+		ui->data5->clear();
+		ui->data6->clear();
+	}
+	QString t = QDateTime::fromMSecsSinceEpoch(info.ts).toString("yyyy.MM.dd hh:mm:ss.zzz");
+	if(info.stream_state == Codec::STREAM_NEW){
+		ui->textLog->append(t + " DCS RX started src: " + info.src + " dst: " + info.gw2);
+	}
+	if(info.stream_state == Codec::STREAM_END){
+		ui->textLog->append(t + " DCS RX ended src: " + info.src  + " dst: " + info.gw2);
+	}
+	if(info.stream_state == Codec::STREAM_LOST){
+		ui->textLog->append(t + " DCS RX lost src: " + info.src  + " dst: " + info.gw2);
+	}
+	if(info.netmsg.size()){
+		ui->textLog->append(t + " MSG: " + info.netmsg);
+	}
 	++m_rxcnt;
 }
 
-void DudeStar::update_xrf_data()
+void DudeStar::update_xrf_data(Codec::MODEINFO info)
 {
-	if(connect_status == DISCONNECTED){
+	if(connect_status == Codec::DISCONNECTED){
 		qDebug() << "update_xrf_data() called after disconnected";
 		return;
 	}
-	if((connect_status == CONNECTING) && (m_xrf->get_status() == CONNECTED_RW)){
-		connect_status = CONNECTED_RW;
+	if((connect_status == Codec::CONNECTING) && (info.status == Codec::CONNECTED_RW)){
+		connect_status = Codec::CONNECTED_RW;
 		ui->pushConnect->setText("Disconnect");
 		ui->pushConnect->setEnabled(true);
 		ui->comboVocoder->setEnabled(false);
@@ -2108,13 +2263,33 @@ void DudeStar::update_xrf_data()
 		}
 		process_codecgain_changed(ui->sliderCodecGain->value());
 	}
-	ui->data1->setText(m_xrf->get_mycall());
-	ui->data2->setText(m_xrf->get_urcall());
-	ui->data3->setText(m_xrf->get_rptr1());
-	ui->data4->setText(m_xrf->get_rptr2());
-	ui->data5->setText(QString::number(m_xrf->get_streamid(), 16) + " " + QString::number(m_xrf->get_fn(), 16));
-	ui->data6->setText(m_xrf->get_usertxt());
-	status_txt->setText(" Host: " + m_xrf->get_host() + ":" + QString::number( m_xrf->get_port()) + " Ping: " + QString::number(m_xrf->get_cnt()));
+	status_txt->setText(" Host: " + info.host + ":" + QString::number(info.port) + " Ping: " + QString::number(info.count));
+	if(info.streamid){
+		ui->data1->setText(info.src);
+		ui->data2->setText(info.dst);
+		ui->data3->setText(info.gw);
+		ui->data4->setText(info.gw2);
+		ui->data5->setText(QString::number(info.streamid, 16) + " " + QString::number(info.frame_number, 16));
+		ui->data6->setText(info.usertxt);
+	}
+	else{
+		ui->data1->clear();
+		ui->data2->clear();
+		ui->data3->clear();
+		ui->data4->clear();
+		ui->data5->clear();
+		ui->data6->clear();
+	}
+	QString t = QDateTime::fromMSecsSinceEpoch(info.ts).toString("yyyy.MM.dd hh:mm:ss.zzz");
+	if(info.stream_state == Codec::STREAM_NEW){
+		ui->textLog->append(t + " XRF RX started src: " + info.src + " dst: " + info.gw2);
+	}
+	if(info.stream_state == Codec::STREAM_END){
+		ui->textLog->append(t + " XRF RX ended src: " + info.src  + " dst: " + info.gw2);
+	}
+	if(info.stream_state == Codec::STREAM_LOST){
+		ui->textLog->append(t + " XRF RX lost src: " + info.src  + " dst: " + info.gw2);
+	}
 	++m_rxcnt;
 }
 

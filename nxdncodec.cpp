@@ -39,45 +39,21 @@ const unsigned char BIT_MASK_TABLE[] = { 0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04
 #define WRITE_BIT1(p,i,b) p[(i)>>3] = (b) ? (p[(i)>>3] | BIT_MASK_TABLE[(i)&7]) : (p[(i)>>3] & ~BIT_MASK_TABLE[(i)&7])
 #define READ_BIT1(p,i)    (p[(i)>>3] & BIT_MASK_TABLE[(i)&7])
 
-NXDNCodec::NXDNCodec(QString callsign, uint16_t nxdnid, uint32_t dstid, QString host, int port, QString vocoder, QString audioin, QString audioout) :
-	m_callsign(callsign),
+NXDNCodec::NXDNCodec(QString callsign, uint16_t nxdnid, uint32_t gwid, QString host, int port, QString vocoder, QString audioin, QString audioout) :
+	Codec(callsign, 0, NULL, host, port, vocoder, audioin, audioout),
 	m_nxdnid(nxdnid),
-	m_srcid(0),
-	m_dstid(dstid),
-	m_host(host),
-	m_port(port),
-	m_tx(false),
-	m_txcnt(0),
-	m_cnt(0),
-	m_transmitcnt(0),
-	m_fn(0),
-	m_streamid(0),
 	m_vocoder(vocoder),
 	m_ambedev(nullptr),
 	m_hwrx(false),
-	m_hwtx(false),
-	m_audioin(audioin),
-	m_audioout(audioout)
+	m_hwtx(false)
 {
 	m_txcnt = 0;
-#ifdef USE_FLITE
-	flite_init();
-	voice_slt = register_cmu_us_slt(nullptr);
-	voice_kal = register_cmu_us_kal16(nullptr);
-	voice_awb = register_cmu_us_awb(nullptr);
-#endif
+	m_txtimerint = 19;
+	m_modeinfo.gwid = gwid;
 }
 
 NXDNCodec::~NXDNCodec()
 {
-}
-
-void NXDNCodec::in_audio_vol_changed(qreal v){
-	m_audio->set_input_volume(v);
-}
-
-void NXDNCodec::out_audio_vol_changed(qreal v){
-	m_audio->set_output_volume(v);
 }
 
 void NXDNCodec::decoder_gain_changed(qreal v)
@@ -106,8 +82,8 @@ void NXDNCodec::process_udp()
 	fflush(stderr);
 #endif
 	if(buf.size() == 17){
-		if(m_status == CONNECTING){
-			m_status = CONNECTED_RW;
+		if(m_modeinfo.status == CONNECTING){
+			m_modeinfo.status = CONNECTED_RW;
 			m_rxtimer = new QTimer();
 			connect(m_rxtimer, SIGNAL(timeout()), this, SLOT(process_rx_data()));
 			m_txtimer = new QTimer();
@@ -134,14 +110,45 @@ void NXDNCodec::process_udp()
 			m_audio->init();
 			m_ping_timer->start(1000);
 		}
-		m_cnt++;
+		if( (m_modeinfo.stream_state == STREAM_LOST) || (m_modeinfo.stream_state == STREAM_END) ){
+			m_modeinfo.stream_state = STREAM_IDLE;
+		}
+		m_modeinfo.count++;
 	}
 	if(buf.size() == 43){
-		m_srcid = (uint16_t)((buf.data()[5] << 8) & 0xff00) | (buf.data()[6] & 0xff);
-		m_dstid = (uint16_t)((buf.data()[7] << 8) & 0xff00) | (buf.data()[8] & 0xff);
-		if(!m_tx && (m_fn++ == 0)){
-			m_rxtimer->start(19);
+		m_modeinfo.srcid = (uint16_t)((buf.data()[5] << 8) & 0xff00) | (buf.data()[6] & 0xff);
+		m_modeinfo.dstid = (uint16_t)((buf.data()[7] << 8) & 0xff00) | (buf.data()[8] & 0xff);
+		if(get_lich_fct(buf.data()[10U]) == NXDN_LICH_USC_SACCH_NS){
+			if((buf.data()[9U] & 0x08) == 0x08){
+				qDebug() << "Received EOT";
+				m_modeinfo.frame_number = 0;
+				m_modeinfo.stream_state = STREAM_END;
+				m_modeinfo.ts = QDateTime::currentMSecsSinceEpoch();
+				m_modeinfo.streamid = 0;
+			}
+			else{
+				if(!m_rxtimer->isActive()){
+					m_audio->start_playback();
+					m_rxtimer->start(19);
+				}
+				m_modeinfo.stream_state = STREAM_NEW;
+				m_modeinfo.ts = QDateTime::currentMSecsSinceEpoch();
+				qDebug() << "New NXDN stream from " << m_modeinfo.srcid << " to " << m_modeinfo.dstid;
+			}
 		}
+		else if(!m_tx && ( (m_modeinfo.stream_state == STREAM_LOST) || (m_modeinfo.stream_state == STREAM_END) || (m_modeinfo.stream_state == STREAM_IDLE) )){
+			if(!m_rxtimer->isActive()){
+				m_audio->start_playback();
+				m_rxtimer->start(19);
+			}
+			m_modeinfo.stream_state = STREAM_NEW;
+			m_modeinfo.ts = QDateTime::currentMSecsSinceEpoch();
+			qDebug() << "New NXDN stream in progress from " << m_modeinfo.srcid << " to " << m_modeinfo.dstid;
+		}
+		else{
+			m_modeinfo.stream_state = STREAMING;
+		}
+		m_rxwatchdog = 0;
 
 		memcpy(ambe, buf.data() + 15, 7);
 		if(m_hwrx){
@@ -189,14 +196,8 @@ void NXDNCodec::process_udp()
 		for(int i = 0; i < 7; ++i){
 			m_rxambeq.append(ambe[i]);
 		}
-
-		if(buf.data()[5] == 0x08){
-			qDebug() << "Received EOT";
-			m_fn = 0;
-			m_rxtimer->stop();
-		}
 	}
-	emit update();
+	emit update(m_modeinfo);
 }
 
 void NXDNCodec::interleave(uint8_t *ambe)
@@ -227,14 +228,14 @@ void NXDNCodec::hostname_lookup(QHostInfo i)
 		out.append('D');
 		out.append('N');
 		out.append('P');
-		out.append(m_callsign.toUtf8());
-		out.append(10 - m_callsign.size(), ' ');
-		out.append((m_dstid >> 8) & 0xff);
-		out.append((m_dstid >> 0) & 0xff);
+		out.append(m_modeinfo.callsign.toUtf8());
+		out.append(10 - m_modeinfo.callsign.size(), ' ');
+		out.append((m_modeinfo.gwid >> 8) & 0xff);
+		out.append((m_modeinfo.gwid >> 0) & 0xff);
 		m_address = i.addresses().first();
 		m_udp = new QUdpSocket(this);
 		connect(m_udp, SIGNAL(readyRead()), this, SLOT(process_udp()));
-		m_udp->writeDatagram(out, m_address, m_port);
+		m_udp->writeDatagram(out, m_address, m_modeinfo.port);
 #ifdef DEBUG
 		fprintf(stderr, "CONN: ");
 		for(int i = 0; i < out.size(); ++i){
@@ -246,12 +247,6 @@ void NXDNCodec::hostname_lookup(QHostInfo i)
 	}
 }
 
-void NXDNCodec::send_connect()
-{
-	m_status = CONNECTING;
-	QHostInfo::lookupHost(m_host, this, SLOT(hostname_lookup(QHostInfo)));
-}
-
 void NXDNCodec::send_ping()
 {
 	QByteArray out;
@@ -260,11 +255,11 @@ void NXDNCodec::send_ping()
 	out.append('D');
 	out.append('N');
 	out.append('P');
-	out.append(m_callsign.toUtf8());
-	out.append(10 - m_callsign.size(), ' ');
-	out.append((m_dstid >> 8) & 0xff);
-	out.append((m_dstid >> 0) & 0xff);
-	m_udp->writeDatagram(out, m_address, m_port);
+	out.append(m_modeinfo.callsign.toUtf8());
+	out.append(10 - m_modeinfo.callsign.size(), ' ');
+	out.append((m_modeinfo.gwid >> 8) & 0xff);
+	out.append((m_modeinfo.gwid >> 0) & 0xff);
+	m_udp->writeDatagram(out, m_address, m_modeinfo.port);
 #ifdef DEBUG
 	fprintf(stderr, "PING: ");
 	for(int i = 0; i < out.size(); ++i){
@@ -283,11 +278,11 @@ void NXDNCodec::send_disconnect()
 	out.append('D');
 	out.append('N');
 	out.append('U');
-	out.append(m_callsign.toUtf8());
-	out.append(10 - m_callsign.size(), ' ');
-	out.append((m_dstid >> 8) & 0xff);
-	out.append((m_dstid >> 0) & 0xff);
-	m_udp->writeDatagram(out, m_address, m_port);
+	out.append(m_modeinfo.callsign.toUtf8());
+	out.append(10 - m_modeinfo.callsign.size(), ' ');
+	out.append((m_modeinfo.gwid >> 8) & 0xff);
+	out.append((m_modeinfo.gwid >> 0) & 0xff);
+	m_udp->writeDatagram(out, m_address, m_modeinfo.port);
 #ifdef DEBUG
 	fprintf(stderr, "SEND: ");
 	for(int i = 0; i < out.size(); ++i){
@@ -296,46 +291,6 @@ void NXDNCodec::send_disconnect()
 	fprintf(stderr, "\n");
 	fflush(stderr);
 #endif
-}
-
-void NXDNCodec::start_tx()
-{
-	//std::cerr << "Pressed TX buffersize == " << audioin->bufferSize() << std::endl;
-	qDebug() << "start_tx() " << m_ttsid << " " << m_ttstext << " " << m_dstid;
-	m_tx = true;
-	m_txcnt = 0;
-	m_rxtimer->stop();
-	m_fn = 0;
-	m_ttscnt = 0;
-#ifdef USE_FLITE
-
-	if(m_ttsid == 1){
-		tts_audio = flite_text_to_wave(m_ttstext.toStdString().c_str(), voice_kal);
-	}
-	else if(m_ttsid == 2){
-		tts_audio = flite_text_to_wave(m_ttstext.toStdString().c_str(), voice_awb);
-	}
-	else if(m_ttsid == 3){
-		tts_audio = flite_text_to_wave(m_ttstext.toStdString().c_str(), voice_slt);
-	}
-#endif
-	if(!m_txtimer->isActive()){
-		//fprintf(stderr, "press_tx()\n");
-		//audio_buffer.open(QBuffer::ReadWrite|QBuffer::Truncate);
-		//audiofile.setFileName("audio.pcm");
-		//audiofile.open(QIODevice::WriteOnly | QIODevice::Truncate);
-		if(m_ttsid == 0){
-			m_audio->set_input_buffer_size(640);
-			m_audio->start_capture();
-			//audioin->start(&audio_buffer);
-		}
-		m_txtimer->start(19);
-	}
-}
-
-void NXDNCodec::stop_tx()
-{
-	m_tx = false;
 }
 
 void NXDNCodec::transmit()
@@ -399,7 +354,7 @@ void NXDNCodec::send_frame()
 	if(m_tx){
 		temp_nxdn = get_frame();
 		txdata.append((char *)temp_nxdn, 43);
-		m_udp->writeDatagram(txdata, m_address, m_port);
+		m_udp->writeDatagram(txdata, m_address, m_modeinfo.port);
 
 		fprintf(stderr, "SEND:%d: ", txdata.size());
 		for(int i = 0; i < txdata.size(); ++i){
@@ -414,7 +369,7 @@ void NXDNCodec::send_frame()
 		temp_nxdn = get_eot();
 		m_ttscnt = 0;
 		txdata.append((char *)temp_nxdn, 43);
-		m_udp->writeDatagram(txdata, m_address, m_port);
+		m_udp->writeDatagram(txdata, m_address, m_modeinfo.port);
 	}
 }
 
@@ -423,8 +378,8 @@ uint8_t * NXDNCodec::get_frame()
 	memcpy(m_nxdnframe, "NXDND", 5);
 	m_nxdnframe[5U] = (m_nxdnid >> 8) & 0xFFU;
 	m_nxdnframe[6U] = (m_nxdnid >> 0) & 0xFFU;
-	m_nxdnframe[7U] = (m_dstid >> 8) & 0xFFU;
-	m_nxdnframe[8U] = (m_dstid >> 0) & 0xFFU;
+	m_nxdnframe[7U] = (m_modeinfo.gwid >> 8) & 0xFFU;
+	m_nxdnframe[8U] = (m_modeinfo.gwid >> 0) & 0xFFU;
 	m_nxdnframe[9U] = 0x01U;
 
 	if(!m_txcnt || m_eot){
@@ -477,7 +432,7 @@ void NXDNCodec::encode_header()
 		set_layer3_msgtype(NXDN_MESSAGE_TYPE_VCALL);
 	}
 	set_layer3_srcid(m_nxdnid);
-	set_layer3_dstid(m_dstid);
+	set_layer3_dstid(m_modeinfo.gwid);
 	set_layer3_grp(true);
 	set_layer3_blks(0U);
 	memcpy(&m_nxdnframe[15U], m_layer3, 14U);
@@ -500,7 +455,7 @@ void NXDNCodec::encode_data()
 
 	set_layer3_msgtype(NXDN_MESSAGE_TYPE_VCALL);
 	set_layer3_srcid(m_nxdnid);
-	set_layer3_dstid(m_dstid);
+	set_layer3_dstid(m_modeinfo.gwid);
 	set_layer3_grp(true);
 	set_layer3_blks(0U);
 
@@ -569,6 +524,11 @@ void NXDNCodec::deinterleave_ambe(uint8_t *d)
 		//ambe_data[j/8] += (dvsi_data[i])<<(7-(j%8));
 	}
 	memcpy(d, ambe_data, 7);
+}
+
+unsigned char NXDNCodec::get_lich_fct(uint8_t lich)
+{
+	return (lich >> 4) & 0x03U;
 }
 
 void NXDNCodec::set_lich_rfct(uint8_t rfct)
@@ -717,12 +677,27 @@ void NXDNCodec::process_rx_data()
 	int16_t audio[160];
 	uint8_t ambe[7];
 
+	if(m_rxwatchdog++ > 25){
+		qDebug() << "NXDN RX stream timeout ";
+		m_rxwatchdog = 0;
+		m_modeinfo.stream_state = STREAM_LOST;
+		m_modeinfo.ts = QDateTime::currentMSecsSinceEpoch();
+		emit update(m_modeinfo);
+		m_rxambeq.clear();
+	}
+
 	if((!m_tx) && (m_rxambeq.size() > 6) ){
 		for(int i = 0; i < 7; ++i){
 			ambe[i] = m_rxambeq.dequeue();
 		}
 	}
-	else{
+	else if ( (m_modeinfo.stream_state == STREAM_END) || (m_modeinfo.stream_state == STREAM_LOST) ){
+		m_rxtimer->stop();
+		m_audio->stop_playback();
+		m_rxwatchdog = 0;
+		m_modeinfo.streamid = 0;
+		m_rxcodecq.clear();
+		qDebug() << "YSF playback stopped";
 		return;
 	}
 
@@ -742,18 +717,3 @@ void NXDNCodec::process_rx_data()
 		emit update_output_level(m_audio->level());
 	}
 }
-
-void NXDNCodec::deleteLater()
-{
-	if(m_status == CONNECTED_RW){
-		m_ping_timer->stop();
-		send_disconnect();
-		delete m_audio;
-		if(m_ambedev != nullptr){
-			delete m_ambedev;
-		}
-	}
-	m_cnt = 0;
-	QObject::deleteLater();
-}
-

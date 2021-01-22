@@ -21,47 +21,13 @@
 
 #define DEBUG
 
-#ifdef USE_FLITE
-extern "C" {
-extern cst_voice * register_cmu_us_slt(const char *);
-extern cst_voice * register_cmu_us_kal16(const char *);
-extern cst_voice * register_cmu_us_awb(const char *);
-}
-#endif
-
-XRFCodec::XRFCodec(QString callsign, QString hostname, QString host, int port, QString vocoder, QString audioin, QString audioout) :
-	m_callsign(callsign),
-	m_hostname(hostname),
-	m_host(host),
-	m_port(port),
-	m_streamid(0),
-	m_fn(0),
-	m_cnt(0),
-	m_vocoder(vocoder),
-	m_ambedev(nullptr),
-	m_hwrx(false),
-	m_hwtx(false),
-	m_audioin(audioin),
-	m_audioout(audioout)
+XRFCodec::XRFCodec(QString callsign, QString hostname, char module, QString host, int port, QString vocoder, QString audioin, QString audioout) :
+	Codec(callsign, module, hostname, host, port, vocoder, audioin, audioout)
 {
-#ifdef USE_FLITE
-	flite_init();
-	voice_slt = register_cmu_us_slt(nullptr);
-	voice_kal = register_cmu_us_kal16(nullptr);
-	voice_awb = register_cmu_us_awb(nullptr);
-#endif
 }
 
 XRFCodec::~XRFCodec()
 {
-}
-
-void XRFCodec::in_audio_vol_changed(qreal v){
-	m_audio->set_input_volume(v);
-}
-
-void XRFCodec::out_audio_vol_changed(qreal v){
-	m_audio->set_output_volume(v);
 }
 
 void XRFCodec::decoder_gain_changed(qreal v)
@@ -77,8 +43,6 @@ void XRFCodec::process_udp()
 	QByteArray buf;
 	QHostAddress sender;
 	quint16 senderPort;
-	int nbAudioSamples = 0;
-	int16_t *audioSamples;
 	static bool sd_sync = 0;
 	static int sd_seq = 0;
 	static char user_data[21];
@@ -93,27 +57,29 @@ void XRFCodec::process_udp()
 	fprintf(stderr, "\n");
 	fflush(stderr);
 #endif
-	
-	if(buf.size() == 9){ //2 way keep alive ping
-		m_cnt++;
+	if(buf.size() == 9){
+		m_modeinfo.count++;
+		if( (m_modeinfo.stream_state == STREAM_LOST) || (m_modeinfo.stream_state == STREAM_END) ){
+			m_modeinfo.stream_state = STREAM_IDLE;
+		}
 	}
 
-	if( (m_status == CONNECTING) && (buf.size() == 14) && (!memcmp(buf.data()+10, "ACK", 3)) ){
-		m_status = CONNECTED_RW;
+	if( (m_modeinfo.status == CONNECTING) && (buf.size() == 14) && (!memcmp(buf.data()+10, "ACK", 3)) ){
+		m_modeinfo.status = CONNECTED_RW;
 		m_mbedec = new MBEDecoder();
 		//m_mbedec->setAutoGain(true);
 		m_mbeenc = new MBEEncoder();
 		m_mbeenc->set_dstar_mode();
-		m_mbeenc->set_gain_adjust(3);
+		m_mbeenc->set_gain_adjust(1);
 		if(m_vocoder != ""){
 			m_hwrx = true;
 			m_hwtx = true;
 			m_ambedev = new SerialAMBE("XRF");
 			m_ambedev->connect_to_serial(m_vocoder);
-			m_hwrxtimer = new QTimer();
-			connect(m_hwrxtimer, SIGNAL(timeout()), this, SLOT(receive_hwrx_data()));
 			connect(m_ambedev, SIGNAL(data_ready()), this, SLOT(get_ambe()));
 		}
+		m_rxtimer = new QTimer();
+		connect(m_rxtimer, SIGNAL(timeout()), this, SLOT(process_rx_data()));
 		m_txtimer = new QTimer();
 		connect(m_txtimer, SIGNAL(timeout()), this, SLOT(transmit()));
 		m_ping_timer = new QTimer();
@@ -124,25 +90,67 @@ void XRFCodec::process_udp()
 	}
 
 	if((buf.size() == 56) && (!memcmp(buf.data(), "DSVT", 4)) ){
-		if(m_hwrx && !m_tx && (m_streamid == 0)){
-			m_hwrxtimer->start(19);
+		uint16_t streamid = (buf.data()[12] << 8) | (buf.data()[13] & 0xff);
+		if( (m_modeinfo.streamid != 0) && (streamid != m_modeinfo.streamid) ){
+			qDebug() << "New header received before timeout";
+			m_modeinfo.streamid = 0;
+			m_audio->stop_playback();
 		}
-		m_streamid = (buf.data()[12] << 8) | (buf.data()[13] & 0xff);
-		char temp[9];
-		memcpy(temp, buf.data() + 18, 8); temp[8] = '\0';
-		m_rptr2 = QString(temp);
-		memcpy(temp, buf.data() + 26, 8); temp[8] = '\0';
-		m_rptr1 = QString(temp);
-		memcpy(temp, buf.data() + 34, 8); temp[8] = '\0';
-		m_urcall = QString(temp);
-		memcpy(temp, buf.data() + 42, 8); temp[8] = '\0';
-		m_mycall = QString(temp);
-		QString h = m_hostname + " " + m_module;
+		if(!m_tx && (m_modeinfo.streamid == 0)){
+			char temp[9];
+			memcpy(temp, buf.data() + 18, 8); temp[8] = '\0';
+			m_modeinfo.gw2 = QString(temp);
+			memcpy(temp, buf.data() + 26, 8); temp[8] = '\0';
+			m_modeinfo.gw = QString(temp);
+			memcpy(temp, buf.data() + 34, 8); temp[8] = '\0';
+			m_modeinfo.dst = QString(temp);
+			memcpy(temp, buf.data() + 42, 8); temp[8] = '\0';
+			m_modeinfo.src = QString(temp);
+			QString h = m_hostname + " " + m_module;
+			m_modeinfo.streamid = streamid;
+			m_modeinfo.stream_state = STREAM_NEW;
+			m_modeinfo.ts = QDateTime::currentMSecsSinceEpoch();
+			if(!m_rxtimer->isActive()){
+				m_audio->start_playback();
+				m_rxtimer->start(19);
+			}
+			qDebug() << "New stream from " << m_modeinfo.src << " to " << m_modeinfo.dst << " id == " << QString::number(m_modeinfo.streamid, 16);
+			emit update(m_modeinfo);
+		}
+		m_rxwatchdog = 0;
 	}
-		
+
 	if((buf.size() == 27) && (!memcmp(buf.data(), "DSVT", 4))) {
-		m_streamid = (buf.data()[12] << 8) | (buf.data()[13] & 0xff);
-		m_fn = buf.data()[14];
+		m_rxwatchdog = 0;
+		uint16_t streamid = (buf.data()[12] << 8) | (buf.data()[13] & 0xff);
+		if( (streamid != m_modeinfo.streamid) ){
+			qDebug() << "New data packet received before timeout";
+			m_modeinfo.streamid = streamid;
+			if(!m_rxtimer->isActive()){
+				m_audio->start_playback();
+				m_rxtimer->start(19);
+			}
+		}
+		if(!m_tx && ( (m_modeinfo.stream_state == STREAM_LOST) || (m_modeinfo.stream_state == STREAM_END) || (m_modeinfo.stream_state == STREAM_IDLE) )){
+			if(!m_rxtimer->isActive()){
+				m_audio->start_playback();
+				m_rxtimer->start(19);
+			}
+			m_modeinfo.stream_state = STREAM_NEW;
+		}
+		else{
+			m_modeinfo.stream_state = STREAMING;
+		}
+		m_modeinfo.streamid = streamid;
+		m_modeinfo.frame_number = buf.data()[14];
+		if(m_modeinfo.frame_number & 0x40){
+			qDebug() << "XRF RX stream ended ";
+			m_rxwatchdog = 0;
+			m_modeinfo.stream_state = STREAM_END;
+			m_modeinfo.ts = QDateTime::currentMSecsSinceEpoch();
+			emit update(m_modeinfo);
+			m_modeinfo.streamid = 0;
+		}
 		if((buf.data()[14] == 0) && (buf.data()[24] == 0x55) && (buf.data()[25] == 0x2d) && (buf.data()[26] == 0x16)){
 			sd_sync = 1;
 			sd_seq = 1;
@@ -192,39 +200,28 @@ void XRFCodec::process_udp()
 			user_data[20] = '\0';
 			sd_sync = 0;
 			sd_seq = 0;
-			m_userdata = QString(user_data);
+			m_modeinfo.usertxt = QString(user_data);
 		}
-		if(m_hwrx && !m_tx){
-			m_ambedev->decode((uint8_t *)buf.data()+15);
-			if(buf.data()[14] & 0x40){
-				m_streamid = 0;
-				m_hwrxtimer->stop();
-				//m_ambedev->clear_queue();
-			}
-		}
-		else{
-			m_mbedec->process_dstar((uint8_t *)(buf.data()+15));
-			audioSamples = m_mbedec->getAudio(nbAudioSamples);
-			m_audio->write(audioSamples, nbAudioSamples);
-			m_mbedec->resetAudio();
+		for(int i = 0; i < 9; ++i){
+			m_rxcodecq.append(buf.data()[15+i]);
 		}
 	}
-	emit update();
+	emit update(m_modeinfo);
 }
 
 void XRFCodec::hostname_lookup(QHostInfo i)
 {
 	if (!i.addresses().isEmpty()) {
 		QByteArray out;
-		out.append(m_callsign.toUtf8());
-		out.append(8 - m_callsign.size(), ' ');
+		out.append(m_modeinfo.callsign.toUtf8());
+		out.append(8 - m_modeinfo.callsign.size(), ' ');
 		out.append(m_module);
 		out.append(m_module);
 		out.append(11);
 		m_address = i.addresses().first();
 		m_udp = new QUdpSocket(this);
 		connect(m_udp, SIGNAL(readyRead()), this, SLOT(process_udp()));
-		m_udp->writeDatagram(out, m_address, m_port);
+		m_udp->writeDatagram(out, m_address, m_modeinfo.port);
 #ifdef DEBUG
 		fprintf(stderr, "CONN: ");
 		for(int i = 0; i < out.size(); ++i){
@@ -236,20 +233,13 @@ void XRFCodec::hostname_lookup(QHostInfo i)
 	}
 }
 
-void XRFCodec::send_connect()
-{
-	qDebug() << "send connect " << m_hostname << ":" << m_host << ":" << m_port << ":" << m_callsign;
-	m_status = CONNECTING;
-	QHostInfo::lookupHost(m_host, this, SLOT(hostname_lookup(QHostInfo)));
-}
-
 void XRFCodec::send_ping()
 {
 	QByteArray out;
-	out.append(m_callsign.toUtf8());
-	out.append(8 - m_callsign.size(), ' ');
+	out.append(m_modeinfo.callsign.toUtf8());
+	out.append(8 - m_modeinfo.callsign.size(), ' ');
 	out.append('\x00');
-	m_udp->writeDatagram(out, m_address, m_port);
+	m_udp->writeDatagram(out, m_address, m_modeinfo.port);
 #ifdef DEBUG
 	fprintf(stderr, "PING: ");
 	for(int i = 0; i < out.size(); ++i){
@@ -263,12 +253,12 @@ void XRFCodec::send_ping()
 void XRFCodec::send_disconnect()
 {
 	QByteArray out;
-	out.append(m_callsign.toUtf8());
-	out.append(8 - m_callsign.size(), ' ');
+	out.append(m_modeinfo.callsign.toUtf8());
+	out.append(8 - m_modeinfo.callsign.size(), ' ');
 	out.append(m_module);
 	out.append(' ');
 	out.append('\x00');
-	m_udp->writeDatagram(out, m_address, m_port);
+	m_udp->writeDatagram(out, m_address, m_modeinfo.port);
 #ifdef DEBUG
 	fprintf(stderr, "SEND: ");
 	for(int i = 0; i < out.size(); ++i){
@@ -279,51 +269,31 @@ void XRFCodec::send_disconnect()
 #endif
 }
 
-void XRFCodec::start_tx()
+void XRFCodec::format_callsign(QString &s)
 {
-	//std::cerr << "Pressed TX buffersize == " << audioin->bufferSize() << std::endl;
-	qDebug() << "start_tx() " << m_ttsid << " " << m_ttstext;
-	if(m_hwrx){
-		m_hwrxtimer->stop();
-	}
+	QStringList l = s.simplified().split(' ');
 
-	if(m_hwtx){
-		m_ambedev->clear_queue();
-	}
-
-	m_tx = true;
-	m_streamid = 0;
-	m_txcnt = 0;
-	m_ttscnt = 0;
-#ifdef USE_FLITE
-
-	if(m_ttsid == 1){
-		tts_audio = flite_text_to_wave(m_ttstext.toStdString().c_str(), voice_kal);
-	}
-	else if(m_ttsid == 2){
-		tts_audio = flite_text_to_wave(m_ttstext.toStdString().c_str(), voice_awb);
-	}
-	else if(m_ttsid == 3){
-		tts_audio = flite_text_to_wave(m_ttstext.toStdString().c_str(), voice_slt);
-	}
-#endif
-	if(!m_txtimer->isActive()){
-		//fprintf(stderr, "press_tx()\n");
-		//audio_buffer.open(QBuffer::ReadWrite|QBuffer::Truncate);
-		//audiofile.setFileName("audio.pcm");
-		//audiofile.open(QIODevice::WriteOnly | QIODevice::Truncate);
-		if(m_ttsid == 0){
-			m_audio->set_input_buffer_size(640);
-			m_audio->start_capture();
-			//audioin->start(&audio_buffer);
+	if(l.size() > 1){
+		s = l.at(0).simplified();
+		while(s.size() < 7){
+			s.append(' ');
 		}
-		m_txtimer->start(19);
+		s += l.at(1).simplified();
+	}
+	else{
+		while(s.size() < 8){
+			s.append(' ');
+		}
 	}
 }
 
-void XRFCodec::stop_tx()
+void XRFCodec::start_tx()
 {
-	m_tx = false;
+	format_callsign(m_txmycall);
+	format_callsign(m_txurcall);
+	format_callsign(m_txrptr1);
+	format_callsign(m_txrptr2);
+	Codec::start_tx();
 }
 
 void XRFCodec::transmit()
@@ -338,7 +308,6 @@ void XRFCodec::transmit()
 	if(m_ttsid > 0){
 		for(int i = 0; i < 160; ++i){
 			if(m_ttscnt >= tts_audio->num_samples/2){
-				//audiotx_cnt = 0;
 				pcm[i] = 0;
 			}
 			else{
@@ -357,9 +326,9 @@ void XRFCodec::transmit()
 	}
 	if(m_hwtx){
 		m_ambedev->encode(pcm);
-		if(m_tx && (m_ambeq.size() >= 9)){
+		if(m_tx && (m_txcodecq.size() >= 9)){
 			for(int i = 0; i < 9; ++i){
-				ambe[i] = m_ambeq.dequeue();
+				ambe[i] = m_txcodecq.dequeue();
 			}
 			send_frame(ambe);
 		}
@@ -387,7 +356,6 @@ void XRFCodec::send_frame(uint8_t *ambe)
 	if(m_tx){
 		if(txstreamid == 0){
 		   txstreamid = static_cast<uint16_t>((::rand() & 0xFFFF));
-		   //std::cerr << "txstreamid == " << txstreamid << std::endl;
 		}
 		if(sendheader){
 			sendheader = 0;
@@ -420,7 +388,7 @@ void XRFCodec::send_frame(uint8_t *ambe)
 			txdata[54] = 0;
 			txdata[55] = 0;
 			calcPFCS(txdata.data());
-			m_udp->writeDatagram(txdata, m_address, m_port);
+			m_udp->writeDatagram(txdata, m_address, m_modeinfo.port);
 		}
 		else{
 			txdata.resize(27);
@@ -481,17 +449,17 @@ void XRFCodec::send_frame(uint8_t *ambe)
 				break;
 			}
 			m_txcnt++;
-			m_udp->writeDatagram(txdata, m_address, m_port);
+			m_udp->writeDatagram(txdata, m_address, m_modeinfo.port);
 		}
 	}
 	else{
 		txdata[14] = (++m_txcnt % 21) | 0x40;
-		m_udp->writeDatagram(txdata, m_address, m_port);
+		m_udp->writeDatagram(txdata, m_address, m_modeinfo.port);
 		m_txcnt = 0;
 		txstreamid = 0;
 		sendheader = 1;
 		m_txtimer->stop();
-		m_udp->writeDatagram(txdata, m_address, m_port);
+		m_udp->writeDatagram(txdata, m_address, m_modeinfo.port);
 		if(m_ttsid == 0){
 			m_audio->stop_capture();
 		}
@@ -513,17 +481,55 @@ void XRFCodec::get_ambe()
 
 	if(m_ambedev->get_ambe(ambe)){
 		for(int i = 0; i < 9; ++i){
-			m_ambeq.append(ambe[i]);
+			m_txcodecq.append(ambe[i]);
 		}
 	}
 }
 
-void XRFCodec::receive_hwrx_data()
+void XRFCodec::process_rx_data()
 {
+	int nbAudioSamples = 0;
+	int16_t *audioSamples;
 	int16_t audio[160];
+	uint8_t ambe[9];
 
-	if(m_ambedev->get_audio(audio)){
-		m_audio->write(audio, 160);
+	if(m_rxwatchdog++ > 100){
+		qDebug() << "XRF RX stream timeout ";
+		m_rxwatchdog = 0;
+		m_modeinfo.stream_state = STREAM_LOST;
+		m_modeinfo.ts = QDateTime::currentMSecsSinceEpoch();
+		emit update(m_modeinfo);
+		m_modeinfo.streamid = 0;
+	}
+
+	if((!m_tx) && (m_rxcodecq.size() > 8) ){
+		for(int i = 0; i < 9; ++i){
+			ambe[i] = m_rxcodecq.dequeue();
+		}
+	}
+	else if ( (m_modeinfo.stream_state == STREAM_END) || (m_modeinfo.stream_state == STREAM_LOST) ){
+		m_rxtimer->stop();
+		m_audio->stop_playback();
+		m_rxwatchdog = 0;
+		m_modeinfo.streamid = 0;
+		m_rxcodecq.clear();
+		qDebug() << "XRF playback stopped";
+		return;
+	}
+	if(m_hwrx){
+		m_ambedev->decode(ambe);
+
+		if(m_ambedev->get_audio(audio)){
+			m_audio->write(audio, 160);
+			emit update_output_level(m_audio->level());
+		}
+	}
+	else{
+		m_mbedec->process_dstar(ambe);
+		audioSamples = m_mbedec->getAudio(nbAudioSamples);
+		m_audio->write(audioSamples, nbAudioSamples);
+		m_mbedec->resetAudio();
+		emit update_output_level(m_audio->level());
 	}
 }
 
@@ -550,18 +556,4 @@ void XRFCodec::calcPFCS(char *d)
    crc ^= 65535;
    d[54] = (char)(crc & 0xFF);
    d[55] = (char)(crc >> 8 & 0xFF);
-}
-
-void XRFCodec::deleteLater()
-{
-	if(m_status == CONNECTED_RW){
-		m_ping_timer->stop();
-		send_disconnect();
-		delete m_audio;
-		if(m_ambedev != nullptr){
-			delete m_ambedev;
-		}
-	}
-	m_cnt = 0;
-	QObject::deleteLater();
 }

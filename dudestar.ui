@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>340</width>
+    <width>346</width>
     <height>471</height>
    </rect>
   </property>
@@ -649,7 +649,7 @@
              <widget class="QLineEdit" name="editMYCALL">
               <property name="maximumSize">
                <size>
-                <width>60</width>
+                <width>16777215</width>
                 <height>16777215</height>
                </size>
               </property>
@@ -669,7 +669,7 @@
              <widget class="QLineEdit" name="editRPTR1">
               <property name="maximumSize">
                <size>
-                <width>60</width>
+                <width>16777215</width>
                 <height>16777215</height>
                </size>
               </property>
@@ -699,7 +699,7 @@
              <widget class="QLineEdit" name="editDMRID">
               <property name="maximumSize">
                <size>
-                <width>60</width>
+                <width>16777215</width>
                 <height>16777215</height>
                </size>
               </property>
@@ -709,7 +709,7 @@
              <widget class="QLineEdit" name="editCallsign">
               <property name="maximumSize">
                <size>
-                <width>60</width>
+                <width>16777215</width>
                 <height>16777215</height>
                </size>
               </property>
@@ -808,7 +808,7 @@
              <widget class="QLineEdit" name="editURCALL">
               <property name="maximumSize">
                <size>
-                <width>60</width>
+                <width>16777215</width>
                 <height>16777215</height>
                </size>
               </property>
@@ -825,7 +825,7 @@
              <widget class="QLineEdit" name="editRPTR2">
               <property name="maximumSize">
                <size>
-                <width>60</width>
+                <width>16777215</width>
                 <height>16777215</height>
                </size>
               </property>

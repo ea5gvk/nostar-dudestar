@@ -45,48 +45,17 @@ const unsigned char REC80[] = {0x80U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 
 #define WRITE_BIT(p,i,b) p[(i)>>3] = (b) ? (p[(i)>>3] | BIT_MASK_TABLE[(i)&7]) : (p[(i)>>3] & ~BIT_MASK_TABLE[(i)&7])
 #define READ_BIT(p,i)    (p[(i)>>3] & BIT_MASK_TABLE[(i)&7])
 
-#ifdef USE_FLITE
-extern "C" {
-extern cst_voice * register_cmu_us_slt(const char *);
-extern cst_voice * register_cmu_us_kal16(const char *);
-extern cst_voice * register_cmu_us_awb(const char *);
-}
-#endif
-
 P25Codec::P25Codec(QString callsign, int dmrid, int hostname, QString host, int port, QString audioin, QString audioout) :
-	m_tx(false),
-	m_callsign(callsign),
+	Codec(callsign, 0, NULL, host, port, NULL, audioin, audioout),
 	m_hostname(hostname),
-	m_host(host),
-	m_port(port),
-	m_dmrid(dmrid),
-	m_srcid(0),
-	m_dstid(0),
-	m_fn(0),
-	m_cnt(0),
-	m_rxcnt(0),
-	m_audioin(audioin),
-	m_audioout(audioout)
+	m_dmrid(dmrid)
 {
 	m_p25cnt = 0;
-#ifdef USE_FLITE
-	flite_init();
-	voice_slt = register_cmu_us_slt(nullptr);
-	voice_kal = register_cmu_us_kal16(nullptr);
-	voice_awb = register_cmu_us_awb(nullptr);
-#endif
+	m_txtimerint = 19;
 }
 
 P25Codec::~P25Codec()
 {
-}
-
-void P25Codec::in_audio_vol_changed(qreal v){
-	m_audio->set_input_volume(v);
-}
-
-void P25Codec::out_audio_vol_changed(qreal v){
-	m_audio->set_output_volume(v);
 }
 
 void P25Codec::decoder_gain_changed(qreal v)
@@ -111,13 +80,13 @@ void P25Codec::process_udp()
 	fflush(stderr);
 #endif
 	if(buf.size() == 11){
-		if(m_status == CONNECTING){
-			m_status = CONNECTED_RW;
+		if(m_modeinfo.status == CONNECTING){
+			m_modeinfo.status = CONNECTED_RW;
 			m_mbedec = new MBEDecoder();
 			//m_mbedec->setAutoGain(true);
 			m_mbeenc = new MBEEncoder();
 			m_mbeenc->set_88bit_mode();
-			m_status = CONNECTED_RW;
+			m_modeinfo.status = CONNECTED_RW;
 			m_txtimer = new QTimer();
 			m_rxtimer = new QTimer();
 			connect(m_rxtimer, SIGNAL(timeout()), this, SLOT(process_rx_data()));
@@ -128,15 +97,32 @@ void P25Codec::process_udp()
 			m_audio = new AudioEngine(m_audioin, m_audioout);
 			m_audio->init();
 		}
-		m_cnt++;
-		emit update();
+		if((m_modeinfo.stream_state == STREAM_LOST) || (m_modeinfo.stream_state == STREAM_END) ){
+			m_modeinfo.stream_state = STREAM_IDLE;
+		}
+		m_modeinfo.count++;
+		emit update(m_modeinfo);
 	}
 	if(buf.size() > 11){
-		if(!m_tx && (m_rxcnt++ == 0)){
-			m_rxtimer->start(19);
+		if( (m_modeinfo.stream_state == STREAM_END) ||
+			(m_modeinfo.stream_state == STREAM_LOST) ||
+			(m_modeinfo.stream_state == STREAM_IDLE))
+		{
+			m_modeinfo.stream_state = STREAM_NEW;
+			m_modeinfo.ts = QDateTime::currentMSecsSinceEpoch();
+			if(!m_tx && !m_rxtimer->isActive() ){
+				m_rxcodecq.clear();
+				m_audio->start_playback();
+				m_rxtimer->start(19);
+			}
+			qDebug() << "New P25 stream";
 		}
+		else{
+			m_modeinfo.stream_state = STREAMING;
+		}
+		m_rxwatchdog = 0;
 		int offset = 0;
-		m_fn = buf.data()[0U];
+		m_modeinfo.frame_number = buf.data()[0U];
 		switch ((uint8_t)buf.data()[0U]) {
 		case 0x62U:
 			offset = 10U;
@@ -148,11 +134,11 @@ void P25Codec::process_udp()
 			offset = 5U;
 			break;
 		case 0x65U:
-			m_dstid = (uint32_t)((buf.data()[1] << 16) | ((buf.data()[2] << 8) & 0xff00) | (buf.data()[3] & 0xff));
+			m_modeinfo.dstid = (uint32_t)((buf.data()[1] << 16) | ((buf.data()[2] << 8) & 0xff00) | (buf.data()[3] & 0xff));
 			offset = 5U;
 			break;
 		case 0x66U:
-			m_srcid = (uint32_t)((buf.data()[1] << 16) | ((buf.data()[2] << 8) & 0xff00) | (buf.data()[3] & 0xff));
+			m_modeinfo.srcid = (uint32_t)((buf.data()[1] << 16) | ((buf.data()[2] << 8) & 0xff00) | (buf.data()[3] & 0xff));
 			//ui->rptr1->setText(QString::number((uint32_t)((buf.data()[1] << 16) | ((buf.data()[2] << 8) & 0xff00) | (buf.data()[3] & 0xff))));
 			offset = 5U;
 			break;
@@ -182,8 +168,9 @@ void P25Codec::process_udp()
 			offset = 4U;
 			break;
 		case 0x80U:
-			m_rxtimer->stop();
-			m_rxcnt = 0;
+			m_modeinfo.stream_state = STREAM_END;
+			m_modeinfo.ts = QDateTime::currentMSecsSinceEpoch();
+			qDebug() << "P25 stream ended";
 		default:
 			break;
 		}
@@ -193,7 +180,7 @@ void P25Codec::process_udp()
 		for (int i = 0; i < 11; ++i){
 			m_rximbeq.append(buf.data()[offset+i]);
 		}
-		emit update();
+		emit update(m_modeinfo);
 	}
 }
 
@@ -202,12 +189,12 @@ void P25Codec::hostname_lookup(QHostInfo i)
 	if (!i.addresses().isEmpty()) {
 		QByteArray out;
 		out.append(0xf0);
-		out.append(m_callsign.toUtf8());
-		out.append(10 - m_callsign.size(), ' ');
+		out.append(m_modeinfo.callsign.toUtf8());
+		out.append(10 - m_modeinfo.callsign.size(), ' ');
 		m_address = i.addresses().first();
 		m_udp = new QUdpSocket(this);
 		connect(m_udp, SIGNAL(readyRead()), this, SLOT(process_udp()));
-		m_udp->writeDatagram(out, m_address, m_port);
+		m_udp->writeDatagram(out, m_address, m_modeinfo.port);
 #ifdef DEBUG
 		fprintf(stderr, "CONN: ");
 		for(int i = 0; i < out.size(); ++i){
@@ -219,19 +206,13 @@ void P25Codec::hostname_lookup(QHostInfo i)
 	}
 }
 
-void P25Codec::send_connect()
-{
-	m_status = CONNECTING;
-	QHostInfo::lookupHost(m_host, this, SLOT(hostname_lookup(QHostInfo)));
-}
-
 void P25Codec::send_ping()
 {
 	QByteArray out;
 	out.append(0xf0);
-	out.append(m_callsign.toUtf8());
-	out.append(10 - m_callsign.size(), ' ');
-	m_udp->writeDatagram(out, m_address, m_port);
+	out.append(m_modeinfo.callsign.toUtf8());
+	out.append(10 - m_modeinfo.callsign.size(), ' ');
+	m_udp->writeDatagram(out, m_address, m_modeinfo.port);
 #ifdef DEBUG
 	fprintf(stderr, "PING: ");
 	for(int i = 0; i < out.size(); ++i){
@@ -246,9 +227,9 @@ void P25Codec::send_disconnect()
 {
 	QByteArray out;
 	out.append(0xf1);
-	out.append(m_callsign.toUtf8());
-	out.append(10 - m_callsign.size(), ' ');
-	m_udp->writeDatagram(out, m_address, m_port);
+	out.append(m_modeinfo.callsign.toUtf8());
+	out.append(10 - m_modeinfo.callsign.size(), ' ');
+	m_udp->writeDatagram(out, m_address, m_modeinfo.port);
 #ifdef DEBUG
 	fprintf(stderr, "SEND: ");
 	for(int i = 0; i < out.size(); ++i){
@@ -257,44 +238,6 @@ void P25Codec::send_disconnect()
 	fprintf(stderr, "\n");
 	fflush(stderr);
 #endif
-}
-
-void P25Codec::start_tx()
-{
-	qDebug() << "start_tx() " << m_ttsid << " " << m_ttstext;
-	m_tx = true;
-	m_rxtimer->stop();
-	m_rxcnt = 0;
-
-#ifdef USE_FLITE
-
-	if(m_ttsid == 1){
-		tts_audio = flite_text_to_wave(m_ttstext.toStdString().c_str(), voice_kal);
-	}
-	else if(m_ttsid == 2){
-		tts_audio = flite_text_to_wave(m_ttstext.toStdString().c_str(), voice_awb);
-	}
-	else if(m_ttsid == 3){
-		tts_audio = flite_text_to_wave(m_ttstext.toStdString().c_str(), voice_slt);
-	}
-#endif
-	if(!m_txtimer->isActive()){
-		//fprintf(stderr, "press_tx()\n");
-		//audio_buffer.open(QBuffer::ReadWrite|QBuffer::Truncate);
-		//audiofile.setFileName("audio.pcm");
-		//audiofile.open(QIODevice::WriteOnly | QIODevice::Truncate);
-		if(m_ttsid == 0){
-			m_audio->set_input_buffer_size(640);
-			m_audio->start_capture();
-			//audioin->start(&audio_buffer);
-		}
-		m_txtimer->start(19);
-	}
-}
-
-void P25Codec::stop_tx()
-{
-	m_tx = false;
 }
 
 void P25Codec::transmit()
@@ -307,17 +250,15 @@ void P25Codec::transmit()
 	unsigned char buffer[22];
 	static uint8_t p25step = 0;
 #ifdef USE_FLITE
-	static uint16_t ttscnt = 0;
-
 	if(m_ttsid > 0){
 		for(int i = 0; i < 160; ++i){
-			if(ttscnt >= tts_audio->num_samples/2){
+			if(m_ttscnt >= tts_audio->num_samples/2){
 				//audiotx_cnt = 0;
 				pcm[i] = 0;
 			}
 			else{
-				pcm[i] = tts_audio->samples[ttscnt*2] / 2;
-				ttscnt++;
+				pcm[i] = tts_audio->samples[m_ttscnt*2] / 2;
+				m_ttscnt++;
 			}
 		}
 		m_mbeenc->encode(pcm, imbe);
@@ -454,26 +395,24 @@ void P25Codec::transmit()
 			break;
 		}
 
-		m_srcid = m_dmrid;
-		m_dstid = m_hostname;
-		m_fn = p25step;
-		m_udp->writeDatagram(txdata, m_address, m_port);
+		m_modeinfo.srcid = m_dmrid;
+		m_modeinfo.dstid = m_hostname;
+		m_modeinfo.frame_number = p25step;
+		m_udp->writeDatagram(txdata, m_address, m_modeinfo.port);
 	}
 	else{
 		txdata.append((char *)REC80, 17U);
-		m_udp->writeDatagram(txdata, m_address, m_port);
+		m_udp->writeDatagram(txdata, m_address, m_modeinfo.port);
 		fprintf(stderr, "P25 TX stopped\n");
 		m_txtimer->stop();
 		if(m_ttsid == 0){
 			m_audio->stop_capture();
 		}
-#ifdef USE_FLITE
-		ttscnt = 0;
-#endif
 		p25step = 0;
-		m_srcid = 0;
-		m_dstid = 0;
-		m_fn = 0;
+		m_modeinfo.srcid = 0;
+		m_modeinfo.dstid = 0;
+		m_modeinfo.frame_number = 0;
+		m_txcodecq.clear();
 	}
 #ifdef DEBUG
 		fprintf(stderr, "SEND: ");
@@ -490,6 +429,15 @@ void P25Codec::process_rx_data()
 	int nbAudioSamples = 0;
 	int16_t *audioSamples;
 
+	if(m_rxwatchdog++ > 50){
+		qDebug() << "P25 RX stream timeout ";
+		m_rxwatchdog = 0;
+		m_modeinfo.stream_state = STREAM_LOST;
+		m_modeinfo.ts = QDateTime::currentMSecsSinceEpoch();
+		emit update(m_modeinfo);
+		m_modeinfo.streamid = 0;
+	}
+
 	char imbe[11];
 	if(m_rximbeq.size() > 10){
 		for(int i = 0; i < 11; ++i){
@@ -502,15 +450,12 @@ void P25Codec::process_rx_data()
 		m_mbedec->resetAudio();
 		emit update_output_level(m_audio->level());
 	}
-}
-
-void P25Codec::deleteLater()
-{
-	if(m_status == CONNECTED_RW){
-		m_ping_timer->stop();
-		send_disconnect();
-		delete m_audio;
+	else if ( (m_modeinfo.stream_state == STREAM_END) || (m_modeinfo.stream_state == STREAM_LOST) ){
+		m_rxtimer->stop();
+		m_audio->stop_playback();
+		m_rxwatchdog = 0;
+		m_modeinfo.streamid = 0;
+		m_rxcodecq.clear();
+		qDebug() << "P25 playback stopped";
 	}
-	m_cnt = 0;
-	QObject::deleteLater();
 }

@@ -100,7 +100,7 @@ void AudioEngine::init()
 
 		m_out = new QAudioOutput(info, tempformat, this);
 		m_out->setBufferSize(1600);
-		m_outdev = m_out->start();
+		//m_outdev = m_out->start();
 	}
 
 	devices = QAudioDeviceInfo::availableDevices(QAudio::AudioInput);
@@ -175,6 +175,17 @@ void AudioEngine::stop_capture()
 	m_in->stop();
 }
 
+void AudioEngine::start_playback()
+{
+	m_out->reset();
+	m_outdev = m_out->start();
+}
+
+void AudioEngine::stop_playback()
+{
+	m_out->stop();
+}
+
 void AudioEngine::input_data_received()
 {
 	QByteArray data;
@@ -208,11 +219,11 @@ void AudioEngine::write(int16_t *pcm, size_t s)
 	}
 }
 
-uint16_t AudioEngine::read(int16_t *pcm, int s)
+uint16_t AudioEngine::read(int16_t *pcm, int s, int g)
 {
 	if(m_audioinq.size() >= s){
 		for(int i = 0; i < s; ++i){
-			pcm[i] = m_audioinq.dequeue();
+			pcm[i] = m_audioinq.dequeue() / g;
 		}
 		return 1;
 	}

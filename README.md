@@ -42,7 +42,7 @@ Port: UDP port of node, usually 4569.
 
 Add DTMF commands like \*3node, \*1node, \*70, etc in the IAX DTMF box and hit send to send the DTMF string.  The asterisk (*) character is already added on the Droidstar app, so only input the numeric portion of the command (70 instead of *70, etc). Details on various commands can be found at the AllStar wiki and others.
 
-# Compiling on Linux
+# Compiling
 This software is written in C++ on Linux and requires mbelib and QT5, and natually the devel packages to build.  With these requirements met, run the following:
 ```
 qmake
@@ -58,6 +58,7 @@ And if pulseaudio is not currently installed:
 ```
 sudo apt-get install pulseaudio
 ```
+My primary development platform is Fedora Linux.  With a proper build environment, the build instructions apply to all other platforms/distributions, including Windows and macOS.
 
 # Builds
 64 and 32 bit Windows builds are available from the releases section.  These are statically linked, stand-alone executables, no install required.  *NO support for Windows builds, either building or using.*

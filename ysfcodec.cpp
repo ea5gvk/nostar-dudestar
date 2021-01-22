@@ -16,7 +16,6 @@
 */
 
 #include "ysfcodec.h"
-
 #include "YSFConvolution.h"
 #include "CRCenc.h"
 #include "Golay24128.h"
@@ -24,61 +23,23 @@
 #include <iostream>
 #include <cstring>
 
-#define DEBUG
+//#define DEBUG
 
 const int dvsi_interleave[49] = {
-		0, 3, 6,  9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 41, 43, 45, 47,
-		1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34, 37, 40, 42, 44, 46, 48,
-		2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35, 38
+	0, 3, 6,  9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 41, 43, 45, 47,
+	1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34, 37, 40, 42, 44, 46, 48,
+	2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35, 38
 };
 
-#ifdef USE_FLITE
-extern "C" {
-extern cst_voice * register_cmu_us_slt(const char *);
-extern cst_voice * register_cmu_us_kal16(const char *);
-extern cst_voice * register_cmu_us_awb(const char *);
-}
-#endif
-
 YSFCodec::YSFCodec(QString callsign, QString hostname, QString host, int port, QString vocoder, QString audioin, QString audioout) :
-	m_callsign(callsign),
-	m_hostname(hostname),
-	m_host(host),
-	m_port(port),
-	m_tx(false),
-	m_txcnt(0),
-	m_rxcnt(0),
-	m_ttsid(0),
-	m_cnt(0),
-	m_type(-1),
-	m_fn(0),
-	m_streamid(0),
-	m_vocoder(vocoder),
-	m_ambedev(nullptr),
-	m_hwrx(false),
-	m_hwtx(false),
-	m_fcs(false),
-	m_audioin(audioin),
-	m_audioout(audioout)
+	Codec(callsign, 0, hostname, host, port, vocoder, audioin, audioout),
+
+	m_fcs(false)
 {
-#ifdef USE_FLITE
-	flite_init();
-	voice_slt = register_cmu_us_slt(nullptr);
-	voice_kal = register_cmu_us_kal16(nullptr);
-	voice_awb = register_cmu_us_awb(nullptr);
-#endif
 }
 
 YSFCodec::~YSFCodec()
 {
-}
-
-void YSFCodec::in_audio_vol_changed(qreal v){
-	m_audio->set_input_volume(v);
-}
-
-void YSFCodec::out_audio_vol_changed(qreal v){
-	m_audio->set_output_volume(v);
 }
 
 void YSFCodec::decoder_gain_changed(qreal v)
@@ -108,8 +69,8 @@ void YSFCodec::process_udp()
 	fflush(stderr);
 #endif
 	if(((buf.size() == 14) && (m_hostname.left(3) != "FCS")) || ((buf.size() == 7) && (m_hostname.left(3) == "FCS"))){
-		if(m_status == CONNECTING){
-			m_status = CONNECTED_RW;
+		if(m_modeinfo.status == CONNECTING){
+			m_modeinfo.status = CONNECTED_RW;
 			m_txtimer = new QTimer();
 			connect(m_txtimer, SIGNAL(timeout()), this, SLOT(transmit()));
 			m_ping_timer = new QTimer();
@@ -128,7 +89,6 @@ void YSFCodec::process_udp()
 				m_ambedev = new SerialAMBE("YSF");
 				m_ambedev->connect_to_serial(m_vocoder);
 				connect(m_ambedev, SIGNAL(data_ready()), this, SLOT(get_ambe()));
-				//m_hwrxtimer->start(20);
 			}
 			else{
 				m_hwrx = false;
@@ -142,48 +102,81 @@ void YSFCodec::process_udp()
 				::sprintf(info, "%9u%9u%-6.6s%-12.12s%7u", 438000000, 438000000, "AA00AA", "MMDVM", 1234567);
 				::memset(info + 43U, ' ', 57U);
 				out.append(info, 100);
-				m_udp->writeDatagram(out, m_address, m_port);
+				m_udp->writeDatagram(out, m_address, m_modeinfo.port);
 				p = 800;
 				set_fcs_mode(true, m_hostname.left(8).toStdString());
 			}
 			m_ping_timer->start(p);
-			m_rxcnt = 0;
 		}
-		m_cnt++;
+		if((m_modeinfo.stream_state == STREAM_LOST) || (m_modeinfo.stream_state == STREAM_END) ){
+			m_modeinfo.stream_state = STREAM_IDLE;
+		}
+		m_modeinfo.count++;
 	}
 	if((buf.size() == 10) && (::memcmp(buf.data(), "ONLINE", 6U) == 0)){
-		m_cnt++;
+		m_modeinfo.count++;
+		if((m_modeinfo.stream_state == STREAM_LOST) || (m_modeinfo.stream_state == STREAM_END) ){
+			m_modeinfo.stream_state = STREAM_IDLE;
+		}
 	}
 	uint8_t *p_data = nullptr;
 	if((buf.size() == 155) && (::memcmp(buf.data(), "YSFD", 4U) == 0)){
 		memcpy(ysftag, buf.data() + 4, 10);ysftag[10] = '\0';
-		m_gateway = QString(ysftag);
+		m_modeinfo.gw = QString(ysftag);
 		p_data = (uint8_t *)buf.data() + 35;
-		if(!m_tx && (m_rxcnt++ == 0)){
-			m_rxtimer->start(19);
-		}
 	}
 	else if(buf.size() == 130){
 		memcpy(ysftag, buf.data() + 0x79, 8);ysftag[8] = '\0';
-		m_gateway = QString(ysftag);
+		m_modeinfo.gw = QString(ysftag);
 		p_data = (uint8_t *)buf.data();
-		if(!m_tx && (m_rxcnt++ == 0)){
-			m_rxtimer->start(19);
-		}
 	}
 
 	if(p_data != nullptr){
+		m_rxwatchdog = 0;
 		CYSFFICH fich;
 		if(fich.decode(p_data)){
 			m_fi = fich.getFI();
-			m_fn = fich.getFN();
-			m_ft = fich.getFT();
-			m_path = fich.getVoIP();
-			m_type = fich.getDT();
+			m_modeinfo.frame_number = fich.getFN();
+			m_modeinfo.frame_total = fich.getFT();
+			m_modeinfo.path = fich.getVoIP();
+			m_modeinfo.type = fich.getDT();
+
+			if(m_fi == YSF_FI_HEADER){
+				m_modeinfo.stream_state = STREAM_NEW;
+				m_modeinfo.ts = QDateTime::currentMSecsSinceEpoch();
+				if(!m_tx && !m_rxtimer->isActive() ){
+					m_audio->start_playback();
+					m_rxtimer->start(19);
+				}
+				qDebug() << "New YSF stream from gw" << m_modeinfo.gw;
+			}
+			else if(m_fi == YSF_FI_TERMINATOR){
+				m_modeinfo.stream_state = STREAM_END;
+				m_modeinfo.ts = QDateTime::currentMSecsSinceEpoch();
+				qDebug() << "YSF stream ended" << m_modeinfo.gw;
+			}
+			else if(YSF_FI_COMMUNICATIONS){
+				if( (m_modeinfo.stream_state == STREAM_END) ||
+					(m_modeinfo.stream_state == STREAM_LOST) ||
+					(m_modeinfo.stream_state == STREAM_IDLE))
+				{
+					m_modeinfo.stream_state = STREAM_NEW;
+					m_modeinfo.ts = QDateTime::currentMSecsSinceEpoch();
+					if(!m_tx && !m_rxtimer->isActive() ){
+						m_audio->start_playback();
+						m_rxtimer->start(19);
+					}
+					qDebug() << "New YSF stream in progress from gw" << m_modeinfo.gw;
+
+				}
+				else{
+					m_modeinfo.stream_state = STREAMING;
+				}
+			}
 		}
 		decode(p_data);
 	}
-	emit update();
+	emit update(m_modeinfo);
 }
 
 void YSFCodec::hostname_lookup(QHostInfo i)
@@ -195,8 +188,8 @@ void YSFCodec::hostname_lookup(QHostInfo i)
 			out.append('I');
 			out.append('N');
 			out.append('G');
-			out.append(m_callsign.toUtf8());
-			out.append(6 - m_callsign.size(), ' ');
+			out.append(m_modeinfo.callsign.toUtf8());
+			out.append(6 - m_modeinfo.callsign.size(), ' ');
 			out.append(m_hostname.toUtf8());
 			out.append(7, '\x00');
 		}
@@ -205,13 +198,13 @@ void YSFCodec::hostname_lookup(QHostInfo i)
 			out.append('S');
 			out.append('F');
 			out.append('P');
-			out.append(m_callsign.toUtf8());
-			out.append(10 - m_callsign.size(), ' ');
+			out.append(m_modeinfo.callsign.toUtf8());
+			out.append(10 - m_modeinfo.callsign.size(), ' ');
 		}
 		m_address = i.addresses().first();
 		m_udp = new QUdpSocket(this);
 		connect(m_udp, SIGNAL(readyRead()), this, SLOT(process_udp()));
-		m_udp->writeDatagram(out, m_address, m_port);
+		m_udp->writeDatagram(out, m_address, m_modeinfo.port);
 #ifdef DEBUG
 		fprintf(stderr, "CONN: ");
 		for(int i = 0; i < out.size(); ++i){
@@ -223,12 +216,6 @@ void YSFCodec::hostname_lookup(QHostInfo i)
 	}
 }
 
-void YSFCodec::send_connect()
-{
-	m_status = CONNECTING;
-	QHostInfo::lookupHost(m_host, this, SLOT(hostname_lookup(QHostInfo)));
-}
-
 void YSFCodec::send_ping()
 {
 	QByteArray out;
@@ -237,8 +224,8 @@ void YSFCodec::send_ping()
 		out.append('I');
 		out.append('N');
 		out.append('G');
-		out.append(m_callsign.toUtf8());
-		out.append(6 - m_callsign.size(), ' ');
+		out.append(m_modeinfo.callsign.toUtf8());
+		out.append(6 - m_modeinfo.callsign.size(), ' ');
 		out.append(m_hostname.toUtf8());
 		out.append(7, '\x00');
 	}
@@ -247,10 +234,10 @@ void YSFCodec::send_ping()
 		out.append('S');
 		out.append('F');
 		out.append('P');
-		out.append(m_callsign.toUtf8());
-		out.append(10 - m_callsign.size(), ' ');
+		out.append(m_modeinfo.callsign.toUtf8());
+		out.append(10 - m_modeinfo.callsign.size(), ' ');
 	}
-	m_udp->writeDatagram(out, m_address, m_port);
+	m_udp->writeDatagram(out, m_address, m_modeinfo.port);
 #ifdef DEBUG
 	fprintf(stderr, "PING: ");
 	for(int i = 0; i < out.size(); ++i){
@@ -277,10 +264,10 @@ void YSFCodec::send_disconnect()
 		out.append('S');
 		out.append('F');
 		out.append('U');
-		out.append(m_callsign.toUtf8());
-		out.append(10 - m_callsign.size(), ' ');
+		out.append(m_modeinfo.callsign.toUtf8());
+		out.append(10 - m_modeinfo.callsign.size(), ' ');
 	}
-	m_udp->writeDatagram(out, m_address, m_port);
+	m_udp->writeDatagram(out, m_address, m_modeinfo.port);
 #ifdef DEBUG
 	fprintf(stderr, "SEND: ");
 	for(int i = 0; i < out.size(); ++i){
@@ -370,7 +357,7 @@ void YSFCodec::decode(uint8_t* data)
 	::memset(v_tmp, 0, 7U);
 
 	data += YSF_SYNC_LENGTH_BYTES + YSF_FICH_LENGTH_BYTES;
-	switch(m_type){
+	switch(m_modeinfo.type){
 	case 0:
 		decode_vd1(data, dt);
 		break;
@@ -380,14 +367,14 @@ void YSFCodec::decode(uint8_t* data)
 		break;
 	}
 
-	switch (m_fn) {
+	switch (m_modeinfo.frame_number) {
 	case 0:
 		if(m_fi == YSF_FI_COMMUNICATIONS){
-			m_dst = QString((char *)dt);
+			m_modeinfo.dst = QString((char *)dt);
 		}
 		break;
 	case 1:
-		m_src = QString((char *)dt);
+		m_modeinfo.src = QString((char *)dt);
 		break;
 	}
 
@@ -451,7 +438,7 @@ void YSFCodec::decode(uint8_t* data)
 			interleave(v_tmp);
 		}
 		for(int i = 0; i < 7; ++i){
-			m_rxambeq.append(v_tmp[i]);
+			m_rxcodecq.append(v_tmp[i]);
 		}
 	}
 }
@@ -473,50 +460,6 @@ void YSFCodec::interleave(uint8_t *ambe)
 		dvsi_data[j/8] += (ambe_data[i])<<(7-(j%8));
 	}
 	memcpy(ambe, dvsi_data, 7);
-}
-
-void YSFCodec::start_tx()
-{
-	//std::cerr << "Pressed TX buffersize == " << audioin->bufferSize() << std::endl;
-	qDebug() << "start_tx() " << m_ttsid << " " << m_ttstext;
-	m_tx = true;
-	m_txcnt = 0;
-	m_rxtimer->stop();
-	if(m_hwtx){
-		m_ambedev->clear_queue();
-	}
-	m_rxcnt = 0;
-	m_ttscnt = 0;
-	m_transmitcnt = 0;
-#ifdef USE_FLITE
-
-	if(m_ttsid == 1){
-		tts_audio = flite_text_to_wave(m_ttstext.toStdString().c_str(), voice_kal);
-	}
-	else if(m_ttsid == 2){
-		tts_audio = flite_text_to_wave(m_ttstext.toStdString().c_str(), voice_awb);
-	}
-	else if(m_ttsid == 3){
-		tts_audio = flite_text_to_wave(m_ttstext.toStdString().c_str(), voice_slt);
-	}
-#endif
-	if(!m_txtimer->isActive()){
-		//fprintf(stderr, "press_tx()\n");
-		//audio_buffer.open(QBuffer::ReadWrite|QBuffer::Truncate);
-		//audiofile.setFileName("audio.pcm");
-		//audiofile.open(QIODevice::WriteOnly | QIODevice::Truncate);
-		if(m_ttsid == 0){
-			m_audio->set_input_buffer_size(640);
-			m_audio->start_capture();
-			//audioin->start(&audio_buffer);
-		}
-		m_txtimer->start(19);
-	}
-}
-
-void YSFCodec::stop_tx()
-{
-	m_tx = false;
 }
 
 void YSFCodec::transmit()
@@ -555,12 +498,12 @@ void YSFCodec::transmit()
 			for(int j = 0; j < 8; ++j){
 				ambe[i] |= (ambe_frame[(i*8)+j] << (7-j));
 			}
-			m_ambeq.append(ambe[i]);
+			m_txcodecq.append(ambe[i]);
 		}
 	}
-	if(m_tx && (m_ambeq.size() >= 35)){
+	if(m_tx && (m_txcodecq.size() >= 35)){
 		for(int i = 0; i < 35; ++i){
-			m_ambe[i] = m_ambeq.dequeue();
+			m_ambe[i] = m_txcodecq.dequeue();
 		}
 		send_frame();
 	}
@@ -584,7 +527,7 @@ void YSFCodec::send_frame()
 		++m_txcnt;
 		frame_size = ::memcmp(m_ysfFrame, "YSFD", 4) ? 130 : 155;
 		txdata.append((char *)m_ysfFrame, frame_size);
-		m_udp->writeDatagram(txdata, m_address, m_port);
+		m_udp->writeDatagram(txdata, m_address, m_modeinfo.port);
 #ifdef DEBUG
 		fprintf(stderr, "SEND:%d: ", txdata.size());
 		for(int i = 0; i < txdata.size(); ++i){
@@ -605,7 +548,7 @@ void YSFCodec::send_frame()
 		m_ttscnt = 0;
 		frame_size = ::memcmp(m_ysfFrame, "YSFD", 4) ? 130 : 155;
 		txdata.append((char *)m_ysfFrame, frame_size);
-		m_udp->writeDatagram(txdata, m_address, m_port);
+		m_udp->writeDatagram(txdata, m_address, m_modeinfo.port);
 	}
 }
 
@@ -613,7 +556,7 @@ void YSFCodec::encode_header(bool eot)
 {
 	unsigned char callsign[12];
 	::memcpy(callsign, "          ", 10);
-	::memcpy(callsign, m_callsign.toStdString().c_str(), ::strlen(m_callsign.toStdString().c_str()));
+	::memcpy(callsign, m_modeinfo.callsign.toStdString().c_str(), ::strlen(m_modeinfo.callsign.toStdString().c_str()));
 
 	uint8_t *p_frame = m_ysfFrame;
 	if(m_fcs){
@@ -668,7 +611,7 @@ void YSFCodec::encode_dv2()
 {
 	unsigned char callsign[12];
 	::memcpy(callsign, "          ", 10);
-	::memcpy(callsign, m_callsign.toStdString().c_str(), ::strlen(m_callsign.toStdString().c_str()));
+	::memcpy(callsign, m_modeinfo.callsign.toStdString().c_str(), ::strlen(m_modeinfo.callsign.toStdString().c_str()));
 	uint8_t *p_frame = m_ysfFrame;
 	if(m_fcs){
 		::memset(p_frame + 120U, 0, 10U);
@@ -969,7 +912,7 @@ void YSFCodec::get_ambe()
 
 	if(m_ambedev->get_ambe(ambe)){
 		for(int i = 0; i < 7; ++i){
-			m_ambeq.append(ambe[i]);
+			m_txcodecq.append(ambe[i]);
 		}
 	}
 }
@@ -981,12 +924,25 @@ void YSFCodec::process_rx_data()
 	int16_t audio[160];
 	uint8_t ambe[7];
 
-	if((!m_tx) && (m_rxambeq.size() > 6) ){
+	if(m_rxwatchdog++ > 20){
+		qDebug() << "YSF RX stream timeout ";
+		m_modeinfo.stream_state = STREAM_LOST;
+		m_modeinfo.ts = QDateTime::currentMSecsSinceEpoch();
+		emit update(m_modeinfo);
+	}
+
+	if((!m_tx) && (m_rxcodecq.size() > 6) ){
 		for(int i = 0; i < 7; ++i){
-			ambe[i] = m_rxambeq.dequeue();
+			ambe[i] = m_rxcodecq.dequeue();
 		}
 	}
-	else{
+	else if ( (m_modeinfo.stream_state == STREAM_END) || (m_modeinfo.stream_state == STREAM_LOST) ){
+		m_rxtimer->stop();
+		m_audio->stop_playback();
+		m_rxwatchdog = 0;
+		m_modeinfo.streamid = 0;
+		m_rxcodecq.clear();
+		qDebug() << "YSF playback stopped";
 		return;
 	}
 
@@ -1005,18 +961,4 @@ void YSFCodec::process_rx_data()
 		m_mbedec->resetAudio();
 		emit update_output_level(m_audio->level());
 	}
-}
-
-void YSFCodec::deleteLater()
-{
-	if(m_status == CONNECTED_RW){
-		m_ping_timer->stop();
-		send_disconnect();
-		delete m_audio;
-		if(m_ambedev != nullptr){
-			delete m_ambedev;
-		}
-	}
-	m_cnt = 0;
-	QObject::deleteLater();
 }
