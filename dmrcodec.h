@@ -18,13 +18,8 @@
 #ifndef DMRCODEC_H
 #define DMRCODEC_H
 
-#include <QObject>
-#include <QtNetwork>
 #include "codec.h"
-#include "serialambe.h"
-#include "mbedec.h"
-#include "mbeenc.h"
-#include <inttypes.h>
+//#include <inttypes.h>
 #include "DMRData.h"
 #include "cbptc19696.h"
 

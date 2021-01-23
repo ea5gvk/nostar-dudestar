@@ -178,7 +178,7 @@ void P25Codec::process_udp()
 			//m_codecq.enqueue(buf.data()[i + offset]);
 		//}
 		for (int i = 0; i < 11; ++i){
-			m_rximbeq.append(buf.data()[offset+i]);
+			m_rxcodecq.append(buf.data()[offset+i]);
 		}
 		emit update(m_modeinfo);
 	}
@@ -439,9 +439,9 @@ void P25Codec::process_rx_data()
 	}
 
 	char imbe[11];
-	if(m_rximbeq.size() > 10){
+	if(m_rxcodecq.size() > 10){
 		for(int i = 0; i < 11; ++i){
-			imbe[i] = m_rximbeq.dequeue();
+			imbe[i] = m_rxcodecq.dequeue();
 		}
 		m_mbedec->process_p25((uint8_t *)&imbe);
 		audioSamples = m_mbedec->getAudio(nbAudioSamples);

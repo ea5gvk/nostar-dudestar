@@ -18,12 +18,7 @@
 #ifndef DCSCODEC_H
 #define DCSCODEC_H
 
-#include <QObject>
-#include <QtNetwork>
 #include "codec.h"
-#include "serialambe.h"
-#include "mbedec.h"
-#include "mbeenc.h"
 
 class DCSCodec : public Codec
 {

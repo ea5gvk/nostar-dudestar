@@ -47,11 +47,8 @@ const unsigned char YSF_MR_DIRECT   = 0x00U;
 const unsigned char YSF_MR_NOT_BUSY = 0x01U;
 const unsigned char YSF_MR_BUSY     = 0x02U;
 
-#include <QObject>
-#include <QtNetwork>
-#include "codec.h"
-
 #include <string>
+#include "codec.h"
 #include "YSFFICH.h"
 
 class YSFCodec : public Codec

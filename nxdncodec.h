@@ -18,13 +18,8 @@
 #ifndef NXDNCODEC_H
 #define NXDNCODEC_H
 
-#include <QObject>
-#include <inttypes.h>
-#include <QtNetwork>
+//#include <inttypes.h>
 #include "codec.h"
-#include "serialambe.h"
-#include "mbedec.h"
-#include "mbeenc.h"
 
 class NXDNCodec : public Codec
 {
@@ -35,15 +30,12 @@ public:
 	unsigned char * get_frame();
 	unsigned char * get_eot(){m_eot = true; return get_frame();}
 	void set_hwtx(bool hw){m_hwtx = hw;}
-	bool get_hwrx() { return m_hwrx; }
-	bool get_hwtx() { return m_hwtx; }
 private slots:
 	void process_udp();
 	void process_rx_data();
 	void get_ambe();
 	void send_ping();
 	void send_disconnect();
-
 	void transmit();
 	void hostname_lookup(QHostInfo i);
 	void swrx_state_changed(int s) {m_hwrx = !s; }
@@ -58,15 +50,7 @@ private:
 	uint8_t m_sacch[5];
 	uint8_t m_layer3[22];
 	uint8_t m_ambe[36];
-	MBEDecoder *m_mbedec;
-	MBEEncoder *m_mbeenc;
-	QString m_vocoder;
-	SerialAMBE *m_ambedev;
-	bool m_hwrx;
-	bool m_hwtx;
 	uint8_t packet_size;
-	QQueue<char> m_rxambeq;
-	QQueue<char> m_ambeq;
 
 	void encode_header();
 	void encode_data();

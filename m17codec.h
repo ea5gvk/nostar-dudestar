@@ -17,6 +17,7 @@
 
 #ifndef M17CODEC_H
 #define M17CODEC_H
+
 #include <string>
 #include "codec.h"
 #include "codec2/codec2.h"

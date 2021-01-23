@@ -18,11 +18,6 @@
 #ifndef P25CODEC_H
 #define P25CODEC_H
 
-#include <QObject>
-#include <QtNetwork>
-#include "codec.h"
-#include "mbedec.h"
-#include "mbeenc.h"
 #include "codec.h"
 
 class P25Codec : public Codec
@@ -38,10 +33,6 @@ private:
 	int m_hostname;
 	uint32_t m_dmrid;
 	uint32_t m_txdstid;
-	MBEDecoder *m_mbedec;
-	MBEEncoder *m_mbeenc;
-	QQueue<unsigned char> m_codecq;
-	QQueue<char> m_rximbeq;
 private slots:
 	void process_udp();
 	void process_rx_data();

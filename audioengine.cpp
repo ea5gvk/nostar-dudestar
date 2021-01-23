@@ -136,7 +136,8 @@ void AudioEngine::init()
         int sr = 8000;
         if(MACHAK){
 			if( (info.deviceName() == "Built-in Microphone") ||
-				(info.deviceName() == "MacBook Pro Microphone") ){
+				(info.deviceName() == "MacBook Pro Microphone") ||
+				(info.deviceName() == "MacBook Pro Mikrofon")){
                 sr = 44100;
                 m_srm = 5;
             }

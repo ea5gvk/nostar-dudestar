@@ -41,11 +41,7 @@ const unsigned char BIT_MASK_TABLE[] = { 0x80U, 0x40U, 0x20U, 0x10U, 0x08U, 0x04
 
 NXDNCodec::NXDNCodec(QString callsign, uint16_t nxdnid, uint32_t gwid, QString host, int port, QString vocoder, QString audioin, QString audioout) :
 	Codec(callsign, 0, NULL, host, port, vocoder, audioin, audioout),
-	m_nxdnid(nxdnid),
-	m_vocoder(vocoder),
-	m_ambedev(nullptr),
-	m_hwrx(false),
-	m_hwtx(false)
+	m_nxdnid(nxdnid)
 {
 	m_txcnt = 0;
 	m_txtimerint = 19;
@@ -155,7 +151,7 @@ void NXDNCodec::process_udp()
 			interleave(ambe);
 		}
 		for(int i = 0; i < 7; ++i){
-			m_rxambeq.append(ambe[i]);
+			m_rxcodecq.append(ambe[i]);
 		}
 
 		char t[7];
@@ -171,7 +167,7 @@ void NXDNCodec::process_udp()
 			interleave(ambe);
 		}
 		for(int i = 0; i < 7; ++i){
-			m_rxambeq.append(ambe[i]);
+			m_rxcodecq.append(ambe[i]);
 		}
 
 		memcpy(ambe, buf.data() + 29, 7);
@@ -179,7 +175,7 @@ void NXDNCodec::process_udp()
 			interleave(ambe);
 		}
 		for(int i = 0; i < 7; ++i){
-			m_rxambeq.append(ambe[i]);
+			m_rxcodecq.append(ambe[i]);
 		}
 
 		d = &(buf.data()[35]);
@@ -194,7 +190,7 @@ void NXDNCodec::process_udp()
 			interleave(ambe);
 		}
 		for(int i = 0; i < 7; ++i){
-			m_rxambeq.append(ambe[i]);
+			m_rxcodecq.append(ambe[i]);
 		}
 	}
 	emit update(m_modeinfo);
@@ -332,13 +328,13 @@ void NXDNCodec::transmit()
 				ambe[i] |= (ambe_frame[(i*8)+j] << (7-j));
 			}
 			ambe[6] &= 0x80;
-			m_ambeq.append(ambe[i]);
+			m_txcodecq.append(ambe[i]);
 		}
 	}
 
-	if(m_tx && (m_ambeq.size() >= 28)){
+	if(m_tx && (m_txcodecq.size() >= 28)){
 		for(int i = 0; i < 28; ++i){
-			m_ambe[i] = m_ambeq.dequeue();
+			m_ambe[i] = m_txcodecq.dequeue();
 		}
 		send_frame();
 	}
@@ -665,7 +661,7 @@ void NXDNCodec::get_ambe()
 
 	if(m_ambedev->get_ambe(ambe)){
 		for(int i = 0; i < 7; ++i){
-			m_ambeq.append(ambe[i]);
+			m_txcodecq.append(ambe[i]);
 		}
 	}
 }
@@ -683,12 +679,12 @@ void NXDNCodec::process_rx_data()
 		m_modeinfo.stream_state = STREAM_LOST;
 		m_modeinfo.ts = QDateTime::currentMSecsSinceEpoch();
 		emit update(m_modeinfo);
-		m_rxambeq.clear();
+		m_rxcodecq.clear();
 	}
 
-	if((!m_tx) && (m_rxambeq.size() > 6) ){
+	if((!m_tx) && (m_rxcodecq.size() > 6) ){
 		for(int i = 0; i < 7; ++i){
-			ambe[i] = m_rxambeq.dequeue();
+			ambe[i] = m_rxcodecq.dequeue();
 		}
 	}
 	else if ( (m_modeinfo.stream_state == STREAM_END) || (m_modeinfo.stream_state == STREAM_LOST) ){
