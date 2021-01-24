@@ -615,6 +615,7 @@ void IAXCodec::process_udp()
 			m_pingtimer->start(2000);
 			m_audio = new AudioEngine(m_audioin, m_audioout);
 			m_audio->init();
+			m_audio->start_playback();
 			m_audio->set_input_buffer_size(640);
 			m_audio->start_capture();
 			m_txtimer->start(19);
