@@ -100,6 +100,7 @@ void AudioEngine::init()
 
 		m_out = new QAudioOutput(info, tempformat, this);
 		m_out->setBufferSize(1600);
+		connect(m_out, SIGNAL(stateChanged(QAudio::State)), this, SLOT(handleStateChanged(QAudio::State)));
 		//m_outdev = m_out->start();
 	}
 
@@ -178,7 +179,7 @@ void AudioEngine::stop_capture()
 
 void AudioEngine::start_playback()
 {
-	m_out->reset();
+	//m_out->reset();
 	m_outdev = m_out->start();
 }
 
@@ -248,4 +249,24 @@ uint16_t AudioEngine::read(int16_t *pcm)
 		pcm[i] = m_audioinq.dequeue();
 	}
 	return s;
+}
+
+void AudioEngine::handleStateChanged(QAudio::State newState)
+{
+	switch (newState) {
+	case QAudio::ActiveState:
+		qDebug() << "AudioOut state active";
+		break;
+	case QAudio::SuspendedState:
+		qDebug() << "AudioOut state suspended";
+		break;
+	case QAudio::IdleState:
+		qDebug() << "AudioOut state idle";
+		break;
+	case QAudio::StoppedState:
+		qDebug() << "AudioOut state stopped";
+		break;
+	default:
+		break;
+	}
 }

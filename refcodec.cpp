@@ -178,6 +178,7 @@ void REFCodec::process_udp()
 		if(streamid != m_modeinfo.streamid){
 			return;
 		}
+		m_rxwatchdog = 0;
 		m_modeinfo.stream_state = STREAMING;
 		m_modeinfo.frame_number = buf.data()[16];
 		if((buf.data()[16] == 0) && (buf.data()[26] == 0x55) && (buf.data()[27] == 0x2d) && (buf.data()[28] == 0x16)){

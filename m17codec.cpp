@@ -20,7 +20,7 @@
 #include "m17codec.h"
 #define M17CHARACTERS " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-/."
 
-//#define DEBUG
+#define DEBUG
 
 M17Codec::M17Codec(QString callsign, char module, QString hostname, QString host, int port, QString audioin, QString audioout) :
 	Codec(callsign, module, hostname, host, port, NULL, audioin, audioout),
@@ -159,24 +159,25 @@ void M17Codec::process_udp()
 			m_modeinfo.streamid = streamid;
 			m_audio->start_playback();
 
-			if(!m_rxtimer->isActive()){
-				m_rxtimer->start(19);
+			if((buf.data()[19] & 0x06U) == 0x04U){
+				m_modeinfo.type = 1;//"3200 Voice";
+				set_mode(true);
 			}
+			else{
+				m_modeinfo.type = 0;//"1600 V/D";
+				set_mode(false);
+			}
+
+			if(!m_rxtimer->isActive()){
+				m_rxtimer->start(m_modeinfo.type ? 19 : 38);
+			}
+
 			m_modeinfo.stream_state = STREAM_NEW;
 			m_modeinfo.ts = QDateTime::currentMSecsSinceEpoch();
 			qDebug() << "New stream from " << m_modeinfo.src << " to " << m_modeinfo.dst << " id == " << QString::number(m_modeinfo.streamid, 16);
 		}
 		else{
 			m_modeinfo.stream_state = STREAMING;
-		}
-
-		if((buf.data()[19] & 0x06U) == 0x04U){
-			m_modeinfo.type = 1;//"3200 Voice";
-			set_mode(true);
-		}
-		else{
-			m_modeinfo.type = 0;//"1600 V/D";
-			set_mode(false);
 		}
 
 		m_modeinfo.frame_number = (buf.data()[34] << 8) | (buf.data()[35] & 0xff);
@@ -480,4 +481,3 @@ void M17Codec::process_rx_data()
 	m_audio->write(pcm, s);
 	emit update_output_level(m_audio->level());
 }
-

@@ -143,6 +143,7 @@ void NXDNCodec::process_udp()
 		}
 		else{
 			m_modeinfo.stream_state = STREAMING;
+			m_modeinfo.frame_number++;
 		}
 		m_rxwatchdog = 0;
 

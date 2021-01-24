@@ -1425,7 +1425,10 @@ void DudeStar::process_connect()
 		callsign = ui->editCallsign->text().toUpper();
 		dmrid = ui->editDMRID->text().toUInt();
 
-		if(callsign != m_dmrids[dmrid]){
+		if( (callsign.size() < 4) ||
+			(dmrid < 250000) ||
+			(callsign != m_dmrids[dmrid]))
+		{
 			QMessageBox::warning(this, tr("Connection refused"), tr("A valid callsign and DMR ID are required to use Dudestar on any mode, and they must match. "
 																	"If you have entered a valid DMR ID that matches the entered callsign, and you are still seeing "
 																	"this message, then you either have to click update ID files button or wait until your DMR ID "

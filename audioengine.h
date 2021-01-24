@@ -63,6 +63,7 @@ private:
 
 private slots:
 	void input_data_received();
+	void handleStateChanged(QAudio::State newState);
 };
 
 #endif // AUDIOENGINE_H
