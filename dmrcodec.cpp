@@ -194,7 +194,7 @@ void DMRCodec::process_udp()
 		else if((uint8_t)buf.data()[15] & 0x01){
 			m_audio->start_playback();
 			if(!m_rxtimer->isActive()){
-				m_rxtimer->start(19);
+				m_rxtimer->start(20);
 			}
 			m_modeinfo.stream_state = STREAM_NEW;
 			m_modeinfo.ts = QDateTime::currentMSecsSinceEpoch();
@@ -214,7 +214,7 @@ void DMRCodec::process_udp()
 		if(!m_tx && ( (m_modeinfo.stream_state == STREAM_LOST) || (m_modeinfo.stream_state == STREAM_END) || (m_modeinfo.stream_state == STREAM_IDLE) )){
 			m_audio->start_playback();
 			if(!m_rxtimer->isActive()){
-				m_rxtimer->start(19);
+				m_rxtimer->start(20);
 			}
 			m_modeinfo.stream_state = STREAM_NEW;
 		}
@@ -818,6 +818,21 @@ void DMRCodec::process_rx_data()
 		for(int i = 0; i < 9; ++i){
 			ambe[i] = m_rxcodecq.dequeue();
 		}
+		if(m_hwrx){
+			m_ambedev->decode(ambe);
+
+			if(m_ambedev->get_audio(audio)){
+				m_audio->write(audio, 160);
+				emit update_output_level(m_audio->level());
+			}
+		}
+		else{
+			m_mbedec->process_dmr(ambe);
+			audioSamples = m_mbedec->getAudio(nbAudioSamples);
+			m_audio->write(audioSamples, nbAudioSamples);
+			m_mbedec->resetAudio();
+			emit update_output_level(m_audio->level());
+		}
 	}
 	else if ( (m_modeinfo.stream_state == STREAM_END) || (m_modeinfo.stream_state == STREAM_LOST) ){
 		m_rxtimer->stop();
@@ -827,20 +842,5 @@ void DMRCodec::process_rx_data()
 		m_rxcodecq.clear();
 		qDebug() << "DMR playback stopped";
 		return;
-	}
-	if(m_hwrx){
-		m_ambedev->decode(ambe);
-
-		if(m_ambedev->get_audio(audio)){
-			m_audio->write(audio, 160);
-			emit update_output_level(m_audio->level());
-		}
-	}
-	else{
-		m_mbedec->process_dmr(ambe);
-		audioSamples = m_mbedec->getAudio(nbAudioSamples);
-		m_audio->write(audioSamples, nbAudioSamples);
-		m_mbedec->resetAudio();
-		emit update_output_level(m_audio->level());
 	}
 }

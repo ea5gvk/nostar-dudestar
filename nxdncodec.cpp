@@ -125,7 +125,7 @@ void NXDNCodec::process_udp()
 			else{
 				if(!m_rxtimer->isActive()){
 					m_audio->start_playback();
-					m_rxtimer->start(19);
+					m_rxtimer->start(20);
 				}
 				m_modeinfo.stream_state = STREAM_NEW;
 				m_modeinfo.ts = QDateTime::currentMSecsSinceEpoch();
@@ -135,7 +135,7 @@ void NXDNCodec::process_udp()
 		else if(!m_tx && ( (m_modeinfo.stream_state == STREAM_LOST) || (m_modeinfo.stream_state == STREAM_END) || (m_modeinfo.stream_state == STREAM_IDLE) )){
 			if(!m_rxtimer->isActive()){
 				m_audio->start_playback();
-				m_rxtimer->start(19);
+				m_rxtimer->start(20);
 			}
 			m_modeinfo.stream_state = STREAM_NEW;
 			m_modeinfo.ts = QDateTime::currentMSecsSinceEpoch();
@@ -687,6 +687,21 @@ void NXDNCodec::process_rx_data()
 		for(int i = 0; i < 7; ++i){
 			ambe[i] = m_rxcodecq.dequeue();
 		}
+		if(m_hwrx){
+			m_ambedev->decode(ambe);
+
+			if(m_ambedev->get_audio(audio)){
+				m_audio->write(audio, 160);
+				emit update_output_level(m_audio->level());
+			}
+		}
+		else{
+			m_mbedec->process_nxdn(ambe);
+			audioSamples = m_mbedec->getAudio(nbAudioSamples);
+			m_audio->write(audioSamples, nbAudioSamples);
+			m_mbedec->resetAudio();
+			emit update_output_level(m_audio->level());
+		}
 	}
 	else if ( (m_modeinfo.stream_state == STREAM_END) || (m_modeinfo.stream_state == STREAM_LOST) ){
 		m_rxtimer->stop();
@@ -696,21 +711,5 @@ void NXDNCodec::process_rx_data()
 		m_rxcodecq.clear();
 		qDebug() << "YSF playback stopped";
 		return;
-	}
-
-	if(m_hwrx){
-		m_ambedev->decode(ambe);
-
-		if(m_ambedev->get_audio(audio)){
-			m_audio->write(audio, 160);
-			emit update_output_level(m_audio->level());
-		}
-	}
-	else{
-		m_mbedec->process_nxdn(ambe);
-		audioSamples = m_mbedec->getAudio(nbAudioSamples);
-		m_audio->write(audioSamples, nbAudioSamples);
-		m_mbedec->resetAudio();
-		emit update_output_level(m_audio->level());
 	}
 }

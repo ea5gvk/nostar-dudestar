@@ -160,7 +160,7 @@ void REFCodec::process_udp()
 
 			if(!m_tx && !m_rxtimer->isActive() && (m_modeinfo.streamid == 0)){
 				m_audio->start_playback();
-				m_rxtimer->start(19);
+				m_rxtimer->start(20);
 				m_rxcodecq.clear();
 				m_modeinfo.stream_state = STREAM_NEW;
 				m_modeinfo.streamid = streamid;
@@ -584,6 +584,21 @@ void REFCodec::process_rx_data()
 		for(int i = 0; i < 9; ++i){
 			ambe[i] = m_rxcodecq.dequeue();
 		}
+		if(m_hwrx){
+			m_ambedev->decode(ambe);
+
+			if(m_ambedev->get_audio(audio)){
+				m_audio->write(audio, 160);
+				emit update_output_level(m_audio->level());
+			}
+		}
+		else{
+			m_mbedec->process_dstar(ambe);
+			audioSamples = m_mbedec->getAudio(nbAudioSamples);
+			m_audio->write(audioSamples, nbAudioSamples);
+			m_mbedec->resetAudio();
+			emit update_output_level(m_audio->level());
+		}
 	}
 	else if ( (m_modeinfo.stream_state == STREAM_END) || (m_modeinfo.stream_state == STREAM_LOST) ){
 		m_rxtimer->stop();
@@ -593,21 +608,6 @@ void REFCodec::process_rx_data()
 		m_rxcodecq.clear();
 		qDebug() << "REF playback stopped";
 		return;
-	}
-	if(m_hwrx){
-		m_ambedev->decode(ambe);
-
-		if(m_ambedev->get_audio(audio)){
-			m_audio->write(audio, 160);
-			emit update_output_level(m_audio->level());
-		}
-	}
-	else{
-		m_mbedec->process_dstar(ambe);
-		audioSamples = m_mbedec->getAudio(nbAudioSamples);
-		m_audio->write(audioSamples, nbAudioSamples);
-		m_mbedec->resetAudio();
-		emit update_output_level(m_audio->level());
 	}
 }
 

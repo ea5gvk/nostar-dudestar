@@ -169,7 +169,7 @@ void M17Codec::process_udp()
 			}
 
 			if(!m_rxtimer->isActive()){
-				m_rxtimer->start(m_modeinfo.type ? 19 : 38);
+				m_rxtimer->start(m_modeinfo.type ? 20 : 40);
 			}
 
 			m_modeinfo.stream_state = STREAM_NEW;
@@ -465,6 +465,10 @@ void M17Codec::process_rx_data()
 		for(int i = 0; i < 8; ++i){
 			codec2[i] = m_rxcodecq.dequeue();
 		}
+		m_c2->codec2_decode(pcm, codec2);
+		int s = get_mode() ? 160 : 320;
+		m_audio->write(pcm, s);
+		emit update_output_level(m_audio->level());
 	}
 	else if ( (m_modeinfo.stream_state == STREAM_END) || (m_modeinfo.stream_state == STREAM_LOST) ){
 		m_rxtimer->stop();
@@ -475,9 +479,4 @@ void M17Codec::process_rx_data()
 		qDebug() << "M17 playback stopped";
 		return;
 	}
-
-	m_c2->codec2_decode(pcm, codec2);
-	int s = get_mode() ? 160 : 320;
-	m_audio->write(pcm, s);
-	emit update_output_level(m_audio->level());
 }
