@@ -146,7 +146,7 @@ void YSFCodec::process_udp()
 				m_modeinfo.ts = QDateTime::currentMSecsSinceEpoch();
 				if(!m_tx && !m_rxtimer->isActive() ){
 					m_audio->start_playback();
-					m_rxtimer->start(19);
+					m_rxtimer->start(m_rxtimerint);
 				}
 				qDebug() << "New YSF stream from gw" << m_modeinfo.gw;
 			}
@@ -164,7 +164,7 @@ void YSFCodec::process_udp()
 					m_modeinfo.ts = QDateTime::currentMSecsSinceEpoch();
 					if(!m_tx && !m_rxtimer->isActive() ){
 						m_audio->start_playback();
-						m_rxtimer->start(19);
+						m_rxtimer->start(m_rxtimerint);
 					}
 					qDebug() << "New YSF stream in progress from gw" << m_modeinfo.gw;
 

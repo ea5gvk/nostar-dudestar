@@ -194,7 +194,7 @@ void DMRCodec::process_udp()
 		else if((uint8_t)buf.data()[15] & 0x01){
 			m_audio->start_playback();
 			if(!m_rxtimer->isActive()){
-				m_rxtimer->start(20);
+				m_rxtimer->start(m_rxtimerint);
 			}
 			m_modeinfo.stream_state = STREAM_NEW;
 			m_modeinfo.ts = QDateTime::currentMSecsSinceEpoch();
@@ -214,7 +214,7 @@ void DMRCodec::process_udp()
 		if(!m_tx && ( (m_modeinfo.stream_state == STREAM_LOST) || (m_modeinfo.stream_state == STREAM_END) || (m_modeinfo.stream_state == STREAM_IDLE) )){
 			m_audio->start_playback();
 			if(!m_rxtimer->isActive()){
-				m_rxtimer->start(20);
+				m_rxtimer->start(m_rxtimerint);
 			}
 			m_modeinfo.stream_state = STREAM_NEW;
 		}

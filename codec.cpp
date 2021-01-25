@@ -32,6 +32,11 @@ Codec::Codec(QString callsign, char module, QString hostname, QString host, int 
 	m_audioin(audioin),
 	m_audioout(audioout),
 	m_rxwatchdog(0),
+#ifdef Q_OS_WIN
+	m_rxtimerint(19),
+#else
+	m_rxtimerint(20),
+#endif
 	m_txtimerint(19),
 	m_vocoder(vocoder),
 	m_ambedev(nullptr),

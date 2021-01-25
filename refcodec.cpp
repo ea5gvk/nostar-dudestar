@@ -160,7 +160,7 @@ void REFCodec::process_udp()
 
 			if(!m_tx && !m_rxtimer->isActive() && (m_modeinfo.streamid == 0)){
 				m_audio->start_playback();
-				m_rxtimer->start(20);
+				m_rxtimer->start(m_rxtimerint);
 				m_rxcodecq.clear();
 				m_modeinfo.stream_state = STREAM_NEW;
 				m_modeinfo.streamid = streamid;

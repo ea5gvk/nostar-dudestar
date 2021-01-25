@@ -115,6 +115,7 @@ protected:
 	QString m_audioin;
 	QString m_audioout;
 	uint32_t m_rxwatchdog;
+	uint8_t m_rxtimerint;
 	uint8_t m_txtimerint;
 	QQueue<uint8_t> m_rxcodecq;
 	QQueue<uint8_t> m_txcodecq;

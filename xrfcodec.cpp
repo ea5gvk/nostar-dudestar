@@ -112,7 +112,7 @@ void XRFCodec::process_udp()
 			m_modeinfo.ts = QDateTime::currentMSecsSinceEpoch();
 			if(!m_rxtimer->isActive()){
 				m_audio->start_playback();
-				m_rxtimer->start(20);
+				m_rxtimer->start(m_rxtimerint);
 			}
 			qDebug() << "New stream from " << m_modeinfo.src << " to " << m_modeinfo.dst << " id == " << QString::number(m_modeinfo.streamid, 16);
 			emit update(m_modeinfo);
@@ -128,13 +128,13 @@ void XRFCodec::process_udp()
 			m_modeinfo.streamid = streamid;
 			if(!m_rxtimer->isActive()){
 				m_audio->start_playback();
-				m_rxtimer->start(20);
+				m_rxtimer->start(m_rxtimerint);
 			}
 		}
 		if(!m_tx && ( (m_modeinfo.stream_state == STREAM_LOST) || (m_modeinfo.stream_state == STREAM_END) || (m_modeinfo.stream_state == STREAM_IDLE) )){
 			if(!m_rxtimer->isActive()){
 				m_audio->start_playback();
-				m_rxtimer->start(20);
+				m_rxtimer->start(m_rxtimerint);
 			}
 			m_modeinfo.stream_state = STREAM_NEW;
 		}

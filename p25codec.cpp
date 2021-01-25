@@ -113,7 +113,7 @@ void P25Codec::process_udp()
 			if(!m_tx && !m_rxtimer->isActive() ){
 				m_rxcodecq.clear();
 				m_audio->start_playback();
-				m_rxtimer->start(19);
+				m_rxtimer->start(m_rxtimerint);
 			}
 			qDebug() << "New P25 stream";
 		}

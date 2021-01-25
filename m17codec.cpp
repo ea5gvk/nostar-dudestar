@@ -34,6 +34,7 @@ M17Codec::M17Codec(QString callsign, char module, QString hostname, QString host
 	m_modeinfo.streamid = 0;
 #ifdef Q_OS_WIN
 	m_txtimerint = 30; // Qt timers on windows seem to be slower than desired value
+
 #else
 	m_txtimerint = 36;
 #endif
@@ -169,7 +170,7 @@ void M17Codec::process_udp()
 			}
 
 			if(!m_rxtimer->isActive()){
-				m_rxtimer->start(m_modeinfo.type ? 20 : 40);
+				m_rxtimer->start(m_modeinfo.type ? m_rxtimerint : m_rxtimerint*2);
 			}
 
 			m_modeinfo.stream_state = STREAM_NEW;

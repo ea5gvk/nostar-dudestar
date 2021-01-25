@@ -125,7 +125,7 @@ void NXDNCodec::process_udp()
 			else{
 				if(!m_rxtimer->isActive()){
 					m_audio->start_playback();
-					m_rxtimer->start(20);
+					m_rxtimer->start(m_rxtimerint);
 				}
 				m_modeinfo.stream_state = STREAM_NEW;
 				m_modeinfo.ts = QDateTime::currentMSecsSinceEpoch();
@@ -135,7 +135,7 @@ void NXDNCodec::process_udp()
 		else if(!m_tx && ( (m_modeinfo.stream_state == STREAM_LOST) || (m_modeinfo.stream_state == STREAM_END) || (m_modeinfo.stream_state == STREAM_IDLE) )){
 			if(!m_rxtimer->isActive()){
 				m_audio->start_playback();
-				m_rxtimer->start(20);
+				m_rxtimer->start(m_rxtimerint);
 			}
 			m_modeinfo.stream_state = STREAM_NEW;
 			m_modeinfo.ts = QDateTime::currentMSecsSinceEpoch();

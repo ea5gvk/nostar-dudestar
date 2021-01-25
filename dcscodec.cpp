@@ -109,7 +109,7 @@ void DCSCodec::process_udp()
 			m_modeinfo.ts = QDateTime::currentMSecsSinceEpoch();
 			if(!m_rxtimer->isActive()){
 				m_audio->start_playback();
-				m_rxtimer->start(20);
+				m_rxtimer->start(m_rxtimerint);
 				m_rxcodecq.clear();
 			}
 			qDebug() << "New stream from " << m_modeinfo.src << " to " << m_modeinfo.dst << " id == " << QString::number(m_modeinfo.streamid, 16);
