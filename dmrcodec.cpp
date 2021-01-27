@@ -419,6 +419,7 @@ void DMRCodec::send_frame()
 	else{
 		set_calltype(0);
 	}
+
 	if(m_tx){
 
 		if(!m_dmrcnt){

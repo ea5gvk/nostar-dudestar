@@ -71,7 +71,8 @@ private slots:
 	void send_frame();
 	void decoder_gain_changed(qreal);
 private:
-	void decode(uint8_t* data);
+	void decode_dn(uint8_t* data);
+	void decode_vw(uint8_t* data);
 	void encode_header(bool eot = 0);
 	void encode_dv2();
 	void decode_vd2(uint8_t* data, uint8_t *dt);

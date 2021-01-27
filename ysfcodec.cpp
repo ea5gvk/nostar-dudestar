@@ -25,6 +25,14 @@
 
 //#define DEBUG
 
+const unsigned int IMBE_INTERLEAVE[] = {
+	0,  7, 12, 19, 24, 31, 36, 43, 48, 55, 60, 67, 72, 79, 84, 91,  96, 103, 108, 115, 120, 127, 132, 139,
+	1,  6, 13, 18, 25, 30, 37, 42, 49, 54, 61, 66, 73, 78, 85, 90,  97, 102, 109, 114, 121, 126, 133, 138,
+	2,  9, 14, 21, 26, 33, 38, 45, 50, 57, 62, 69, 74, 81, 86, 93,  98, 105, 110, 117, 122, 129, 134, 141,
+	3,  8, 15, 20, 27, 32, 39, 44, 51, 56, 63, 68, 75, 80, 87, 92,  99, 104, 111, 116, 123, 128, 135, 140,
+	4, 11, 16, 23, 28, 35, 40, 47, 52, 59, 64, 71, 76, 83, 88, 95, 100, 107, 112, 119, 124, 131, 136, 143,
+	5, 10, 17, 22, 29, 34, 41, 46, 53, 58, 65, 70, 77, 82, 89, 94, 101, 106, 113, 118, 125, 130, 137, 142};
+
 const int dvsi_interleave[49] = {
 	0, 3, 6,  9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 41, 43, 45, 47,
 	1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34, 37, 40, 42, 44, 46, 48,
@@ -174,7 +182,12 @@ void YSFCodec::process_udp()
 				}
 			}
 		}
-		decode(p_data);
+		if(m_modeinfo.type == 3){
+			decode_vw(p_data);
+		}
+		else{
+			decode_dn(p_data);
+		}
 	}
 	emit update(m_modeinfo);
 }
@@ -278,6 +291,65 @@ void YSFCodec::send_disconnect()
 #endif
 }
 
+void YSFCodec::decode_vw(uint8_t* data)
+{
+	uint8_t vch[18U];
+	uint8_t imbe[11U];
+	bool bit[144U];
+
+	data += YSF_SYNC_LENGTH_BYTES + YSF_FICH_LENGTH_BYTES;
+
+	unsigned int offset = 0U;
+
+	// We have a total of 5 VCH sections, iterate through each
+	for (unsigned int j = 0U; j < 5U; j++, offset += 18U) {
+		::memcpy(vch, data + offset, 18U);
+
+		for (unsigned int i = 0U; i < 144U; i++) {
+			unsigned int n = IMBE_INTERLEAVE[i];
+			bit[i] = READ_BIT(vch, n);
+		}
+		unsigned int c0data = 0U;
+		for (unsigned int i = 0U; i < 12U; i++)
+			c0data = (c0data << 1) | (bit[i] ? 0x01U : 0x00U);
+
+		bool prn[114U];
+
+		// Create the whitening vector and save it for future use
+		unsigned int p = 16U * c0data;
+		for (unsigned int i = 0U; i < 114U; i++) {
+			p = (173U * p + 13849U) % 65536U;
+			prn[i] = p >= 32768U;
+		}
+
+		// De-whiten some bits
+		for (unsigned int i = 0U; i < 114U; i++)
+			bit[i + 23U] ^= prn[i];
+
+		unsigned int offset = 0U;
+		for (unsigned int i = 0U; i < 12U; i++, offset++)
+			WRITE_BIT(imbe, offset, bit[i + 0U]);
+		for (unsigned int i = 0U; i < 12U; i++, offset++)
+			WRITE_BIT(imbe, offset, bit[i + 23U]);
+		for (unsigned int i = 0U; i < 12U; i++, offset++)
+			WRITE_BIT(imbe, offset, bit[i + 46U]);
+		for (unsigned int i = 0U; i < 12U; i++, offset++)
+			WRITE_BIT(imbe, offset, bit[i + 69U]);
+		for (unsigned int i = 0U; i < 11U; i++, offset++)
+			WRITE_BIT(imbe, offset, bit[i + 92U]);
+		for (unsigned int i = 0U; i < 11U; i++, offset++)
+			WRITE_BIT(imbe, offset, bit[i + 107U]);
+		for (unsigned int i = 0U; i < 11U; i++, offset++)
+			WRITE_BIT(imbe, offset, bit[i + 122U]);
+		for (unsigned int i = 0U; i < 7U; i++, offset++)
+			WRITE_BIT(imbe, offset, bit[i + 137U]);
+
+		for(int i = 0; i < 11; ++i){
+			m_rxcodecq.append(imbe[i]);
+		}
+	}
+}
+
 void YSFCodec::decode_vd1(uint8_t* data, uint8_t *dt)
 {
 	unsigned char dch[45U];
@@ -350,7 +422,7 @@ void YSFCodec::decode_vd2(uint8_t* data, uint8_t *dt)
 	}
 }
 
-void YSFCodec::decode(uint8_t* data)
+void YSFCodec::decode_dn(uint8_t* data)
 {
 	uint8_t v_tmp[7U];
 	uint8_t dt[20];
@@ -923,6 +995,7 @@ void YSFCodec::process_rx_data()
 	int16_t *audioSamples;
 	int16_t audio[160];
 	uint8_t ambe[7];
+	uint8_t imbe[11];
 
 	if(m_rxwatchdog++ > 20){
 		qDebug() << "YSF RX stream timeout ";
@@ -930,34 +1003,56 @@ void YSFCodec::process_rx_data()
 		m_modeinfo.ts = QDateTime::currentMSecsSinceEpoch();
 		emit update(m_modeinfo);
 	}
-
-	if((!m_tx) && (m_rxcodecq.size() > 6) ){
-		for(int i = 0; i < 7; ++i){
-			ambe[i] = m_rxcodecq.dequeue();
-		}
-		if(m_hwrx){
-			m_ambedev->decode(ambe);
-
-			if(m_ambedev->get_audio(audio)){
-				m_audio->write(audio, 160);
-				emit update_output_level(m_audio->level());
+	if(m_modeinfo.type == 3){
+		if(m_rxcodecq.size() > 10){
+			for(int i = 0; i < 11; ++i){
+				imbe[i] = m_rxcodecq.dequeue();
 			}
-		}
-		else{
-			m_mbedec->process_nxdn(ambe);
+			m_mbedec->process_p25(imbe);
 			audioSamples = m_mbedec->getAudio(nbAudioSamples);
+			//fprintf(stderr, "audio sample size == %d\n", nbAudioSamples);
 			m_audio->write(audioSamples, nbAudioSamples);
 			m_mbedec->resetAudio();
 			emit update_output_level(m_audio->level());
 		}
+		else if ( (m_modeinfo.stream_state == STREAM_END) || (m_modeinfo.stream_state == STREAM_LOST) ){
+			m_rxtimer->stop();
+			m_audio->stop_playback();
+			m_rxwatchdog = 0;
+			m_modeinfo.streamid = 0;
+			m_rxcodecq.clear();
+			qDebug() << "YSF FR playback stopped";
+		}
 	}
-	else if ( (m_modeinfo.stream_state == STREAM_END) || (m_modeinfo.stream_state == STREAM_LOST) ){
-		m_rxtimer->stop();
-		m_audio->stop_playback();
-		m_rxwatchdog = 0;
-		m_modeinfo.streamid = 0;
-		m_rxcodecq.clear();
-		qDebug() << "YSF playback stopped";
-		return;
+	else{
+		if((!m_tx) && (m_rxcodecq.size() > 6) ){
+			for(int i = 0; i < 7; ++i){
+				ambe[i] = m_rxcodecq.dequeue();
+			}
+			if(m_hwrx){
+				m_ambedev->decode(ambe);
+
+				if(m_ambedev->get_audio(audio)){
+					m_audio->write(audio, 160);
+					emit update_output_level(m_audio->level());
+				}
+			}
+			else{
+				m_mbedec->process_nxdn(ambe);
+				audioSamples = m_mbedec->getAudio(nbAudioSamples);
+				m_audio->write(audioSamples, nbAudioSamples);
+				m_mbedec->resetAudio();
+				emit update_output_level(m_audio->level());
+			}
+		}
+		else if ( (m_modeinfo.stream_state == STREAM_END) || (m_modeinfo.stream_state == STREAM_LOST) ){
+			m_rxtimer->stop();
+			m_audio->stop_playback();
+			m_rxwatchdog = 0;
+			m_modeinfo.streamid = 0;
+			m_rxcodecq.clear();
+			qDebug() << "YSF VD playback stopped";
+			return;
+		}
 	}
 }

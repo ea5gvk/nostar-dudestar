@@ -170,7 +170,11 @@ void M17Codec::process_udp()
 			}
 
 			if(!m_rxtimer->isActive()){
+#ifdef Q_OS_WIN
+				m_rxtimer->start(m_modeinfo.type ? m_rxtimerint : 32);
+#else
 				m_rxtimer->start(m_modeinfo.type ? m_rxtimerint : m_rxtimerint*2);
+#endif
 			}
 
 			m_modeinfo.stream_state = STREAM_NEW;
