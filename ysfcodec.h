@@ -70,10 +70,13 @@ private slots:
 	void swtx_state_changed(int s) {m_hwtx = !s; }
 	void send_frame();
 	void decoder_gain_changed(qreal);
+	void rate_changed(int r) { m_txfullrate = r;}
 private:
 	void decode_dn(uint8_t* data);
 	void decode_vw(uint8_t* data);
 	void encode_header(bool eot = 0);
+	void encode_vw();
+	void encode_imbe(unsigned char* data, const unsigned char* imbe);
 	void encode_dv2();
 	void decode_vd2(uint8_t* data, uint8_t *dt);
 	void decode_vd1(uint8_t* data, uint8_t *dt);
@@ -89,7 +92,8 @@ private:
 	unsigned char gateway[12];
 	unsigned char m_ysfFrame[200];
 	unsigned char m_vch[13U];
-	unsigned char m_ambe[45];
+	unsigned char m_ambe[55];
+	//unsigned char m_imbe[55];
 	CYSFFICH fich;
 	unsigned char ambe_fr[4][24];
 	unsigned int ambe_a;
@@ -97,6 +101,7 @@ private:
 	unsigned int ambe_c;
 	bool m_fcs;
 	std::string m_fcsname;
+	bool m_txfullrate;
 };
 
 #endif

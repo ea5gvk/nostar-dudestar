@@ -481,8 +481,8 @@ void DudeStar::process_mode_change(const QString &m)
 		ui->editRPTR1->setEnabled(false);
 		ui->editRPTR2->setEnabled(false);
 		ui->editUserTxt->setEnabled(false);
-		ui->radioButtonM173200->setEnabled(false);
-		ui->radioButtonM171600->setEnabled(false);
+		ui->radioButtonM173200->setEnabled(true);
+		ui->radioButtonM171600->setEnabled(true);
 		ui->labelHost->setVisible(true);
 		ui->comboHost->setVisible(true);
 		ui->labelIAXDTMF->setVisible(false);
@@ -1555,6 +1555,8 @@ void DudeStar::process_connect()
 			m_ysf->moveToThread(m_modethread);
 			connect(m_ysf, SIGNAL(update(Codec::MODEINFO)), this, SLOT(update_ysf_data(Codec::MODEINFO)));
 			connect(m_ysf, SIGNAL(update_output_level(unsigned short)), this, SLOT(update_output_level(unsigned short)));
+			ui->radioButtonM171600->setChecked(true);
+			connect(this, SIGNAL(rate_changed(int)), m_ysf, SLOT(rate_changed(int)));
 			connect(m_modethread, SIGNAL(started()), m_ysf, SLOT(send_connect()));
 			connect(m_modethread, SIGNAL(finished()), m_ysf, SLOT(deleteLater()));
 			connect(this, SIGNAL(input_source_changed(int, QString)), m_ysf, SLOT(input_src_changed(int, QString)));
@@ -1643,6 +1645,7 @@ void DudeStar::process_connect()
 			m_m17->moveToThread(m_modethread);
 			connect(m_m17, SIGNAL(update(Codec::MODEINFO)), this, SLOT(update_m17_data(Codec::MODEINFO)));
 			connect(m_m17, SIGNAL(update_output_level(unsigned short)), this, SLOT(update_output_level(unsigned short)));
+			ui->radioButtonM173200->setChecked(true);
 			connect(this, SIGNAL(rate_changed(int)), m_m17, SLOT(rate_changed(int)));
 			connect(m_modethread, SIGNAL(started()), m_m17, SLOT(send_connect()));
 			connect(m_modethread, SIGNAL(finished()), m_m17, SLOT(deleteLater()));

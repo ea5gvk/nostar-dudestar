@@ -447,7 +447,7 @@
            <property name="geometry">
             <rect>
              <x>0</x>
-             <y>0</y>
+             <y>-293</y>
              <width>303</width>
              <height>704</height>
             </rect>
@@ -483,7 +483,7 @@
                </font>
               </property>
               <property name="text">
-               <string>M17 Settings</string>
+               <string>M17 / YSF Mode</string>
               </property>
              </widget>
             </item>
@@ -528,7 +528,7 @@
             <item row="20" column="0">
              <widget class="QRadioButton" name="radioButtonM173200">
               <property name="text">
-               <string>3200 Voice</string>
+               <string>Full rate (VW)</string>
               </property>
              </widget>
             </item>
@@ -889,7 +889,7 @@
             <item row="20" column="1" colspan="2">
              <widget class="QRadioButton" name="radioButtonM171600">
               <property name="text">
-               <string>1600 Voice / Data</string>
+               <string>Voice / Data (DN)</string>
               </property>
              </widget>
             </item>

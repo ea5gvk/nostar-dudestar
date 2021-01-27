@@ -627,6 +627,7 @@ void MBEEncoder::set_dstar_mode(void)
 
 void MBEEncoder::set_49bit_mode(void)
 {
+	d_88bit_mode = false;
 	d_49bit_mode = true;
 }
 
@@ -637,6 +638,7 @@ void MBEEncoder::set_dmr_mode(void)
 
 void MBEEncoder::set_88bit_mode(void)
 {
+	d_49bit_mode = false;
 	d_88bit_mode = true;
 }
 // given a buffer of 160 audio samples (S16_LE),

@@ -87,6 +87,7 @@ void Codec::start_tx()
 	if(m_hwtx){
 		m_ambedev->clear_queue();
 	}
+	m_txcodecq.clear();
 	m_tx = true;
 	m_txcnt = 0;
 	m_ttscnt = 0;

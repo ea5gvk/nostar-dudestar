@@ -19,6 +19,7 @@
 #include "YSFConvolution.h"
 #include "CRCenc.h"
 #include "Golay24128.h"
+#include "chamming.h"
 #include "vocoder_tables.h"
 #include <iostream>
 #include <cstring>
@@ -42,7 +43,8 @@ const int dvsi_interleave[49] = {
 YSFCodec::YSFCodec(QString callsign, QString hostname, QString host, int port, QString vocoder, QString audioin, QString audioout) :
 	Codec(callsign, 0, hostname, host, port, vocoder, audioin, audioout),
 
-	m_fcs(false)
+	m_fcs(false),
+	m_txfullrate(false)
 {
 }
 
@@ -87,7 +89,12 @@ void YSFCodec::process_udp()
 			m_mbedec = new MBEDecoder();
 			//m_mbedec->setAutoGain(true);
 			m_mbeenc = new MBEEncoder();
-			m_mbeenc->set_49bit_mode();
+			if(m_txfullrate){
+				m_mbeenc->set_88bit_mode();
+			}
+			else{
+				m_mbeenc->set_49bit_mode();
+			}
 			m_mbeenc->set_gain_adjust(2.5);
 			m_rxtimer = new QTimer();
 			connect(m_rxtimer, SIGNAL(timeout()), this, SLOT(process_rx_data()));
@@ -536,9 +543,10 @@ void YSFCodec::interleave(uint8_t *ambe)
 
 void YSFCodec::transmit()
 {
-	uint8_t ambe_frame[49];
+	uint8_t ambe_frame[88];
 	uint8_t ambe[7];
 	int16_t pcm[160];
+	uint8_t s = 7;
 
 	memset(ambe, 0, 7);
 #ifdef USE_FLITE
@@ -561,20 +569,34 @@ void YSFCodec::transmit()
 			return;
 		}
 	}
-	if(m_hwtx){
+	if(m_hwtx && !m_txfullrate){
 		m_ambedev->encode(pcm);
 	}
 	else{
+		if(m_txfullrate){
+			s = 11;
+			m_mbeenc->set_88bit_mode();
+		}
+		else{
+			s = 7;
+			m_mbeenc->set_49bit_mode();
+		}
+
 		m_mbeenc->encode(pcm, ambe_frame);
-		for(int i = 0; i < 7; ++i){
-			for(int j = 0; j < 8; ++j){
-				ambe[i] |= (ambe_frame[(i*8)+j] << (7-j));
+		for(int i = 0; i < s; ++i){
+			if(!m_txfullrate){
+				for(int j = 0; j < 8; ++j){
+					ambe[i] |= (ambe_frame[(i*8)+j] << (s-j));
+				}
+				m_txcodecq.append(ambe[i]);
 			}
-			m_txcodecq.append(ambe[i]);
+			else{
+				m_txcodecq.append(ambe_frame[i]);
+			}
 		}
 	}
-	if(m_tx && (m_txcodecq.size() >= 35)){
-		for(int i = 0; i < 35; ++i){
+	if(m_tx && (m_txcodecq.size() >= (s*5))){
+		for(int i = 0; i < (s*5); ++i){
 			m_ambe[i] = m_txcodecq.dequeue();
 		}
 		send_frame();
@@ -594,7 +616,7 @@ void YSFCodec::send_frame()
 			encode_header();
 		}
 		else{
-			encode_dv2();
+			m_txfullrate ? encode_vw() : encode_dv2();
 		}
 		++m_txcnt;
 		frame_size = ::memcmp(m_ysfFrame, "YSFD", 4) ? 130 : 155;
@@ -661,7 +683,7 @@ void YSFCodec::encode_header(bool eot)
 	fich.setDev(0U);
 	fich.setMR(0U);
 	fich.setVoIP(false);
-	fich.setDT(YSF_DT_VD_MODE2);
+	fich.setDT(m_txfullrate ? YSF_DT_VOICE_FR_MODE : YSF_DT_VD_MODE2);
 	fich.setSQL(false);
 	fich.setSQ(0U);
 	fich.encode(p_frame);
@@ -677,6 +699,157 @@ void YSFCodec::encode_header(bool eot)
 
 	writeDataFRModeData1(csd1, p_frame);
 	writeDataFRModeData2(csd2, p_frame);
+}
+
+void YSFCodec::encode_vw()
+{
+	unsigned char callsign[12];
+	::memcpy(callsign, "          ", 10);
+	::memcpy(callsign, m_modeinfo.callsign.toStdString().c_str(), ::strlen(m_modeinfo.callsign.toStdString().c_str()));
+	uint8_t *p_frame = m_ysfFrame;
+	if(m_fcs){
+		::memset(p_frame + 120U, 0, 10U);
+		::memcpy(p_frame + 121U, m_fcsname.c_str(), 8);
+	}
+	else{
+		::memcpy(m_ysfFrame + 0U, "YSFD", 4U);
+		::memcpy(m_ysfFrame + 4U, callsign, YSF_CALLSIGN_LENGTH);
+		::memcpy(m_ysfFrame + 14U, callsign, YSF_CALLSIGN_LENGTH);
+		::memcpy(m_ysfFrame + 24U, "ALL       ", YSF_CALLSIGN_LENGTH);
+		m_ysfFrame[34U] = (m_txcnt & 0x7f) << 1;
+		p_frame = m_ysfFrame + 35U;
+	}
+	::memcpy(p_frame, YSF_SYNC_BYTES, 5);
+	uint32_t fn = (m_txcnt - 1U) % 7U;
+
+	fich.setFI(YSF_FI_COMMUNICATIONS);
+	fich.setCS(2U);
+	fich.setCM(0U);
+	fich.setBN(0U);
+	fich.setBT(0U);
+	fich.setFN(fn);
+	fich.setFT(6U);
+	fich.setDev(0U);
+	fich.setMR(0U);
+	fich.setVoIP(false);
+	fich.setDT(YSF_DT_VOICE_FR_MODE);
+	fich.setSQL(false);
+	fich.setSQ(0U);
+	fich.encode(p_frame);
+
+	p_frame += YSF_SYNC_LENGTH_BYTES + YSF_FICH_LENGTH_BYTES;
+	for(int i = 0; i < 5; ++i){
+		//uint8_t imbe4400[11];
+		uint8_t imbe7200[18];
+
+		//for(int j = 0; j < 11; ++j){
+		//	imbe4400[j] = m_txcodecq.dequeue();
+		//}
+		encode_imbe(imbe7200, m_ambe + (11*i));
+		memcpy(p_frame + (18*i), imbe7200, 18);
+	}
+}
+
+void YSFCodec::encode_imbe(unsigned char* data, const unsigned char* imbe)
+{
+	assert(data != NULL);
+	assert(imbe != NULL);
+
+	bool bTemp[144U];
+	bool* bit = bTemp;
+
+	// c0
+	unsigned int c0 = 0U;
+	for (unsigned int i = 0U; i < 12U; i++) {
+		bool b = READ_BIT(imbe, i);
+		c0 = (c0 << 1) | (b ? 0x01U : 0x00U);
+	}
+	unsigned int g2 = CGolay24128::encode23127(c0);
+	for (int i = 23; i >= 0; i--) {
+		bit[i] = (g2 & 0x01U) == 0x01U;
+		g2 >>= 1;
+	}
+	bit += 23U;
+
+	// c1
+	unsigned int c1 = 0U;
+	for (unsigned int i = 12U; i < 24U; i++) {
+		bool b = READ_BIT(imbe, i);
+		c1 = (c1 << 1) | (b ? 0x01U : 0x00U);
+	}
+	g2 = CGolay24128::encode23127(c1);
+	for (int i = 23; i >= 0; i--) {
+		bit[i] = (g2 & 0x01U) == 0x01U;
+		g2 >>= 1;
+	}
+	bit += 23U;
+
+	// c2
+	unsigned int c2 = 0;
+	for (unsigned int i = 24U; i < 36U; i++) {
+		bool b = READ_BIT(imbe, i);
+		c2 = (c2 << 1) | (b ? 0x01U : 0x00U);
+	}
+	g2 = CGolay24128::encode23127(c2);
+	for (int i = 23; i >= 0; i--) {
+		bit[i] = (g2 & 0x01U) == 0x01U;
+		g2 >>= 1;
+	}
+	bit += 23U;
+
+	// c3
+	unsigned int c3 = 0U;
+	for (unsigned int i = 36U; i < 48U; i++) {
+		bool b = READ_BIT(imbe, i);
+		c3 = (c3 << 1) | (b ? 0x01U : 0x00U);
+	}
+	g2 = CGolay24128::encode23127(c3);
+	for (int i = 23; i >= 0; i--) {
+		bit[i] = (g2 & 0x01U) == 0x01U;
+		g2 >>= 1;
+	}
+	bit += 23U;
+
+	// c4
+	for (unsigned int i = 0U; i < 11U; i++)
+		bit[i] = READ_BIT(imbe, i + 48U);
+	CHamming::encode15113_1(bit);
+	bit += 15U;
+
+	// c5
+	for (unsigned int i = 0U; i < 11U; i++)
+		bit[i] = READ_BIT(imbe, i + 59U);
+	CHamming::encode15113_1(bit);
+	bit += 15U;
+
+	// c6
+	for (unsigned int i = 0U; i < 11U; i++)
+		bit[i] = READ_BIT(imbe, i + 70U);
+	CHamming::encode15113_1(bit);
+	bit += 15U;
+
+	// c7
+	for (unsigned int i = 0U; i < 7U; i++)
+		bit[i] = READ_BIT(imbe, i + 81U);
+
+	bool prn[114U];
+
+	// Create the whitening vector and save it for future use
+	unsigned int p = 16U * c0;
+	for (unsigned int i = 0U; i < 114U; i++) {
+		p = (173U * p + 13849U) % 65536U;
+		prn[i] = p >= 32768U;
+	}
+
+	// Whiten some bits
+	for (unsigned int i = 0U; i < 114U; i++)
+		bTemp[i + 23U] ^= prn[i];
+
+	// Interleave
+	for (unsigned int i = 0U; i < 144U; i++) {
+		unsigned int n = IMBE_INTERLEAVE[i];
+		WRITE_BIT(data, n, bTemp[i]);
+	}
 }
 
 void YSFCodec::encode_dv2()
