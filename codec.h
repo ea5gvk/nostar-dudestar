@@ -78,6 +78,7 @@ public:
 		STREAM_END,
 		STREAM_LOST,
 		STREAM_IDLE,
+		TRANSMITTING,
 		STREAM_UNKNOWN
 	};
 signals:

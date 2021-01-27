@@ -612,6 +612,7 @@ void YSFCodec::send_frame()
 	int frame_size;
 
 	if(m_tx){
+		m_modeinfo.stream_state = TRANSMITTING;
 		if(!m_txcnt){
 			encode_header();
 		}
@@ -643,7 +644,10 @@ void YSFCodec::send_frame()
 		frame_size = ::memcmp(m_ysfFrame, "YSFD", 4) ? 130 : 155;
 		txdata.append((char *)m_ysfFrame, frame_size);
 		m_udp->writeDatagram(txdata, m_address, m_modeinfo.port);
+		m_modeinfo.stream_state = STREAM_IDLE;
 	}
+	emit update_output_level(m_audio->level());
+	emit update(m_modeinfo);
 }
 
 void YSFCodec::encode_header(bool eot)
@@ -736,6 +740,14 @@ void YSFCodec::encode_vw()
 	fich.setSQL(false);
 	fich.setSQ(0U);
 	fich.encode(p_frame);
+
+	m_modeinfo.gw = m_modeinfo.callsign;
+	m_modeinfo.src = m_modeinfo.callsign;
+	m_modeinfo.dst = "ALL       ";
+	m_modeinfo.type = YSF_DT_VOICE_FR_MODE;
+	m_modeinfo.path = false;
+	m_modeinfo.frame_number = fn;
+	m_modeinfo.frame_total = 6;
 
 	p_frame += YSF_SYNC_LENGTH_BYTES + YSF_FICH_LENGTH_BYTES;
 	for(int i = 0; i < 5; ++i){
@@ -887,6 +899,14 @@ void YSFCodec::encode_dv2()
 	fich.setSQL(false);
 	fich.setSQ(0U);
 	fich.encode(p_frame);
+
+	m_modeinfo.gw = m_modeinfo.callsign;
+	m_modeinfo.src = m_modeinfo.callsign;
+	m_modeinfo.dst = "ALL       ";
+	m_modeinfo.type = YSF_DT_VD_MODE2;
+	m_modeinfo.path = false;
+	m_modeinfo.frame_number = fn;
+	m_modeinfo.frame_total = 6;
 
 	const uint8_t ft70d1[10] = {0x01, 0x22, 0x61, 0x5f, 0x2b, 0x03, 0x11, 0x00, 0x00, 0x00};
 	//const uint8_t dt1_temp[] = {0x31, 0x22, 0x62, 0x5F, 0x29, 0x00, 0x00, 0x00, 0x00, 0x00};

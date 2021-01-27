@@ -145,7 +145,6 @@ private slots:
 	void update_m17_data(Codec::MODEINFO);
 	void update_iax_data();
 	void m17_rate_changed(int);
-	void handleStateChanged(QAudio::State);
 	void process_codecgain_changed(int);
 	void process_mute_button();
 	void process_volume_changed(int);

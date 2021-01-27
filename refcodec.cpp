@@ -437,6 +437,14 @@ void REFCodec::send_frame(uint8_t *ambe)
 			txdata[56] = 0;
 			txdata[57] = 0;
 			calcPFCS(txdata.data());
+
+			m_modeinfo.src = m_txmycall;
+			m_modeinfo.dst = m_txurcall;
+			m_modeinfo.gw = m_txrptr1;
+			m_modeinfo.gw2 = m_txrptr2;
+			m_modeinfo.streamid = txstreamid;
+			m_modeinfo.frame_number = m_txcnt;
+
 			m_udp->writeDatagram(txdata, m_address, m_modeinfo.port);
 		}
 		else {
@@ -551,6 +559,8 @@ void REFCodec::send_frame(uint8_t *ambe)
 		}
 		m_ttscnt = 0;
 	}
+	emit update_output_level(m_audio->level());
+	update(m_modeinfo);
 }
 
 void REFCodec::get_ambe()

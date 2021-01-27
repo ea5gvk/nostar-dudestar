@@ -421,7 +421,7 @@ void DMRCodec::send_frame()
 	}
 
 	if(m_tx){
-
+		m_modeinfo.stream_state = TRANSMITTING;
 		if(!m_dmrcnt){
 			encode_header();
 		}
@@ -448,7 +448,10 @@ void DMRCodec::send_frame()
 		if(m_ttsid == 0){
 			m_audio->stop_capture();
 		}
+		m_modeinfo.stream_state = STREAM_IDLE;
 	}
+	emit update_output_level(m_audio->level());
+	emit update(m_modeinfo);
 #ifdef DEBUG
 	fprintf(stderr, "SEND:%d: ", txdata.size());
 	for(int i = 0; i < txdata.size(); ++i){
@@ -502,6 +505,11 @@ void DMRCodec::build_frame()
 
 	m_dmrFrame[53U] = 0; //data.getBER();
 	m_dmrFrame[54U] = 0; //data.getRSSI();
+
+	m_modeinfo.srcid = m_dmrid;
+	m_modeinfo.dstid = m_txdstid;
+	m_modeinfo.gwid = m_essid;
+	m_modeinfo.frame_number = m_dmrcnt;
 }
 
 void DMRCodec::encode_header()

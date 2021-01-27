@@ -349,6 +349,7 @@ void NXDNCodec::send_frame()
 	QByteArray txdata;
 	unsigned char *temp_nxdn;
 	if(m_tx){
+		m_modeinfo.stream_state = TRANSMITTING;
 		temp_nxdn = get_frame();
 		txdata.append((char *)temp_nxdn, 43);
 		m_udp->writeDatagram(txdata, m_address, m_modeinfo.port);
@@ -367,7 +368,13 @@ void NXDNCodec::send_frame()
 		m_ttscnt = 0;
 		txdata.append((char *)temp_nxdn, 43);
 		m_udp->writeDatagram(txdata, m_address, m_modeinfo.port);
+		m_modeinfo.stream_state = STREAM_IDLE;
 	}
+	m_modeinfo.srcid = m_nxdnid;
+	m_modeinfo.frame_number = m_txcnt;
+	m_modeinfo.dstid = m_modeinfo.gwid;
+	emit update_output_level(m_audio->level());
+	emit update(m_modeinfo);
 }
 
 uint8_t * NXDNCodec::get_frame()

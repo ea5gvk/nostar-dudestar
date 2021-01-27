@@ -354,6 +354,7 @@ void XRFCodec::send_frame(uint8_t *ambe)
 	static uint16_t txstreamid = 0;
 	static bool sendheader = 1;
 	if(m_tx){
+		m_modeinfo.stream_state = TRANSMITTING;
 		if(txstreamid == 0){
 		   txstreamid = static_cast<uint16_t>((::rand() & 0xFFFF));
 		}
@@ -388,6 +389,14 @@ void XRFCodec::send_frame(uint8_t *ambe)
 			txdata[54] = 0;
 			txdata[55] = 0;
 			calcPFCS(txdata.data());
+
+			m_modeinfo.src = m_txmycall;
+			m_modeinfo.dst = m_txurcall;
+			m_modeinfo.gw = m_txrptr1;
+			m_modeinfo.gw2 = m_txrptr2;
+			m_modeinfo.streamid = txstreamid;
+			m_modeinfo.frame_number = m_txcnt;
+
 			m_udp->writeDatagram(txdata, m_address, m_modeinfo.port);
 		}
 		else{
@@ -451,6 +460,8 @@ void XRFCodec::send_frame(uint8_t *ambe)
 			m_txcnt++;
 			m_udp->writeDatagram(txdata, m_address, m_modeinfo.port);
 		}
+		emit update_output_level(m_audio->level());
+		update(m_modeinfo);
 	}
 	else{
 		txdata[14] = (++m_txcnt % 21) | 0x40;
@@ -464,6 +475,7 @@ void XRFCodec::send_frame(uint8_t *ambe)
 			m_audio->stop_capture();
 		}
 		m_ttscnt = 0;
+		m_modeinfo.stream_state = STREAM_IDLE;
 	}
 #ifdef DEBUG
 			fprintf(stderr, "SEND:%d: ", txdata.size());

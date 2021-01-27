@@ -394,7 +394,7 @@ void P25Codec::transmit()
 			p25step = 0;
 			break;
 		}
-
+		m_modeinfo.stream_state = TRANSMITTING;
 		m_modeinfo.srcid = m_dmrid;
 		m_modeinfo.dstid = m_hostname;
 		m_modeinfo.frame_number = p25step;
@@ -409,11 +409,14 @@ void P25Codec::transmit()
 			m_audio->stop_capture();
 		}
 		p25step = 0;
+		m_modeinfo.stream_state = STREAM_IDLE;
 		m_modeinfo.srcid = 0;
 		m_modeinfo.dstid = 0;
 		m_modeinfo.frame_number = 0;
 		m_txcodecq.clear();
 	}
+	emit update_output_level(m_audio->level());
+	emit update(m_modeinfo);
 #ifdef DEBUG
 		fprintf(stderr, "SEND: ");
 		for(int i = 0; i < txdata.size(); ++i){

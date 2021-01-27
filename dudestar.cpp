@@ -2298,7 +2298,3 @@ void DudeStar::update_xrf_data(Codec::MODEINFO info)
 	}
 	++m_rxcnt;
 }
-
-void DudeStar::handleStateChanged(QAudio::State)
-{
-}

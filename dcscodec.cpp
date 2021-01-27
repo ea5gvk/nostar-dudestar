@@ -423,6 +423,14 @@ void DCSCodec::send_frame(uint8_t *ambe)
 		txdata[60] = (m_txcnt >> 16) & 0xff;
 		txdata[61] = 0x01;
 		m_txcnt++;
+
+		m_modeinfo.src = m_txmycall;
+		m_modeinfo.dst = m_txurcall;
+		m_modeinfo.gw = m_txrptr1;
+		m_modeinfo.gw2 = m_txrptr2;
+		m_modeinfo.streamid = txstreamid;
+		m_modeinfo.frame_number = m_txcnt;
+
 		m_udp->writeDatagram(txdata, m_address, m_modeinfo.port);
 #ifdef DEBUG
 		fprintf(stderr, "SEND:%d: ", txdata.size());
@@ -447,6 +455,8 @@ void DCSCodec::send_frame(uint8_t *ambe)
 		}
 		m_ttscnt = 0;
 	}
+	emit update_output_level(m_audio->level());
+	update(m_modeinfo);
 }
 
 void DCSCodec::get_ambe()

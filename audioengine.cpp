@@ -223,9 +223,13 @@ void AudioEngine::write(int16_t *pcm, size_t s)
 
 uint16_t AudioEngine::read(int16_t *pcm, int s, int g)
 {
+	m_maxlevel = 0;
 	if(m_audioinq.size() >= s){
 		for(int i = 0; i < s; ++i){
 			pcm[i] = m_audioinq.dequeue() / g;
+			if(pcm[i] > m_maxlevel){
+				m_maxlevel = pcm[i];
+			}
 		}
 		return 1;
 	}
@@ -237,6 +241,7 @@ uint16_t AudioEngine::read(int16_t *pcm, int s, int g)
 
 uint16_t AudioEngine::read(int16_t *pcm)
 {
+	m_maxlevel = 0;
 	int s;
 	if(m_audioinq.size() >= 160){
 		s = 160;
@@ -247,6 +252,9 @@ uint16_t AudioEngine::read(int16_t *pcm)
 
 	for(int i = 0; i < s; ++i){
 		pcm[i] = m_audioinq.dequeue();
+		if(pcm[i] > m_maxlevel){
+			m_maxlevel = pcm[i];
+		}
 	}
 	return s;
 }
