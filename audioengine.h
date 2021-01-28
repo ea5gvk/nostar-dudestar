@@ -45,7 +45,7 @@ public:
 	void set_output_volume(qreal);
 	void set_input_volume(qreal);
 	bool frame_available() { return (m_audioinq.size() >= 320) ? true : false; }
-	uint16_t read(int16_t *, int, int = 1);
+	uint16_t read(int16_t *, int);
 	uint16_t read(int16_t *);
 	uint16_t level() { return m_maxlevel; }
 signals:

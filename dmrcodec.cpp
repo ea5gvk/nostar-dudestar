@@ -67,9 +67,11 @@ DMRCodec::~DMRCodec()
 
 void DMRCodec::decoder_gain_changed(qreal v)
 {
+#ifdef AMBEHW_SUPPORTED
 	if(m_hwrx){
 		m_ambedev->set_decode_gain(v);
 	}
+#endif
 	m_mbedec->setVolume(v);
 }
 
@@ -281,9 +283,11 @@ void DMRCodec::setup_connection()
 	if(m_vocoder != ""){
 		m_hwrx = true;
 		m_hwtx = true;
+#ifdef AMBEHW_SUPPORTED
 		m_ambedev = new SerialAMBE("DMR");
 		m_ambedev->connect_to_serial(m_vocoder);
 		connect(m_ambedev, SIGNAL(data_ready()), this, SLOT(get_ambe()));
+#endif
 	}
 	else{
 		m_hwrx = false;
@@ -390,7 +394,9 @@ void DMRCodec::transmit()
 	}
 
 	if(m_hwtx){
+#ifdef AMBEHW_SUPPORTED
 		m_ambedev->encode(pcm);
+#endif
 	}
 	else{
 		m_mbeenc->encode(pcm, ambe);

@@ -570,7 +570,9 @@ void YSFCodec::transmit()
 		}
 	}
 	if(m_hwtx && !m_txfullrate){
+#ifdef AMBEHW_SUPPORTED
 		m_ambedev->encode(pcm);
+#endif
 	}
 	else{
 		if(m_txfullrate){
@@ -1170,7 +1172,7 @@ void YSFCodec::writeVDMode2Data(uint8_t* data, const uint8_t* dt)
 		p1 += 18U; p2 += 5U;
 	}
 }
-
+#ifdef AMBEHW_SUPPORTED
 void YSFCodec::get_ambe()
 {
 	uint8_t ambe[7];
@@ -1181,7 +1183,7 @@ void YSFCodec::get_ambe()
 		}
 	}
 }
-
+#endif
 void YSFCodec::process_rx_data()
 {
 	int nbAudioSamples = 0;

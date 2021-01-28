@@ -31,9 +31,11 @@ DCSCodec::~DCSCodec()
 
 void DCSCodec::decoder_gain_changed(qreal v)
 {
+#ifdef AMBEHW_SUPPORTED
 	if(m_hwrx){
 		m_ambedev->set_decode_gain(v);
 	}
+#endif
 	m_mbedec->setVolume(v);
 }
 
@@ -74,9 +76,11 @@ void DCSCodec::process_udp()
 		if(m_vocoder != ""){
 			m_hwrx = true;
 			m_hwtx = true;
+#ifdef AMBEHW_SUPPORTED
 			m_ambedev = new SerialAMBE("DCS");
 			m_ambedev->connect_to_serial(m_vocoder);
 			connect(m_ambedev, SIGNAL(data_ready()), this, SLOT(get_ambe()));
+#endif
 		}
 		else{
 			m_hwrx = false;
@@ -282,9 +286,6 @@ void DCSCodec::format_callsign(QString &s)
 
 void DCSCodec::start_tx()
 {
-	if(m_hwtx){
-		m_ambedev->clear_queue();
-	}
 	format_callsign(m_txmycall);
 	format_callsign(m_txurcall);
 	format_callsign(m_txrptr1);
@@ -322,7 +323,9 @@ void DCSCodec::transmit()
 		}
 	}
 	if(m_hwtx){
+#ifdef AMBEHW_SUPPORTED
 		m_ambedev->encode(pcm);
+#endif
 		if(m_tx && (m_txcodecq.size() >= 9)){
 			for(int i = 0; i < 9; ++i){
 				ambe[i] = m_txcodecq.dequeue();
@@ -458,7 +461,7 @@ void DCSCodec::send_frame(uint8_t *ambe)
 	emit update_output_level(m_audio->level());
 	update(m_modeinfo);
 }
-
+#ifdef AMBEHW_SUPPORTED
 void DCSCodec::get_ambe()
 {
 	uint8_t ambe[9];
@@ -469,7 +472,7 @@ void DCSCodec::get_ambe()
 		}
 	}
 }
-
+#endif
 void DCSCodec::process_rx_data()
 {
 	int nbAudioSamples = 0;
@@ -491,12 +494,14 @@ void DCSCodec::process_rx_data()
 			ambe[i] = m_rxcodecq.dequeue();
 		}
 		if(m_hwrx){
+#ifdef AMBEHW_SUPPORTED
 			m_ambedev->decode(ambe);
 
 			if(m_ambedev->get_audio(audio)){
 				m_audio->write(audio, 160);
 				emit update_output_level(m_audio->level());
 			}
+#endif
 		}
 		else{
 			m_mbedec->process_dstar(ambe);

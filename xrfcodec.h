@@ -39,7 +39,9 @@ private slots:
 	void format_callsign(QString &);
 	void process_udp();
 	void process_rx_data();
+#ifdef AMBEHW_SUPPORTED
 	void get_ambe();
+#endif
 	void send_ping();
 	void send_disconnect();
 	void transmit();

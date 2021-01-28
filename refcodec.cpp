@@ -32,9 +32,11 @@ REFCodec::~REFCodec()
 
 void REFCodec::decoder_gain_changed(qreal v)
 {
+#ifdef AMBEHW_SUPPORTED
 	if(m_hwrx){
 		m_ambedev->set_decode_gain(v);
 	}
+#endif
 	m_mbedec->setVolume(v);
 }
 
@@ -363,7 +365,7 @@ void REFCodec::transmit()
 #endif
 
 	if(m_ttsid == 0){
-		if(m_audio->read(pcm, 160, m_hwtx ? 1 : 1)){
+		if(m_audio->read(pcm, 160)){
 		}
 		else{
 			return;
@@ -371,7 +373,9 @@ void REFCodec::transmit()
 	}
 
 	if(m_hwtx){
+#ifdef AMBEHW_SUPPORTED
 		m_ambedev->encode(pcm);
+#endif
 		if(m_tx && (m_txcodecq.size() >= 9)){
 			for(int i = 0; i < 9; ++i){
 				ambe[i] = m_txcodecq.dequeue();
@@ -562,7 +566,7 @@ void REFCodec::send_frame(uint8_t *ambe)
 	emit update_output_level(m_audio->level());
 	update(m_modeinfo);
 }
-
+#ifdef AMBEHW_SUPPORTED
 void REFCodec::get_ambe()
 {
 	uint8_t ambe[9];
@@ -573,7 +577,7 @@ void REFCodec::get_ambe()
 		}
 	}
 }
-
+#endif
 void REFCodec::process_rx_data()
 {
 	int nbAudioSamples = 0;
@@ -595,12 +599,14 @@ void REFCodec::process_rx_data()
 			ambe[i] = m_rxcodecq.dequeue();
 		}
 		if(m_hwrx){
+#ifdef AMBEHW_SUPPORTED
 			m_ambedev->decode(ambe);
 
 			if(m_ambedev->get_audio(audio)){
 				m_audio->write(audio, 160);
 				emit update_output_level(m_audio->level());
 			}
+#endif
 		}
 		else{
 			m_mbedec->process_dstar(ambe);

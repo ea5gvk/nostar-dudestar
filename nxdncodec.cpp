@@ -54,9 +54,11 @@ NXDNCodec::~NXDNCodec()
 
 void NXDNCodec::decoder_gain_changed(qreal v)
 {
+#ifdef AMBEHW_SUPPORTED
 	if(m_hwrx){
 		m_ambedev->set_decode_gain(v);
 	}
+#endif
 	m_mbedec->setVolume(v);
 }
 
@@ -94,9 +96,11 @@ void NXDNCodec::process_udp()
 			if(m_vocoder != ""){
 				m_hwrx = true;
 				m_hwtx = true;
+#ifdef AMBEHW_SUPPORTED
 				m_ambedev = new SerialAMBE("NXDN");
 				m_ambedev->connect_to_serial(m_vocoder);
 				connect(m_ambedev, SIGNAL(data_ready()), this, SLOT(get_ambe()));
+#endif
 			}
 			else{
 				m_hwrx = false;
@@ -320,7 +324,9 @@ void NXDNCodec::transmit()
 	}
 
 	if(m_hwtx){
+#ifdef AMBEHW_SUPPORTED
 		m_ambedev->encode(pcm);
+#endif
 	}
 	else{
 		m_mbeenc->encode(pcm, ambe_frame);
@@ -662,7 +668,7 @@ void NXDNCodec::encode_crc6(uint8_t *d, uint8_t len)
 		WRITE_BIT1(d, n, b);
 	}
 }
-
+#ifdef AMBEHW_SUPPORTED
 void NXDNCodec::get_ambe()
 {
 	uint8_t ambe[7];
@@ -673,7 +679,7 @@ void NXDNCodec::get_ambe()
 		}
 	}
 }
-
+#endif
 void NXDNCodec::process_rx_data()
 {
 	int nbAudioSamples = 0;
@@ -695,12 +701,14 @@ void NXDNCodec::process_rx_data()
 			ambe[i] = m_rxcodecq.dequeue();
 		}
 		if(m_hwrx){
+#ifdef AMBEHW_SUPPORTED
 			m_ambedev->decode(ambe);
 
 			if(m_ambedev->get_audio(audio)){
 				m_audio->write(audio, 160);
 				emit update_output_level(m_audio->level());
 			}
+#endif
 		}
 		else{
 			m_mbedec->process_nxdn(ambe);

@@ -24,7 +24,9 @@
 #include <flite/flite.h>
 #endif
 #include "audioengine.h"
+#ifdef AMBEHW_SUPPORTED
 #include "serialambe.h"
+#endif
 #include "mbedec.h"
 #include "mbeenc.h"
 
@@ -123,7 +125,9 @@ protected:
 	MBEDecoder *m_mbedec;
 	MBEEncoder *m_mbeenc;
 	QString m_vocoder;
+#ifdef AMBEHW_SUPPORTED
 	SerialAMBE *m_ambedev;
+#endif
 	bool m_hwrx;
 	bool m_hwtx;
 };
