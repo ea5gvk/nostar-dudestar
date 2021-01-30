@@ -82,6 +82,7 @@ DudeStar::~DudeStar()
 	stream << "DCSHOST:" << saved_dcshost << ENDLINE;
 	stream << "XRFHOST:" << saved_xrfhost << ENDLINE;
 	stream << "YSFHOST:" << saved_ysfhost << ENDLINE;
+	stream << "FCSHOST:" << saved_fcshost << ENDLINE;
 	stream << "DMRHOST:" << saved_dmrhost << ENDLINE;
 	stream << "P25HOST:" << saved_p25host << ENDLINE;
 	stream << "NXDNHOST:" << saved_nxdnhost << ENDLINE;
@@ -197,6 +198,7 @@ void DudeStar::init_gui()
 	ui->comboMode->addItem("DCS");
 	ui->comboMode->addItem("XRF");
 	ui->comboMode->addItem("YSF");
+	ui->comboMode->addItem("FCS");
 	ui->comboMode->addItem("DMR");
 	ui->comboMode->addItem("P25");
 	ui->comboMode->addItem("NXDN");
@@ -322,8 +324,8 @@ void DudeStar::file_downloaded(QString filename)
 		else if(filename == "YSFHosts.txt" && m == "YSF"){
 			process_ysf_hosts();
 		}
-		else if(filename == "FCSHosts.txt" && m == "YSF"){
-			process_ysf_hosts();
+		else if(filename == "FCSHosts.txt" && m == "FCS"){
+			process_fcs_rooms();
 		}
 		else if(filename == "P25Hosts.txt" && m == "P25"){
 			process_p25_hosts();
@@ -359,6 +361,9 @@ void DudeStar::process_host_change(const QString &h)
 	}
 	if(ui->comboMode->currentText().simplified() == "YSF"){
 		saved_ysfhost = h.simplified();
+	}
+	if(ui->comboMode->currentText().simplified() == "FCS"){
+		saved_fcshost = h.simplified();
 	}
 	if(ui->comboMode->currentText().simplified() == "DMR"){
 		saved_dmrhost = h.simplified();
@@ -468,6 +473,35 @@ void DudeStar::process_mode_change(const QString &m)
 	}
 	else if(m == "YSF"){
 		process_ysf_hosts();
+		ui->comboModule->setEnabled(false);
+		ui->editDMRID->setEnabled(true);
+		ui->comboESSID->setEnabled(true);
+		ui->editPassword->setEnabled(false);
+		ui->editTG->setEnabled(false);
+		ui->comboCC->setEnabled(false);
+		ui->comboSlot->setEnabled(false);
+		ui->checkPrivate->setEnabled(false);
+		ui->editMYCALL->setEnabled(false);
+		ui->editURCALL->setEnabled(false);
+		ui->editRPTR1->setEnabled(false);
+		ui->editRPTR2->setEnabled(false);
+		ui->editUserTxt->setEnabled(false);
+		ui->radioButtonM173200->setEnabled(true);
+		ui->radioButtonM171600->setEnabled(true);
+		ui->labelHost->setVisible(true);
+		ui->comboHost->setVisible(true);
+		ui->labelIAXDTMF->setVisible(false);
+		ui->editIAXDTMF->setVisible(false);
+		ui->pushIAXDTMF->setVisible(false);
+		ui->label1->setText("Gateway");
+		ui->label2->setText("Callsign");
+		ui->label3->setText("Dest");
+		ui->label4->setText("Type");
+		ui->label5->setText("Path");
+		ui->label6->setText("Frame#");
+	}
+	else if(m == "FCS"){
+		process_fcs_rooms();
 		ui->comboModule->setEnabled(false);
 		ui->editDMRID->setEnabled(true);
 		ui->comboESSID->setEnabled(true);
@@ -822,12 +856,12 @@ void DudeStar::process_ysf_hosts()
 			}
 		}
 		f.close();
-		if(saved_ysfhost.left(3) != "FCS"){
+		//if(saved_ysfhost.left(3) != "FCS"){
 			int i = ui->comboHost->findText(saved_ysfhost);
 			ui->comboHost->setCurrentIndex(i);
-		}
+		//}
 		ui->comboHost->blockSignals(false);
-		process_fcs_rooms();
+		//process_fcs_rooms();
 	}
 	else{
 		download_file("YSFHosts.txt");
@@ -842,7 +876,7 @@ void DudeStar::process_fcs_rooms()
 		ui->comboHost->blockSignals(true);
 		QFile f(config_path + "/FCSHosts.txt");
 		if(f.open(QIODevice::ReadOnly)){
-			//ui->comboHost->clear();
+			ui->comboHost->clear();
 			while(!f.atEnd()){
 				QString l = f.readLine();
 				if(l.at(0) == '#'){
@@ -861,10 +895,10 @@ void DudeStar::process_fcs_rooms()
 			}
 		}
 		f.close();
-		if(saved_ysfhost.left(3) == "FCS"){
-			int i = ui->comboHost->findText(saved_ysfhost);
+		//if(saved_ysfhost.left(3) == "FCS"){
+			int i = ui->comboHost->findText(saved_fcshost);
 			ui->comboHost->setCurrentIndex(i);
-		}
+		//}
 		ui->comboHost->blockSignals(false);
 	}
 	else{
@@ -1207,15 +1241,18 @@ void DudeStar::process_settings()
 						process_ysf_hosts();
 					}
 					else if(i == 4){
-						process_dmr_hosts();
+						process_fcs_rooms();
 					}
 					else if(i == 5){
-						process_p25_hosts();
+						process_dmr_hosts();
 					}
 					else if(i == 6){
-						process_nxdn_hosts();
+						process_p25_hosts();
 					}
 					else if(i == 7){
+						process_nxdn_hosts();
+					}
+					else if(i == 8){
 						process_m17_hosts();
 					}
 				}
@@ -1246,6 +1283,13 @@ void DudeStar::process_settings()
 					saved_ysfhost = sl.at(1).simplified();
 					if(ui->comboMode->currentText().simplified() == "YSF"){
 						int i = ui->comboHost->findText(saved_ysfhost);
+						ui->comboHost->setCurrentIndex(i);
+					}
+				}
+				if(sl.at(0) == "FCSHOST"){
+					saved_fcshost = sl.at(1).simplified();
+					if(ui->comboMode->currentText().simplified() == "FCS"){
+						int i = ui->comboHost->findText(saved_fcshost);
 						ui->comboHost->setCurrentIndex(i);
 					}
 				}
@@ -1549,7 +1593,7 @@ void DudeStar::process_connect()
 			emit ui->editRPTR2->textChanged(ui->editRPTR2->text());
 			m_modethread->start();
 		}
-		if(m_protocol == "YSF"){
+		if( (m_protocol == "YSF") || (m_protocol == "FCS") ){
 			m_ysf = new YSFCodec(callsign, hostname, host, port, ui->comboVocoder->currentData().toString().simplified(), ui->comboCapture->currentText(), ui->comboPlayback->currentText());
 			m_modethread = new QThread;
 			m_ysf->moveToThread(m_modethread);

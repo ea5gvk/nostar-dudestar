@@ -83,6 +83,7 @@ private:
 	QString saved_dcshost;
 	QString saved_xrfhost;
 	QString saved_ysfhost;
+	QString saved_fcshost;
 	QString saved_dmrhost;
 	QString saved_p25host;
 	QString saved_nxdnhost;
