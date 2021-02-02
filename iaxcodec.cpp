@@ -135,7 +135,7 @@ void IAXCodec::send_call()
 {
 	uint16_t scall = htons(++m_scallno | 0x8000);
 	m_oseq = m_iseq = 0;
-	QString num("2125553455");
+	//QString num("2125553455");
 	QByteArray out;
 	out.append((char *)&scall, 2);
 	out.append('\x00');
@@ -153,8 +153,9 @@ void IAXCodec::send_call()
 	out.append('\x00');
 	out.append(IAX_PROTO_VERSION);
 	out.append(IAX_IE_CALLING_NUMBER);
-	out.append(num.size());
-	out.append(num.toUtf8(), num.size());
+	out.append('\x00');
+	//out.append(num.size());
+	//out.append(num.toUtf8(), num.size());
 	out.append(IAX_IE_CALLING_NAME);
 	out.append(m_callsign.size());
 	out.append(m_callsign.toUtf8(), m_callsign.size());

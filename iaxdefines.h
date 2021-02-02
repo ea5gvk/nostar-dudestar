@@ -67,6 +67,7 @@
 #define IAX_IE_AUTHMETHODS			14
 #define IAX_IE_CHALLENGE			15
 #define IAX_IE_MD5_RESULT			16
+#define IAX_IE_APPARENT_ADDR		18
 #define IAX_IE_REFRESH				19
 #define IAX_IE_CAUSE				22
 #define IAX_IE_DATETIME				31
