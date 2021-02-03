@@ -33,6 +33,8 @@
 #define AST_CONTROL_RING			2
 #define AST_CONTROL_RINGING			3
 #define AST_CONTROL_ANSWER			4
+#define AST_CONTROL_KEY				12
+#define AST_CONTROL_UNKEY			13
 
 #define AST_FORMAT_ULAW				4
 #define IAX_AUTH_MD5				2

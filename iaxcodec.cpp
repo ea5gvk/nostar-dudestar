@@ -238,6 +238,31 @@ void IAXCodec::send_dtmf(QByteArray dtmf)
 	}
 }
 
+void IAXCodec::send_radio_key(bool key)
+{
+	QByteArray out;
+	uint16_t scall = htons(m_scallno | 0x8000);
+	uint16_t dcall = htons(m_dcallno);
+	uint32_t ts = htonl((QDateTime::currentMSecsSinceEpoch() - m_timestamp) + 3);
+	out.clear();
+	out.append((char *)&scall, 2);
+	out.append((char *)&dcall, 2);
+	out.append((char *)&ts, 4);
+	out.append(m_oseq);
+	out.append(m_iseq);
+	out.append(AST_FRAME_CONTROL);
+	out.append(key ? AST_CONTROL_KEY : AST_CONTROL_UNKEY);
+	m_udp->writeDatagram(out, m_address, m_port);
+#ifdef DEBUG
+		fprintf(stderr, "SEND: ");
+		for(int i = 0; i < out.size(); ++i){
+			fprintf(stderr, "%02x ", (unsigned char)out.data()[i]);
+		}
+		fprintf(stderr, "\n");
+		fflush(stderr);
+#endif
+}
+
 void IAXCodec::send_ping()
 {
 	QByteArray out;
@@ -707,8 +732,9 @@ void IAXCodec::process_rx_data()
 void IAXCodec::start_tx()
 {
 	//std::cerr << "Pressed TX buffersize == " << audioin->bufferSize() << std::endl;
-	QByteArray tx("*99", 3);
-	send_dtmf(tx);
+	//QByteArray tx("*99", 3);
+	//send_dtmf(tx);
+	send_radio_key(true);
 	m_ttscnt = 0;
 	qDebug() << "start_tx() " << m_ttsid << " " << m_ttstext;
 	m_tx = true;
@@ -728,8 +754,9 @@ void IAXCodec::start_tx()
 void IAXCodec::stop_tx()
 {
 	m_tx = false;
-	QByteArray tx("#", 1);
-	send_dtmf(tx);
+	send_radio_key(false);
+	//QByteArray tx("#", 1);
+	//send_dtmf(tx);
 }
 
 void IAXCodec::transmit()

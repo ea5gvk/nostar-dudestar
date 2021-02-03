@@ -58,6 +58,7 @@ private slots:
 	void process_rx_data();
 	void send_voice_frame(int16_t *);
 	void send_dtmf(QByteArray);
+	void send_radio_key(bool);
 	void input_src_changed(int id, QString t) { m_ttsid = id; m_ttstext = t; }
 	void in_audio_vol_changed(qreal);
 	void out_audio_vol_changed(qreal);
