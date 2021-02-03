@@ -130,71 +130,7 @@ void IAXCodec::decoder_gain_changed(qreal v)
 {
 	m_rxgain = v;
 }
-/*
-void IAXCodec::send_call()
-{
-	uint16_t scall = htons(++m_scallno | 0x8000);
-	m_oseq = m_iseq = 0;
-	//QString num("2125553455");
-	QByteArray out;
-	out.append((char *)&scall, 2);
-	out.append('\x00');
-	out.append('\x00');
-	out.append('\x00');
-	out.append('\x00');
-	out.append('\x00');
-	out.append(3);
-	out.append(m_oseq);
-	out.append(m_iseq);
-	out.append(AST_FRAME_IAX);
-	out.append(IAX_COMMAND_NEW);
-	out.append(IAX_IE_VERSION);
-	out.append(sizeof(short));
-	out.append('\x00');
-	out.append(IAX_PROTO_VERSION);
-	out.append(IAX_IE_CALLING_NUMBER);
-	out.append('\x00');
-	//out.append(num.size());
-	//out.append(num.toUtf8(), num.size());
-	out.append(IAX_IE_CALLING_NAME);
-	out.append(m_callsign.size());
-	out.append(m_callsign.toUtf8(), m_callsign.size());
-	out.append(IAX_IE_FORMAT);
-	out.append(sizeof(int));
-	out.append('\x00');
-	out.append('\x00');
-	out.append('\x00');
-	out.append(AST_FORMAT_ULAW);
-	out.append(IAX_IE_CAPABILITY);
-	out.append(sizeof(int));
-	out.append('\x00');
-	out.append('\x00');
-	out.append('\x00');
-	out.append(AST_FORMAT_ULAW);
-	out.append(IAX_IE_USERNAME);
-	out.append(m_username.size());
-	out.append(m_username.toUtf8(), m_username.size());
-	out.append(IAX_IE_CALLED_NUMBER);
-	out.append(m_node.size());
-	out.append(m_node.toUtf8(), m_node.size());
-	out.append(IAX_IE_DNID);
-	out.append(m_node.size());
-	out.append(m_node.toUtf8(), m_node.size());
-	out.append(IAX_IE_CALLED_CONTEXT);
-	out.append(m_context.size());
-	out.append(m_context.toUtf8(), m_context.size());
-	m_timestamp = QDateTime::currentMSecsSinceEpoch();
-	m_udp->writeDatagram(out, m_address, m_port);
-#ifdef DEBUG
-	fprintf(stderr, "SEND: ");
-	for(int i = 0; i < out.size(); ++i){
-		fprintf(stderr, "%02x ", (unsigned char)out.data()[i]);
-	}
-	fprintf(stderr, "\n");
-	fflush(stderr);
-#endif
-}
-*/
+
 void IAXCodec::send_call()
 {
 	uint16_t scall = htons(++m_scallno | 0x8000);
