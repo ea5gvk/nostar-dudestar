@@ -142,7 +142,7 @@ void IAXCodec::send_call()
 	out.append('\x00');
 	out.append('\x00');
 	out.append('\x00');
-	out.append(3);
+	out.append('\x00');
 	out.append(m_oseq);
 	out.append(m_iseq);
 	out.append(AST_FRAME_IAX);
@@ -187,7 +187,7 @@ void IAXCodec::send_call_auth()
 	QByteArray result = QCryptographicHash::hash(m_md5seed, QCryptographicHash::Md5);
 	uint16_t scall = htons(m_scallno | 0x8000);
 	uint16_t dcall = htons(m_dcallno);
-	uint32_t ts = htonl((QDateTime::currentMSecsSinceEpoch() - m_timestamp) + 3);
+	uint32_t ts = htonl((QDateTime::currentMSecsSinceEpoch() - m_timestamp));// + 3);
 
 	out.append((char *)&scall, 2);
 	out.append((char *)&dcall, 2);
@@ -243,7 +243,7 @@ void IAXCodec::send_radio_key(bool key)
 	QByteArray out;
 	uint16_t scall = htons(m_scallno | 0x8000);
 	uint16_t dcall = htons(m_dcallno);
-	uint32_t ts = htonl((QDateTime::currentMSecsSinceEpoch() - m_timestamp) + 3);
+	uint32_t ts = htonl((QDateTime::currentMSecsSinceEpoch() - m_timestamp));// + 3);
 	out.clear();
 	out.append((char *)&scall, 2);
 	out.append((char *)&dcall, 2);
@@ -268,7 +268,7 @@ void IAXCodec::send_ping()
 	QByteArray out;
 	uint16_t scall = htons(m_scallno | 0x8000);
 	uint16_t dcall = htons(m_dcallno);
-	uint32_t ts = htonl((QDateTime::currentMSecsSinceEpoch() - m_timestamp) + 3);
+	uint32_t ts = htonl((QDateTime::currentMSecsSinceEpoch() - m_timestamp));// + 3);
 
 	out.append((char *)&scall, 2);
 	out.append((char *)&dcall, 2);
@@ -293,7 +293,7 @@ void IAXCodec::send_pong()
 	QByteArray out;
 	uint16_t scall = htons(m_scallno | 0x8000);
 	uint16_t dcall = htons(m_dcallno);
-	uint32_t ts = htonl((QDateTime::currentMSecsSinceEpoch() - m_timestamp) + 3);
+	uint32_t ts = htonl((QDateTime::currentMSecsSinceEpoch() - m_timestamp));// + 3);
 	uint32_t jitter = htonl(m_rxjitter);
 	//uint32_t loss = htonl(m_rxloss);
 	uint32_t frames = htonl(m_rxframes);
@@ -342,7 +342,7 @@ void IAXCodec::send_ack(uint16_t scall, uint16_t dcall, uint8_t oseq, uint8_t is
 	QByteArray out;
 	scall = htons(scall | 0x8000);
 	dcall = htons(dcall);
-	uint32_t ts = htonl((QDateTime::currentMSecsSinceEpoch() - m_timestamp) + 3);
+	uint32_t ts = htonl((QDateTime::currentMSecsSinceEpoch() - m_timestamp));// + 3);
 
 	out.append((char *)&scall, 2);
 	out.append((char *)&dcall, 2);
@@ -367,7 +367,7 @@ void IAXCodec::send_lag_response()
 	QByteArray out;
 	uint16_t scall = htons(m_scallno | 0x8000);
 	uint16_t dcall = htons(m_dcallno);
-	uint32_t ts = htonl((QDateTime::currentMSecsSinceEpoch() - m_timestamp) + 3);
+	uint32_t ts = htonl((QDateTime::currentMSecsSinceEpoch() - m_timestamp));// + 3);
 
 	out.append((char *)&scall, 2);
 	out.append((char *)&dcall, 2);
@@ -392,7 +392,7 @@ void IAXCodec::send_voice_frame(int16_t *f)
 	QByteArray out;
 	uint16_t scall = htons(m_scallno | 0x8000);
 	uint16_t dcall = htons(m_dcallno);
-	uint32_t ts = htonl((QDateTime::currentMSecsSinceEpoch() - m_timestamp) + 3);
+	uint32_t ts = htonl((QDateTime::currentMSecsSinceEpoch() - m_timestamp));// + 3);
 
 	out.append((char *)&scall, 2);
 	out.append((char *)&dcall, 2);
@@ -426,12 +426,13 @@ void IAXCodec::send_registration(uint16_t dcall)
 	if(dcall){
 		dcall = htons(dcall);
 		seq = 1;
-		ts = htonl((QDateTime::currentMSecsSinceEpoch() - m_timestamp) + 3);
+		ts = htonl((QDateTime::currentMSecsSinceEpoch() - m_timestamp));// + 3);
 	}
 	else{
 		--m_regscallno;
 		seq = 0;
-		ts = htonl(3);
+		//ts = htonl(3);
+		ts  = 0;
 		m_md5seed.clear();
 	}
 
@@ -476,7 +477,7 @@ void IAXCodec::send_disconnect()
 	QByteArray out;
 	uint16_t scall = htons(m_scallno | 0x8000);
 	uint16_t dcall = htons(m_dcallno);
-	uint32_t ts = htonl((QDateTime::currentMSecsSinceEpoch() - m_timestamp) + 3);
+	uint32_t ts = htonl((QDateTime::currentMSecsSinceEpoch() - m_timestamp));// + 3);
 	QString bye("BuhBye Dudesters");
 	out.append((char *)&scall, 2);
 	out.append((char *)&dcall, 2);
@@ -672,6 +673,16 @@ void IAXCodec::process_udp()
 		send_ack(m_scallno, m_dcallno, m_oseq, m_iseq);
 	}
 	else if( (buf.data()[0] & 0x80) &&
+		(buf.data()[10] == AST_FRAME_IAX) &&
+		(buf.data()[11] == IAX_COMMAND_VNAK) )
+	{
+		++m_rxframes;
+		m_dcallno = (((buf.data()[0] & 0x7f) << 8) | ((uint8_t)buf.data()[1]));
+		m_iseq = buf.data()[8] + 1;
+		m_oseq = buf.data()[9];
+		send_ack(m_scallno, m_dcallno, m_oseq, m_iseq);
+	}
+	else if( (buf.data()[0] & 0x80) &&
 		(buf.data()[10] == AST_FRAME_VOICE) &&
 		(buf.data()[11] == AST_FORMAT_ULAW) )
 	{
@@ -798,7 +809,7 @@ void IAXCodec::transmit()
 	if (s == 0) return;
 
 	uint16_t scall = htons(m_scallno);
-	uint16_t ts = htons( (QDateTime::currentMSecsSinceEpoch() - m_timestamp) + 3 );
+	uint16_t ts = htons( (QDateTime::currentMSecsSinceEpoch() - m_timestamp));// + 3 );
 	out.append((char *)&scall, 2);
 	out.append((char *)&ts, 2);
 	for(int i = 0; i < s; ++i){
