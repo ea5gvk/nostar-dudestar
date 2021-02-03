@@ -614,14 +614,14 @@ void IAXCodec::process_udp()
 		(buf.data()[10] == AST_FRAME_CONTROL) &&
 		(buf.data()[11] == AST_CONTROL_RINGING) )
 	{
-		int16_t zeropcm[160];
-		memset(zeropcm, 0, 160 * sizeof(int16_t));
+		//int16_t zeropcm[160];
+		//memset(zeropcm, 0, 160 * sizeof(int16_t));
 		++m_rxframes;
 		m_dcallno = (((buf.data()[0] & 0x7f) << 8) | ((uint8_t)buf.data()[1]));
 		m_iseq = buf.data()[8] + 1;
 		m_oseq = buf.data()[9];
 		send_ack(m_scallno, m_dcallno, m_oseq, m_iseq);
-		send_voice_frame(zeropcm);
+		//send_voice_frame(zeropcm);
 	}
 	else if( (buf.data()[0] & 0x80) &&
 		(buf.data()[10] == AST_FRAME_CONTROL) &&
@@ -642,7 +642,7 @@ void IAXCodec::process_udp()
 			m_audio->start_playback();
 			m_audio->set_input_buffer_size(640);
 			m_audio->start_capture();
-			m_txtimer->start(19);
+			//m_txtimer->start(19);
 		}
 		++m_rxframes;
 		m_dcallno = (((buf.data()[0] & 0x7f) << 8) | ((uint8_t)buf.data()[1]));
@@ -686,6 +686,8 @@ void IAXCodec::process_udp()
 		(buf.data()[10] == AST_FRAME_VOICE) &&
 		(buf.data()[11] == AST_FORMAT_ULAW) )
 	{
+		int16_t zeropcm[160];
+		memset(zeropcm, 0, 160 * sizeof(int16_t));
 		++m_rxframes;
 		m_dcallno = (((buf.data()[0] & 0x7f) << 8) | ((uint8_t)buf.data()[1]));
 		m_iseq = buf.data()[8] + 1;
@@ -693,6 +695,10 @@ void IAXCodec::process_udp()
 		send_ack(m_scallno, m_dcallno, m_oseq, m_iseq);
 		for(int i = 0; i < buf.size() - 12; ++i){
 			m_audioq.append(ulaw_decode(buf.data()[12+i]));
+		}
+		send_voice_frame(zeropcm);
+		if(!m_txtimer->isActive()){
+			m_txtimer->start(19);
 		}
 	}
 	else if( (buf.data()[0] & 0x80) &&
