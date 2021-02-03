@@ -130,7 +130,7 @@ void IAXCodec::decoder_gain_changed(qreal v)
 {
 	m_rxgain = v;
 }
-
+/*
 void IAXCodec::send_call()
 {
 	uint16_t scall = htons(++m_scallno | 0x8000);
@@ -183,6 +183,55 @@ void IAXCodec::send_call()
 	out.append(IAX_IE_CALLED_CONTEXT);
 	out.append(m_context.size());
 	out.append(m_context.toUtf8(), m_context.size());
+	m_timestamp = QDateTime::currentMSecsSinceEpoch();
+	m_udp->writeDatagram(out, m_address, m_port);
+#ifdef DEBUG
+	fprintf(stderr, "SEND: ");
+	for(int i = 0; i < out.size(); ++i){
+		fprintf(stderr, "%02x ", (unsigned char)out.data()[i]);
+	}
+	fprintf(stderr, "\n");
+	fflush(stderr);
+#endif
+}
+*/
+void IAXCodec::send_call()
+{
+	uint16_t scall = htons(++m_scallno | 0x8000);
+	m_oseq = m_iseq = 0;
+	QByteArray out;
+	out.append((char *)&scall, 2);
+	out.append('\x00');
+	out.append('\x00');
+	out.append('\x00');
+	out.append('\x00');
+	out.append('\x00');
+	out.append(3);
+	out.append(m_oseq);
+	out.append(m_iseq);
+	out.append(AST_FRAME_IAX);
+	out.append(IAX_COMMAND_NEW);
+	out.append(IAX_IE_VERSION);
+	out.append(sizeof(short));
+	out.append('\x00');
+	out.append(IAX_PROTO_VERSION);
+	out.append(IAX_IE_CALLED_NUMBER);
+	out.append(m_node.size());
+	out.append(m_node.toUtf8(), m_node.size());
+	out.append(IAX_IE_CALLING_NUMBER);
+	out.append('\x00');
+	out.append(IAX_IE_CALLING_NAME);
+	out.append(m_callsign.size());
+	out.append(m_callsign.toUtf8(), m_callsign.size());
+	out.append(IAX_IE_USERNAME);
+	out.append(m_username.size());
+	out.append(m_username.toUtf8(), m_username.size());
+	out.append(IAX_IE_FORMAT);
+	out.append(sizeof(int));
+	out.append('\x00');
+	out.append('\x00');
+	out.append('\x00');
+	out.append(AST_FORMAT_ULAW);
 	m_timestamp = QDateTime::currentMSecsSinceEpoch();
 	m_udp->writeDatagram(out, m_address, m_port);
 #ifdef DEBUG
@@ -532,7 +581,7 @@ void IAXCodec::process_udp()
 		(buf.data()[10] == AST_FRAME_IAX) &&
 		(buf.data()[11] == IAX_COMMAND_REGAUTH) &&
 		(buf.data()[12] == IAX_IE_AUTHMETHODS) &&
-		(buf.data()[15] == IAX_AUTH_MD5) &&
+		((buf.data()[15] & 0x02) == IAX_AUTH_MD5) &&
 		(buf.data()[16] == IAX_IE_CHALLENGE) )
 	{
 		uint16_t dcallno = (((buf.data()[0] & 0x7f) << 8) | ((uint8_t)buf.data()[1]));
@@ -586,6 +635,12 @@ void IAXCodec::process_udp()
 		m_iseq = buf.data()[8] + 1;
 		m_oseq = buf.data()[9];
 		send_ack(m_scallno, m_dcallno, m_oseq, m_iseq);
+	}
+	else if( (buf.data()[0] & 0x80) &&
+		(buf.data()[10] == AST_FRAME_IAX) &&
+		(buf.data()[11] == IAX_COMMAND_REJECT) )
+	{
+
 	}
 	else if( (buf.data()[0] & 0x80) &&
 		(buf.data()[10] == AST_FRAME_CONTROL) &&
