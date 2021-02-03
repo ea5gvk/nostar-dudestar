@@ -12,6 +12,8 @@ I added Flite TTS TX capability to DUDE-Star so I didn't have to talk to myself 
 M17 support is preliminary and is a work in progress, as is the M17 protocol itself. The Codec2 library included in DUDE-Star is a C++ implementation of the original C library taken from the mvoice project.  More info on M17 can be found here: https://m17project.org/
 
 # Usage
+Linux users with USB AMBE dongles will need to make sure they have permission to use the USB serial device, and disable the archaic ModeManager service that still exists on many Linux systems. On most systems this means adding your user to the 'dialout' group, and running 'sudo systemctl disable ModemManager.service' and rebooting.  This is a requirement for any serial device to be accessed.
+
 On first launch, DUDE-Star will attempt to download the host files and ID files.  IAX has no host file, node info is manually entered in the settings tab under 'IAX Settings'.
 
 Host/Mod: Select the desired host and module (for D-STAR and M17) from the selections.
