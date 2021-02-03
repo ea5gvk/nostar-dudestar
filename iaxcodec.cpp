@@ -536,6 +536,12 @@ void IAXCodec::process_udp()
 			send_call();
 		}
 	}
+	else if((buf.data()[0] & 0x80) &&
+		(buf.data()[10] == AST_FRAME_IAX) &&
+		(buf.data()[11] == IAX_COMMAND_REGREJ) )
+	{
+		m_status = DISCONNECTED;
+	}
 	else if( (buf.data()[0] & 0x80) &&
 		(buf.data()[10] == AST_FRAME_IAX) &&
 		(buf.data()[11] == IAX_COMMAND_AUTHREQ) &&
@@ -576,7 +582,7 @@ void IAXCodec::process_udp()
 		(buf.data()[10] == AST_FRAME_IAX) &&
 		(buf.data()[11] == IAX_COMMAND_REJECT) )
 	{
-
+		m_status = DISCONNECTED;
 	}
 	else if( (buf.data()[0] & 0x80) &&
 		(buf.data()[10] == AST_FRAME_CONTROL) &&

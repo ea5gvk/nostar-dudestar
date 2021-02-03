@@ -1794,7 +1794,7 @@ void DudeStar::update_iax_data()
 	}
 	if((connect_status == Codec::CONNECTING) && (m_iax->get_status() == Codec::DISCONNECTED)){
 		process_connect();
-		QMessageBox::warning(this, tr("Connection refused"), tr("M17 connection refused.  Check callsign and confirm this callsign or IP is not already connected to this reflector"));
+		QMessageBox::warning(this, tr("Connection refused"), tr("IAX connection refused.  Check allstar settings and confirm that you have permission to connect to this node."));
 		return;
 	}
 	if( (connect_status == Codec::CONNECTING) && ( m_iax->get_status() == Codec::CONNECTED_RW)){
