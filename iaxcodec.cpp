@@ -41,7 +41,7 @@ IAXCodec::IAXCodec(QString callsign, QString username, QString password, QString
 	m_port(port),
 	m_scallno(0),
 	m_dcallno(0),
-	m_regscallno(0),
+	m_regscallno(0x7fff),
 	m_regdcallno(0),
 	m_audioin(audioin),
 	m_audioout(audioout),
@@ -429,7 +429,7 @@ void IAXCodec::send_registration(uint16_t dcall)
 		ts = htonl((QDateTime::currentMSecsSinceEpoch() - m_timestamp) + 3);
 	}
 	else{
-		++m_regscallno;
+		--m_regscallno;
 		seq = 0;
 		ts = htonl(3);
 		m_md5seed.clear();
@@ -686,6 +686,16 @@ void IAXCodec::process_udp()
 	}
 	else if( (buf.data()[0] & 0x80) &&
 		(buf.data()[10] == AST_FRAME_TEXT) )
+	{
+		++m_rxframes;
+		m_dcallno = (((buf.data()[0] & 0x7f) << 8) | ((uint8_t)buf.data()[1]));
+		m_iseq = buf.data()[8] + 1;
+		m_oseq = buf.data()[9];
+		send_ack(m_scallno, m_dcallno, m_oseq, m_iseq);
+	}
+	else if( (buf.data()[0] & 0x80) &&
+		(buf.data()[10] == AST_FRAME_CONTROL) &&
+		(buf.data()[11] == AST_CONTROL_OPTION) )
 	{
 		++m_rxframes;
 		m_dcallno = (((buf.data()[0] & 0x7f) << 8) | ((uint8_t)buf.data()[1]));
