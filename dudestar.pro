@@ -8,7 +8,17 @@ macx:QMAKE_INFO_PLIST = Info.plist
 
 TARGET = dudestar
 TEMPLATE = app
-VERSION_BUILD='$(shell cd $$PWD;git rev-parse --short HEAD)'
+
+unix: VERSION_BUILD='Linux build $(shell cd $$PWD;git rev-parse --short HEAD)'
+macx: VERSION_BUILD='macOS build $(shell cd $$PWD;git rev-parse --short HEAD)'
+win32 {
+	!contains(QMAKE_TARGET.arch, x86_64) {
+		VERSION_BUILD='Windows 32-bit build $(shell cd $$PWD;git rev-parse --short HEAD)'
+	} else {
+		VERSION_BUILD='Windows 64-bit build $(shell cd $$PWD;git rev-parse --short HEAD)'
+	}
+}
+
 DEFINES += QT_DEPRECATED_WARNINGS
 DEFINES += VERSION_NUMBER=\"\\\"$${VERSION_BUILD}\\\"\"
 #DEFINES += USE_FLITE

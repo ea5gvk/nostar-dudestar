@@ -237,7 +237,7 @@ void DudeStar::init_gui()
 	ui->comboModule->setStyleSheet("combobox-popup: 0;");
 	//ui->comboPlayback->setStyleSheet("combobox-popup: 0;");
 	//ui->comboCapture->setStyleSheet("combobox-popup: 0;");
-	ui->textAbout->setHtml(tr("<p>DUDE-Star git build %1</p><p>Copyright (C) 2019-2021 Doug McLain AD8DP</p>"
+	ui->textAbout->setHtml(tr("<p>DUDE-Star %1</p><p>Copyright (C) 2019-2021 Doug McLain AD8DP</p>"
 							  "<p>This program is free software; you can redistribute it "
 							  "and/or modify it under the terms of the GNU General Public "
 							  "License as published by the Free Software Foundation; "
