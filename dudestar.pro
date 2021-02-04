@@ -12,7 +12,7 @@ TEMPLATE = app
 unix: VERSION_BUILD='Linux build $(shell cd $$PWD;git rev-parse --short HEAD)'
 macx: VERSION_BUILD='macOS build $(shell cd $$PWD;git rev-parse --short HEAD)'
 win32 {
-	!contains(QMAKE_TARGET.arch, x86_64) {
+	contains(QT_ARCH, i386) {
 		VERSION_BUILD='Windows 32-bit build $(shell cd $$PWD;git rev-parse --short HEAD)'
 	} else {
 		VERSION_BUILD='Windows 64-bit build $(shell cd $$PWD;git rev-parse --short HEAD)'
