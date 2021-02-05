@@ -33,6 +33,20 @@
 #include "micpermission.h"
 #endif
 
+#ifdef Q_OS_WIN64
+#define ARCHNAME "Windows 64-bit"
+#elif defined Q_OS_WIN32
+#define ARCHNAME "Windows 32-bit"
+#elif defined Q_OS_MACOS
+#define ARCHNAME "macOS"
+#elif defined Q_OS_LINUX
+#define ARCHNAME "Linux"
+#elif defined Q_OS_UNIX
+#define ARCHNAME "Unix"
+#else
+#define ARCHNAME "Unknown"
+#endif
+
 #define ENDLINE "\n"
 
 #define LOBYTE(w)			((uint8_t)(uint16_t)(w & 0x00FF))
@@ -237,7 +251,7 @@ void DudeStar::init_gui()
 	ui->comboModule->setStyleSheet("combobox-popup: 0;");
 	//ui->comboPlayback->setStyleSheet("combobox-popup: 0;");
 	//ui->comboCapture->setStyleSheet("combobox-popup: 0;");
-	ui->textAbout->setHtml(tr("<p>DUDE-Star %1</p><p>Copyright (C) 2019-2021 Doug McLain AD8DP</p>"
+	ui->textAbout->setHtml(tr("<p>DUDE-Star %1 git build %2</p><p>Copyright (C) 2019-2021 Doug McLain AD8DP</p>"
 							  "<p>This program is free software; you can redistribute it "
 							  "and/or modify it under the terms of the GNU General Public "
 							  "License as published by the Free Software Foundation; "
@@ -247,7 +261,7 @@ void DudeStar::init_gui()
 							  "PARTICULAR PURPOSE. See the GNU General Public License for "
 							  "more details.\n\nYou should have received a copy of the GNU "
 							  "General Public License along with this program. "
-							  "If not, see <a href=\"http://www.gnu.org/licenses/\">http://www.gnu.org/licenses/</a></p>").arg(VERSION_NUMBER));
+							  "If not, see <a href=\"http://www.gnu.org/licenses/\">http://www.gnu.org/licenses/</a></p>").arg(ARCHNAME).arg(VERSION_NUMBER));
 	m_uitimer = new QTimer();
 	connect(m_uitimer, SIGNAL(timeout()), this, SLOT(update_ui()));
 	m_uitimer->start(10);
