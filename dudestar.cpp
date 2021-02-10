@@ -2114,6 +2114,11 @@ void DudeStar::update_dmr_data(Codec::MODEINFO info)
 		QMessageBox::warning(this, tr("Connection refused"), tr("DMR connection refused.  Check callsign, DMR ID, ESSID, and hotspot security password.  Some servers require specific information for Lat/Long/Location/Description.  It's up to you to determine this information from the server you are attempting to connect to."));
 		return;
 	}
+	if(info.status == Codec::CLOSED){
+		process_connect();
+		QMessageBox::warning(this, tr("Connection closed"), tr("DMR server closing down."));
+		return;
+	}
 	if((connect_status == Codec::CONNECTING) && (info.status == Codec::CONNECTED_RW)){
 		connect_status = Codec::CONNECTED_RW;
 		ui->pushConnect->setText("Disconnect");

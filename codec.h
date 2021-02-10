@@ -67,6 +67,7 @@ public:
 	} m_modeinfo;
 	enum{
 		DISCONNECTED,
+		CLOSED,
 		CONNECTING,
 		DMR_AUTH,
 		DMR_CONF,

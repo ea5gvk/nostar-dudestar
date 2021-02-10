@@ -101,6 +101,12 @@ void DMRCodec::process_udp()
 		//delete m_udp;
 		m_modeinfo.status = DISCONNECTED;
 	}
+	if((m_modeinfo.status != CONNECTED_RW) && (::memcmp(buf.data(), "MSTCL", 5U) == 0)){
+		//m_udp->disconnect();
+		//m_udp->close();
+		//delete m_udp;
+		m_modeinfo.status = CLOSED;
+	}
 	if((m_modeinfo.status != CONNECTED_RW) && (::memcmp(buf.data(), "RPTACK", 6U) == 0)){
 		switch(m_modeinfo.status){
 		case CONNECTING:
@@ -137,8 +143,10 @@ void DMRCodec::process_udp()
 			m_modeinfo.status = DMR_CONF;
 			char latitude[20U];
 			char longitude[20U];
-			sprintf(latitude, "%2.5f", m_lat.toFloat());
-			sprintf(longitude, "%2.6f", m_lon.toFloat());
+
+			sprintf(latitude, "%08f", m_lat.toFloat());
+			sprintf(longitude, "%09f", m_lon.toFloat());
+
 			char *p;
 			if((p = strchr(latitude, ',')) != NULL){
 				*p = '.';
@@ -148,7 +156,7 @@ void DMRCodec::process_udp()
 			}
 
 			::sprintf(buffer + 8U, "%-8.8s%09u%09u%02u%02u%8.8s%9.9s%03d%-20.20s%-19.19s%c%-124.124s%-40.40s%-40.40s", m_modeinfo.callsign.toStdString().c_str(),
-					438800000, 438800000, 1, 1, latitude, longitude, 0, m_location.toStdString().c_str(), m_desc.toStdString().c_str(), '4', "", "20200503", "MMDVM_Unknown");
+					438800000, 438800000, 1, 1, latitude, longitude, 0, m_location.toStdString().c_str(), m_desc.toStdString().c_str(), '4', "www.qrz.com", "20200101", "MMDVM_Unknown");
 			out.append(buffer, 302);
 			break;
 		case DMR_CONF:
