@@ -66,6 +66,7 @@ private slots:
 private:
 	enum{
 		DISCONNECTED,
+		CLOSED,
 		CONNECTING,
 		DMR_AUTH,
 		DMR_CONF,
