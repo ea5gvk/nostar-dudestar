@@ -22,8 +22,8 @@
 
 #define DEBUG
 
-M17Codec::M17Codec(QString callsign, char module, QString hostname, QString host, int port, QString audioin, QString audioout) :
-	Codec(callsign, module, hostname, host, port, NULL, audioin, audioout),
+M17Codec::M17Codec(QString callsign, char module, QString hostname, QString host, int port, bool ipv6, QString audioin, QString audioout) :
+	Codec(callsign, module, hostname, host, port, ipv6, NULL, audioin, audioout),
 	m_txrate(1)
 {
 	m_modeinfo.callsign = callsign;
@@ -228,6 +228,8 @@ void M17Codec::hostname_lookup(QHostInfo i)
 		out.append((char *)cs, 6);
 		out.append(m_module);
 		m_address = i.addresses().first();
+		//m_address.setAddress("2600:1f16:d6f:600:20eb:5765:b94c:aebb");
+		qDebug() << "Address == " << m_address.toString();
 		m_udp = new QUdpSocket(this);
 		connect(m_udp, SIGNAL(readyRead()), this, SLOT(process_udp()));
 		m_udp->writeDatagram(out, m_address, m_modeinfo.port);

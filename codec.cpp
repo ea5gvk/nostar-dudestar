@@ -24,7 +24,7 @@ extern cst_voice * register_cmu_us_awb(const char *);
 }
 #endif
 
-Codec::Codec(QString callsign, char module, QString hostname, QString host, int port, QString vocoder,QString audioin, QString audioout) :
+Codec::Codec(QString callsign, char module, QString hostname, QString host, int port, bool ipv6, QString vocoder, QString audioin, QString audioout) :
 	m_module(module),
 	m_hostname(hostname),
 	m_tx(false),
@@ -41,7 +41,8 @@ Codec::Codec(QString callsign, char module, QString hostname, QString host, int 
 	m_vocoder(vocoder),
 	m_ambedev(nullptr),
 	m_hwrx(false),
-	m_hwtx(false)
+	m_hwtx(false),
+	m_ipv6(ipv6)
 {
 	m_modeinfo.callsign = callsign;
 	m_modeinfo.gwid = 0;
@@ -77,7 +78,17 @@ void Codec::out_audio_vol_changed(qreal v){
 void Codec::send_connect()
 {
 	m_modeinfo.status = CONNECTING;
-	QHostInfo::lookupHost(m_modeinfo.host, this, SLOT(hostname_lookup(QHostInfo)));
+	if(m_ipv6 && (m_modeinfo.host != "none")){
+		qDebug() << "Host == " << m_modeinfo.host;
+		QList<QHostAddress> h;
+		QHostInfo i;
+		h.append(QHostAddress(m_modeinfo.host));
+		i.setAddresses(h);
+		hostname_lookup(i);
+	}
+	else{
+		QHostInfo::lookupHost(m_modeinfo.host, this, SLOT(hostname_lookup(QHostInfo)));
+	}
 }
 
 void Codec::start_tx()

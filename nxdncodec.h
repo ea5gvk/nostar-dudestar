@@ -25,7 +25,7 @@ class NXDNCodec : public Codec
 {
 	Q_OBJECT
 public:
-	NXDNCodec(QString callsign, uint16_t nxdnid, uint32_t gwid, QString host, int port, QString vocoder, QString audioin, QString audioout);
+	NXDNCodec(QString callsign, uint16_t nxdnid, uint32_t gwid, QString host, int port, bool ipv6, QString vocoder, QString audioin, QString audioout);
 	~NXDNCodec();
 	unsigned char * get_frame();
 	unsigned char * get_eot(){m_eot = true; return get_frame();}

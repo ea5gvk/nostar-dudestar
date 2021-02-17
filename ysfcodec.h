@@ -55,7 +55,7 @@ class YSFCodec : public Codec
 {
 	Q_OBJECT
 public:
-	YSFCodec(QString callsign, QString hostname, QString host, int port, QString vocoder, QString audioin, QString audioout);
+	YSFCodec(QString callsign, QString hostname, QString host, int port, bool ipv6, QString vocoder, QString audioin, QString audioout);
 	~YSFCodec();
 	void set_fcs_mode(bool y, std::string f = "        "){ m_fcs = y; m_fcsname = f; }
 private slots:

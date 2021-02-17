@@ -40,8 +40,8 @@ const int dvsi_interleave[49] = {
 	2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35, 38
 };
 
-YSFCodec::YSFCodec(QString callsign, QString hostname, QString host, int port, QString vocoder, QString audioin, QString audioout) :
-	Codec(callsign, 0, hostname, host, port, vocoder, audioin, audioout),
+YSFCodec::YSFCodec(QString callsign, QString hostname, QString host, int port, bool ipv6, QString vocoder, QString audioin, QString audioout) :
+	Codec(callsign, 0, hostname, host, port, ipv6, vocoder, audioin, audioout),
 
 	m_fcs(false),
 	m_txfullrate(false)

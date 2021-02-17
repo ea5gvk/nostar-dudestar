@@ -21,8 +21,8 @@
 
 #define DEBUG
 
-REFCodec::REFCodec(QString callsign, QString hostname, char module, QString host, int port, QString vocoder, QString audioin, QString audioout) :
-	Codec(callsign, module, hostname, host, port, vocoder, audioin, audioout)
+REFCodec::REFCodec(QString callsign, QString hostname, char module, QString host, int port, bool ipv6, QString vocoder, QString audioin, QString audioout) :
+	Codec(callsign, module, hostname, host, port, ipv6, vocoder, audioin, audioout)
 {
 }
 

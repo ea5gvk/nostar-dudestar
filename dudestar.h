@@ -61,6 +61,7 @@ signals:
 private:
     void init_gui();
     Ui::DudeStar *ui;
+	QSettings *m_settings;
 	LevelMeter *m_levelmeter;
 	QLabel *m_labeldb;
 	QTimer *m_uitimer;
@@ -75,9 +76,9 @@ private:
 	bool m_update_host_files;
 	int port;
 	QHostAddress address;
-    QString config_path;
+	QString config_path;
     QString callsign;
-	//QString serial;
+	QString serial;
 	QString dmr_password;
 	QString saved_refhost;
 	QString saved_dcshost;
@@ -127,6 +128,7 @@ private:
 	uint16_t m_outlevel;
 	uint64_t m_rxcnt;
 private slots:
+	void save_settings();
     void process_connect();
 	void process_mode_change(const QString &m);
 	void process_host_change(const QString &);

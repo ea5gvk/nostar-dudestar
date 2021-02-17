@@ -45,8 +45,8 @@ const unsigned char REC80[] = {0x80U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 
 #define WRITE_BIT(p,i,b) p[(i)>>3] = (b) ? (p[(i)>>3] | BIT_MASK_TABLE[(i)&7]) : (p[(i)>>3] & ~BIT_MASK_TABLE[(i)&7])
 #define READ_BIT(p,i)    (p[(i)>>3] & BIT_MASK_TABLE[(i)&7])
 
-P25Codec::P25Codec(QString callsign, int dmrid, int hostname, QString host, int port, QString audioin, QString audioout) :
-	Codec(callsign, 0, NULL, host, port, NULL, audioin, audioout),
+P25Codec::P25Codec(QString callsign, int dmrid, int hostname, QString host, int port, bool ipv6, QString audioin, QString audioout) :
+	Codec(callsign, 0, NULL, host, port, ipv6, NULL, audioin, audioout),
 	m_hostname(hostname),
 	m_dmrid(dmrid)
 {

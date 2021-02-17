@@ -24,7 +24,7 @@ class DCSCodec : public Codec
 {
 	Q_OBJECT
 public:
-	DCSCodec(QString callsign, QString hostname, char module, QString host, int port, QString vocoder, QString audioin, QString audioout);
+	DCSCodec(QString callsign, QString hostname, char module, QString host, int port, bool ipv6, QString vocoder, QString audioin, QString audioout);
 	~DCSCodec();
 	unsigned char * get_frame(unsigned char *ambe);
 private:

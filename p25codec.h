@@ -24,7 +24,7 @@ class P25Codec : public Codec
 {
 	Q_OBJECT
 public:
-	P25Codec(QString callsign, int dmrid, int hostname, QString host, int port, QString audioin, QString audioout);
+	P25Codec(QString callsign, int dmrid, int hostname, QString host, int port, bool ipv6, QString audioin, QString audioout);
 	~P25Codec();
 	unsigned char * get_frame(unsigned char *ambe);
 private:

@@ -34,7 +34,7 @@ class Codec : public QObject
 {
 	Q_OBJECT
 public:
-	Codec(QString callsign, char module, QString hostname, QString host, int port, QString vocoder, QString audioin, QString audioout);
+	Codec(QString callsign, char module, QString hostname, QString host, int port, bool ipv6, QString vocoder, QString audioin, QString audioout);
 	~Codec();
 	bool get_hwrx() { return m_hwrx; }
 	bool get_hwtx() { return m_hwtx; }
@@ -89,6 +89,7 @@ signals:
 	void update_output_level(unsigned short);
 protected slots:
 	virtual void send_disconnect(){}
+	virtual void hostname_lookup(QHostInfo){}
 	void send_connect();
 	void input_src_changed(int id, QString t) { m_ttsid = id; m_ttstext = t; }
 	void start_tx();
@@ -131,6 +132,7 @@ protected:
 #endif
 	bool m_hwrx;
 	bool m_hwtx;
+	bool m_ipv6;
 };
 
 #endif // CODEC_H

@@ -37,8 +37,8 @@ const uint32_t ENCODING_TABLE_1676[] =
 	 0xD97AU, 0xDB09U, 0xDD9FU, 0xDFECU, 0xE0E6U, 0xE295U, 0xE403U, 0xE670U, 0xE92FU, 0xEB5CU, 0xEDCAU, 0xEFB9U,
 	 0xF104U, 0xF377U, 0xF5E1U, 0xF792U, 0xF8CDU, 0xFABEU, 0xFC28U, 0xFE5BU};
 
-DMRCodec::DMRCodec(QString callsign, uint32_t dmrid, uint8_t essid, QString password, QString lat, QString lon, QString location, QString desc, QString options, uint32_t dstid, QString host, uint32_t port, QString vocoder, QString audioin, QString audioout) :
-	Codec(callsign, 0, NULL, host, port, vocoder, audioin, audioout),
+DMRCodec::DMRCodec(QString callsign, uint32_t dmrid, uint8_t essid, QString password, QString lat, QString lon, QString location, QString desc, QString options, uint32_t dstid, QString host, uint32_t port, bool ipv6, QString vocoder, QString audioin, QString audioout) :
+	Codec(callsign, 0, NULL, host, port, ipv6, vocoder, audioin, audioout),
 	m_dmrid(dmrid),
 	m_password(password),
 	m_lat(lat),

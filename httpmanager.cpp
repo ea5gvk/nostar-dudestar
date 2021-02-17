@@ -24,7 +24,7 @@ HttpManager::HttpManager(QString f) : QObject(nullptr)
 	m_config_path = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation);
 	m_filename = f;
 #ifndef Q_OS_WIN
-	m_config_path += "/dudestar";
+	m_config_path += "/dudetronics";
 #endif
 }
 
