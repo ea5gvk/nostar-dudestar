@@ -303,6 +303,7 @@ void DudeStar::save_settings()
 	m_settings->setValue("URCALL", ui->editURCALL->text().simplified());
 	m_settings->setValue("RPTR1", ui->editRPTR1->text().simplified());
 	m_settings->setValue("RPTR2", ui->editRPTR2->text().simplified());
+	m_settings->setValue("XRF2REF", ui->checkIPv6->isChecked() ? "true" : "false");
 	m_settings->setValue("USRTXT", ui->editUserTxt->text());
 	m_settings->setValue("IAXUSER", ui->editIAXUsername->text());
 	m_settings->setValue("IAXPASS", ui->editIAXPassword->text());
@@ -1321,6 +1322,7 @@ void DudeStar::process_settings()
 	ui->editRPTR1->setText(m_settings->value("RPTR1").toString().simplified());
 	ui->editRPTR2->setText(m_settings->value("RPTR2").toString().simplified());
 	ui->editUserTxt->setText(m_settings->value("USRTXT").toString().simplified());
+	(m_settings->value("XRF2REF").toString().simplified() == "true") ? ui->checkXrf2Ref->setChecked(true) : ui->checkXrf2Ref->setChecked(false);
 	ui->editIAXUsername->setText(m_settings->value("IAXUSER").toString().simplified());
 	ui->editIAXPassword->setText(m_settings->value("IAXPASS").toString().simplified());
 	ui->editIAXNode->setText(m_settings->value("IAXNODE").toString().simplified());
@@ -1431,9 +1433,9 @@ void DudeStar::process_connect()
 			port = sl.at(1).toInt();
 		}
 		ui->textLog->append("Connecting to " + host + ":" + QString::number(port) + "...");
-		if(m_protocol == "REF"){
+		if( (m_protocol == "REF") || ((m_protocol == "XRF") && (ui->checkXrf2Ref->isChecked())) ){
 			const char m = ui->comboModule->currentIndex() + 0x41;
-			m_ref = new REFCodec(callsign, hostname, m, host, port, false, ui->comboVocoder->currentData().toString().simplified(), ui->comboCapture->currentText(), ui->comboPlayback->currentText());
+			m_ref = new REFCodec(callsign, hostname, m, host, 20001, false, ui->comboVocoder->currentData().toString().simplified(), ui->comboCapture->currentText(), ui->comboPlayback->currentText());
 			m_modethread = new QThread;
 			m_ref->moveToThread(m_modethread);
 			connect(m_ref, SIGNAL(update(Codec::MODEINFO)), this, SLOT(update_ref_data(Codec::MODEINFO)));
@@ -1491,7 +1493,7 @@ void DudeStar::process_connect()
 			emit ui->editRPTR2->textChanged(ui->editRPTR2->text());
 			m_modethread->start();
 		}
-		if(m_protocol == "XRF"){
+		if( (m_protocol == "XRF") && (ui->checkXrf2Ref->isChecked() == false) ){
 			const char m = ui->comboModule->currentIndex() + 0x41;
 			m_xrf = new XRFCodec(callsign, hostname, m, host, port, false, ui->comboVocoder->currentData().toString().simplified(), ui->comboCapture->currentText(), ui->comboPlayback->currentText());
 			m_modethread = new QThread;
