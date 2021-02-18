@@ -1424,7 +1424,7 @@ void DudeStar::process_connect()
 		QStringList sl = ui->comboHost->currentData().toString().simplified().split(',');
 
 		if(m_protocol != "IAX"){
-			if( (ui->checkIPv6->isChecked()) && (sl.size() > 2) && (sl.at(2) != "none") ){
+			if( (m_protocol == "M17") && (ui->checkIPv6->isChecked()) && (sl.size() > 2) && (sl.at(2) != "none") ){
 				host = sl.at(2).simplified();
 			}
 			else{
