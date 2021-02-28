@@ -83,6 +83,7 @@ void AudioEngine::init()
                 qDebug() << (*it).supportedSampleRates();
                 qDebug() << (*it).supportedSampleSizes();
                 qDebug() << (*it).supportedSampleTypes();
+				qDebug() << (*it).preferredFormat();
             }
 			if((*it).deviceName() == m_outputdevice){
 				info = *it;
@@ -120,6 +121,7 @@ void AudioEngine::init()
                 qDebug() << (*it).supportedSampleRates();
                 qDebug() << (*it).supportedSampleSizes();
                 qDebug() << (*it).supportedSampleTypes();
+				qDebug() << (*it).preferredFormat();
             }
 			if((*it).deviceName() == m_inputdevice){
 				info = *it;
@@ -133,22 +135,15 @@ void AudioEngine::init()
 		else{
 			tempformat = format;
 		}
-        fprintf(stderr, "Using recording device %s\n", info.deviceName().toStdString().c_str());fflush(stderr);
-        int sr = 8000;
+
+		int sr = 8000;
         if(MACHAK){
-			if( (info.deviceName() == "Built-in Microphone") ||
-				(info.deviceName() == "MacBook Pro Microphone") ||
-				(info.deviceName() == "MacBook Pro Mikrofon")){
-                sr = 44100;
-                m_srm = 5;
-            }
-            else{
-                sr = 48000;
-                m_srm = 6;
-            }
+			sr = info.preferredFormat().sampleRate();
+			m_srm = (float)sr / 8000.0;
         }
         format.setSampleRate(sr);
 		m_in = new QAudioInput(info, format, this);
+		fprintf(stderr, "Capture device: %s SR: %d resample factor: %f\n", info.deviceName().toStdString().c_str(), sr, m_srm);fflush(stderr);
 	}
 }
 
@@ -204,8 +199,19 @@ void AudioEngine::input_data_received()
 		fprintf(stderr, "\n");
 		fflush(stderr);
 */
-        for(int i = 0; i < len; i += (2 * m_srm)){
-			m_audioinq.enqueue(((data.data()[i+1] << 8) & 0xff00) | (data.data()[i] & 0xff));
+		if(MACHAK){
+			std::vector<int16_t> samples;
+			for(int i = 0; i < len; i += 2){
+				samples.push_back(((data.data()[i+1] << 8) & 0xff00) | (data.data()[i] & 0xff));
+			}
+			for(float i = 0; i < (float)len/2; i += m_srm){
+				m_audioinq.enqueue(samples[i]);
+			}
+		}
+		else{
+			for(int i = 0; i < len; i += (2 * m_srm)){
+				m_audioinq.enqueue(((data.data()[i+1] << 8) & 0xff00) | (data.data()[i] & 0xff));
+			}
 		}
 	}
 }
