@@ -21,6 +21,7 @@
 #include <QMainWindow>
 #include <QButtonGroup>
 #include <QLabel>
+#include <QStandardItemModel>
 #ifdef USE_FLITE
 #include <flite/flite.h>
 #endif
@@ -62,6 +63,15 @@ private:
     void init_gui();
     Ui::DudeStar *ui;
 	QSettings *m_settings;
+	QSettings *m_reflocalhosts;
+	QSettings *m_dcslocalhosts;
+	QSettings *m_xrflocalhosts;
+	QSettings *m_dmrlocalhosts;
+	QSettings *m_ysflocalhosts;
+	QSettings *m_p25localhosts;
+	QSettings *m_nxdnlocalhosts;
+	QSettings *m_m17localhosts;
+	QSettings *m_iaxlocalhosts;
 	LevelMeter *m_levelmeter;
 	QLabel *m_labeldb;
 	QTimer *m_uitimer;
@@ -127,6 +137,7 @@ private:
 	QButtonGroup *tts_voices;
 	uint16_t m_outlevel;
 	uint64_t m_rxcnt;
+	QStandardItemModel *m_customhosts;
 private slots:
 	void save_settings();
     void process_connect();

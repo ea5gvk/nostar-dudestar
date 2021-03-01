@@ -37,7 +37,7 @@ const uint32_t ENCODING_TABLE_1676[] =
 	 0xD97AU, 0xDB09U, 0xDD9FU, 0xDFECU, 0xE0E6U, 0xE295U, 0xE403U, 0xE670U, 0xE92FU, 0xEB5CU, 0xEDCAU, 0xEFB9U,
 	 0xF104U, 0xF377U, 0xF5E1U, 0xF792U, 0xF8CDU, 0xFABEU, 0xFC28U, 0xFE5BU};
 
-DMRCodec::DMRCodec(QString callsign, uint32_t dmrid, uint8_t essid, QString password, QString lat, QString lon, QString location, QString desc, QString options, uint32_t dstid, QString host, uint32_t port, bool ipv6, QString vocoder, QString audioin, QString audioout) :
+DMRCodec::DMRCodec(QString callsign, uint32_t dmrid, uint8_t essid, QString password, QString lat, QString lon, QString location, QString desc, QString freq, QString url, QString swid, QString pkid, QString options, uint32_t dstid, QString host, uint32_t port, bool ipv6, QString vocoder, QString audioin, QString audioout) :
 	Codec(callsign, 0, NULL, host, port, ipv6, vocoder, audioin, audioout),
 	m_dmrid(dmrid),
 	m_password(password),
@@ -45,6 +45,10 @@ DMRCodec::DMRCodec(QString callsign, uint32_t dmrid, uint8_t essid, QString pass
 	m_lon(lon),
 	m_location(location),
 	m_desc(desc),
+	m_freq(freq),
+	m_url(url),
+	m_swid(swid),
+	m_pkid(pkid),
 	m_txdstid(dstid),
 	m_pc(false),
 	m_options(options)
@@ -156,7 +160,7 @@ void DMRCodec::process_udp()
 			}
 
 			::sprintf(buffer + 8U, "%-8.8s%09u%09u%02u%02u%8.8s%9.9s%03d%-20.20s%-19.19s%c%-124.124s%-40.40s%-40.40s", m_modeinfo.callsign.toStdString().c_str(),
-					438800000, 438800000, 1, 1, latitude, longitude, 0, m_location.toStdString().c_str(), m_desc.toStdString().c_str(), '4', "www.qrz.com", "20200101", "MMDVM_Unknown");
+					m_freq.toUInt(), m_freq.toUInt(), 1, 1, latitude, longitude, 0, m_location.toStdString().c_str(), m_desc.toStdString().c_str(), '4', m_url.toStdString().c_str(), m_swid.toStdString().c_str(), m_pkid.toStdString().c_str());
 			out.append(buffer, 302);
 			break;
 		case DMR_CONF:

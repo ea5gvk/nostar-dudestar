@@ -27,7 +27,7 @@ class DMRCodec : public Codec
 {
 	Q_OBJECT
 public:
-	DMRCodec(QString callsign, uint32_t dmrid, uint8_t essid, QString password, QString lat, QString lon, QString location, QString desc, QString options, uint32_t dstid, QString host, uint32_t port, bool ipv6, QString vocoder, QString audioin, QString audioout);
+	DMRCodec(QString callsign, uint32_t dmrid, uint8_t essid, QString password, QString lat, QString lon, QString location, QString desc, QString freq, QString url, QString swid, QString pkid, QString options, uint32_t dstid, QString host, uint32_t port, bool ipv6, QString vocoder, QString audioin, QString audioout);
 	~DMRCodec();
 	unsigned char * get_eot();
 	void set_cc(uint32_t cc){m_colorcode = cc;}
@@ -57,6 +57,10 @@ private:
 	QString m_lon;
 	QString m_location;
 	QString m_desc;
+	QString m_freq;
+	QString m_url;
+	QString m_swid;
+	QString m_pkid;
 	uint32_t m_txdstid;
 	uint8_t packet_size;
 	uint8_t m_ambe[27];

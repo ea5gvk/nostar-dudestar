@@ -71,6 +71,15 @@ DudeStar::DudeStar(QWidget *parent) :
 {
 	qRegisterMetaType<Codec::MODEINFO>("Codec::MODEINFO");
 	m_settings = new QSettings(QSettings::IniFormat, QSettings::UserScope, "dudetronics", "dudestar", this);
+	//m_reflocalhosts = new QSettings(QSettings::IniFormat, QSettings::UserScope, "dudetronics", "REFLocal", this);
+	//m_dcslocalhosts = new QSettings(QSettings::IniFormat, QSettings::UserScope, "dudetronics", "DCSLocal", this);
+	//m_xrflocalhosts = new QSettings(QSettings::IniFormat, QSettings::UserScope, "dudetronics", "XRFLocal", this);
+	//m_dmrlocalhosts = new QSettings(QSettings::IniFormat, QSettings::UserScope, "dudetronics", "DMRLocal", this);
+	//m_ysflocalhosts = new QSettings(QSettings::IniFormat, QSettings::UserScope, "dudetronics", "YSFLocal", this);
+	//m_p25localhosts = new QSettings(QSettings::IniFormat, QSettings::UserScope, "dudetronics", "P25Local", this);
+	//m_nxdnlocalhosts = new QSettings(QSettings::IniFormat, QSettings::UserScope, "dudetronics", "NXDNLocal", this);
+	//m_m17localhosts = new QSettings(QSettings::IniFormat, QSettings::UserScope, "dudetronics", "M17Local", this);
+	//m_iaxlocalhosts = new QSettings(QSettings::IniFormat, QSettings::UserScope, "dudetronics", "IAXLocal", this);
 	muted = false;
 	config_path = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation);
 #ifndef Q_OS_WIN
@@ -183,6 +192,17 @@ void DudeStar::init_gui()
 	ui->comboMode->addItem("NXDN");
 	ui->comboMode->addItem("M17");
 	ui->comboMode->addItem("IAX");
+
+	ui->comboCustomHostMode->addItem("REF");
+	ui->comboCustomHostMode->addItem("DCS");
+	ui->comboCustomHostMode->addItem("XRF");
+	ui->comboCustomHostMode->addItem("YSF");
+	ui->comboCustomHostMode->addItem("FCS");
+	ui->comboCustomHostMode->addItem("DMR");
+	ui->comboCustomHostMode->addItem("P25");
+	ui->comboCustomHostMode->addItem("NXDN");
+	ui->comboCustomHostMode->addItem("M17");
+	ui->comboCustomHostMode->addItem("IAX");
 
 	for(uint8_t cc = 1; cc < 8; ++cc){
 		ui->comboCC->addItem(QString::number(cc));
@@ -298,6 +318,10 @@ void DudeStar::save_settings()
 	m_settings->setValue("DMRLONG", ui->editLong->text());
 	m_settings->setValue("DMRLOC", ui->editLocation->text());
 	m_settings->setValue("DMRDESC", ui->editDesc->text());
+	m_settings->setValue("DMRFREQ", ui->editFreq->text());
+	m_settings->setValue("DMRURL", ui->editURL->text());
+	m_settings->setValue("DMRSWID", ui->editSWID->text());
+	m_settings->setValue("DMRPKID", ui->editPKID->text());
 	m_settings->setValue("DMROPTS", ui->editDMROptions->text());
 	m_settings->setValue("MYCALL", ui->editMYCALL->text().simplified());
 	m_settings->setValue("URCALL", ui->editURCALL->text().simplified());
@@ -1316,6 +1340,10 @@ void DudeStar::process_settings()
 	ui->editLong->setText(m_settings->value("DMRLONG", "0").toString().simplified());
 	ui->editLocation->setText(m_settings->value("DMRLOC").toString().simplified());
 	ui->editDesc->setText(m_settings->value("DMRDESC", "DudeStar").toString().simplified());
+	ui->editFreq->setText(m_settings->value("DMRFREQ", "438800000").toString().simplified());
+	ui->editURL->setText(m_settings->value("DMRURL", "www.qrz.com").toString().simplified());
+	ui->editSWID->setText(m_settings->value("DMRSWID", "20210131_Pi-Star_v4").toString().simplified());
+	ui->editPKID->setText(m_settings->value("DMRPKID", "MMDVM_DMO").toString().simplified());
 	ui->editDMROptions->setText(m_settings->value("DMROPTS").toString().simplified());
 	ui->editMYCALL->setText(m_settings->value("MYCALL").toString().simplified());
 	ui->editURCALL->setText(m_settings->value("URCALL").toString().simplified());
@@ -1549,7 +1577,7 @@ void DudeStar::process_connect()
 			dmr_destid = ui->editTG->text().toUInt();
 			uint8_t essid = ui->comboESSID->currentIndex();
 			QString opts = (ui->checkDMROptions->isChecked()) ? ui->editDMROptions->text() : "";
-			m_dmr = new DMRCodec(callsign, dmrid, essid, dmr_password, ui->editLat->text(), ui->editLong->text(), ui->editLocation->text(), ui->editDesc->text(), opts, dmr_destid, host, port, false, ui->comboVocoder->currentData().toString().simplified(), ui->comboCapture->currentText(), ui->comboPlayback->currentText());
+			m_dmr = new DMRCodec(callsign, dmrid, essid, dmr_password, ui->editLat->text(), ui->editLong->text(), ui->editLocation->text(), ui->editDesc->text(), ui->editFreq->text(), ui->editURL->text(), ui->editSWID->text(), ui->editPKID->text(), opts, dmr_destid, host, port, false, ui->comboVocoder->currentData().toString().simplified(), ui->comboCapture->currentText(), ui->comboPlayback->currentText());
 			m_modethread = new QThread;
 			m_dmr->moveToThread(m_modethread);
 			connect(m_dmr, SIGNAL(update(Codec::MODEINFO)), this, SLOT(update_dmr_data(Codec::MODEINFO)));
@@ -2007,12 +2035,12 @@ void DudeStar::update_dmr_data(Codec::MODEINFO info)
 	}
 	if((connect_status == Codec::CONNECTING) && (info.status == Codec::DISCONNECTED)){
 		process_connect();
-		QMessageBox::warning(this, tr("Connection refused"), tr("DMR connection refused.  Check callsign, DMR ID, ESSID, and hotspot security password.  Some servers require specific information for Lat/Long/Location/Description.  It's up to you to determine this information from the server you are attempting to connect to."));
+		QMessageBox::warning(this, tr("Connection refused"), tr("DMR connection refused.  Check callsign, DMR ID, ESSID, and hotspot security password.  Some servers require specific information for Lat/Long/Location/Description/Freq/URL/Software ID/Package ID, namely BrandMeister.  It's up to you to determine this information from the server you are attempting to connect to."));
 		return;
 	}
 	if(info.status == Codec::CLOSED){
 		process_connect();
-		QMessageBox::warning(this, tr("Connection closed"), tr("DMR server closing down."));
+		QMessageBox::warning(this, tr("Connection closed"), tr("Received MSTCL (Master closing connection) from DMR server. If this is BrandMeister, you may need to use different values for Software ID and Package ID in the Settings tab."));
 		return;
 	}
 	if((connect_status == Codec::CONNECTING) && (info.status == Codec::CONNECTED_RW)){
