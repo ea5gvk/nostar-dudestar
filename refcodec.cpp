@@ -18,12 +18,19 @@
 #include <iostream>
 #include <cstring>
 #include "refcodec.h"
+#include "CRCenc.h"
 
 #define DEBUG
 
-REFCodec::REFCodec(QString callsign, QString hostname, char module, QString host, int port, bool ipv6, QString vocoder, QString audioin, QString audioout) :
-	Codec(callsign, module, hostname, host, port, ipv6, vocoder, audioin, audioout)
+const unsigned char MMDVM_DSTAR_HEADER = 0x10U;
+const unsigned char MMDVM_DSTAR_DATA   = 0x11U;
+const unsigned char MMDVM_DSTAR_LOST   = 0x12U;
+const unsigned char MMDVM_DSTAR_EOT    = 0x13U;
+
+REFCodec::REFCodec(QString callsign, QString hostname, char module, QString host, int port, bool ipv6, QString vocoder, QString modem, QString audioin, QString audioout) :
+	Codec(callsign, module, hostname, host, port, ipv6, vocoder, modem, audioin, audioout)
 {
+	m_txusrtxt = "Testing dudestar    ";
 }
 
 REFCodec::~REFCodec()
@@ -108,6 +115,13 @@ void REFCodec::process_udp()
 				m_hwrx = false;
 				m_hwtx = false;
 			}
+			if(m_modemport != ""){
+				m_modem = new SerialModem("REF");
+				m_modem->set_modem_flags(m_rxInvert, m_txInvert, m_pttInvert, m_useCOSAsLockout, m_duplex);
+				m_modem->set_modem_params(m_rxfreq, m_txfreq, m_txDelay, m_rxLevel, m_rfLevel, m_ysfTXHang, m_cwIdTXLevel, m_dstarTXLevel, m_dmrTXLevel, m_ysfTXLevel, m_p25TXLevel, m_nxdnTXLevel, m_pocsagTXLevel);
+				m_modem->connect_to_serial(m_modemport);
+				connect(m_modem, SIGNAL(modem_data_ready(QByteArray)), this, SLOT(process_modem_data(QByteArray)));
+			}
 			m_rxtimer = new QTimer();
 			connect(m_rxtimer, SIGNAL(timeout()), this, SLOT(process_rx_data()));
 			m_txtimer = new QTimer();
@@ -124,7 +138,7 @@ void REFCodec::process_udp()
 				//memcpy(rptr2, hostname.toLocal8Bit(), hostname.size());
 				//rptr2[7] = module;
 				//rptr2[8] = 0;
-				m_ping_timer->start(1000);
+				//m_ping_timer->start(1000);
 			}
 			else if(buf.data()[7] == 0x4f){ //OKRO -- Go get registered!
 				m_modeinfo.status = CONNECTED_RO;
@@ -151,7 +165,7 @@ void REFCodec::process_udp()
 		memcpy(temp, buf.data() + 44, 8); temp[8] = '\0';
 		QString mycall = QString(temp);
 		QString h = m_hostname + " " + m_module;
-		//qDebug() << "h:r1:r2 == " << h.simplified() << ":" << m_rptr1.simplified() << ":" << m_rptr2.simplified();
+		qDebug() << "h:r1:r2 == " << h.simplified() << ":" << rptr1.simplified() << ":" << rptr2.simplified();
 		if( (rptr2.simplified() == h.simplified()) || (rptr1.simplified() == h.simplified()) ){
 			m_rxwatchdog = 0;
 			const uint16_t streamid = (buf.data()[14] << 8) | (buf.data()[15] & 0xff);
@@ -166,6 +180,27 @@ void REFCodec::process_udp()
 				m_rxcodecq.clear();
 				m_modeinfo.stream_state = STREAM_NEW;
 				m_modeinfo.streamid = streamid;
+
+				if(m_modem){
+					uint8_t out[44];
+					out[0] = 0xe0;
+					out[1] = 44;
+					out[2] = MMDVM_DSTAR_HEADER;
+					out[3] = 0x40;
+					out[4] = 0;
+					out[5] = 0;
+					memcpy(out + 6, rptr2.toLocal8Bit().data(), 8);
+					memcpy(out + 14, rptr1.toLocal8Bit().data(), 8);
+					memcpy(out + 22, urcall.toLocal8Bit().data(), 8);
+					memcpy(out + 30, mycall.toLocal8Bit().data(), 8);
+					memcpy(out + 38, buf.data() + 52, 4);
+					CCRC::addCCITT161((uint8_t *)out + 3, 41);
+					for(int i = 0; i < 44; ++i){
+						m_rxmodemq.append(out[i]);
+					}
+					//m_modem->write(out);
+				}
+
 				qDebug() << "New stream from " << m_modeinfo.src << " to " << m_modeinfo.dst << " id == " << QString::number(m_modeinfo.streamid, 16);
 				emit update(m_modeinfo);
 			}
@@ -183,6 +218,16 @@ void REFCodec::process_udp()
 		m_rxwatchdog = 0;
 		m_modeinfo.stream_state = STREAMING;
 		m_modeinfo.frame_number = buf.data()[16];
+
+		if(m_modem){
+			m_rxmodemq.append(0xe0);
+			m_rxmodemq.append(15);
+			m_rxmodemq.append(MMDVM_DSTAR_DATA);
+			for(int i = 0; i < 12; ++i){
+				m_rxmodemq.append(buf.data()[17+i]);
+			}
+		}
+
 		if((buf.data()[16] == 0) && (buf.data()[26] == 0x55) && (buf.data()[27] == 0x2d) && (buf.data()[28] == 0x16)){
 			sd_sync = 1;
 			sd_seq = 1;
@@ -243,6 +288,11 @@ void REFCodec::process_udp()
 	if(buf.size() == 0x20){ //32
 		const uint16_t streamid = (buf.data()[14] << 8) | (buf.data()[15] & 0xff);
 		if(streamid == m_modeinfo.streamid){
+			if(m_modem){
+				m_rxmodemq.append(0xe0);
+				m_rxmodemq.append(3);
+				m_rxmodemq.append(MMDVM_DSTAR_EOT);
+			}
 			m_modeinfo.usertxt.clear();
 			qDebug() << "REF RX stream ended ";
 			m_rxwatchdog = 0;
@@ -333,8 +383,36 @@ void REFCodec::format_callsign(QString &s)
 	}
 }
 
+void REFCodec::process_modem_data(QByteArray d)
+{
+	QByteArray txdata;
+	char cs[9];
+	uint8_t ambe[9];
+
+	uint8_t *p_frame = (uint8_t *)(d.data());
+	if(p_frame[2] == MMDVM_DSTAR_HEADER){
+		format_callsign(m_txrptr1);
+		format_callsign(m_txrptr2);
+		cs[8] = 0;
+		memcpy(cs, p_frame + 22, 8);
+		m_txurcall = QString(cs);
+		memcpy(cs, p_frame + 30, 8);
+		m_txmycall = QString(cs);
+		m_modeinfo.stream_state = TRANSMITTING_MODEM;
+		m_tx = true;
+	}
+	else if( (p_frame[2] == MMDVM_DSTAR_EOT) || (p_frame[2] == MMDVM_DSTAR_LOST) ){
+		m_tx = false;
+	}
+	else if(p_frame[2] == MMDVM_DSTAR_DATA){
+		memcpy(ambe, p_frame + 3, 9);
+	}
+	send_frame(ambe);
+}
+
 void REFCodec::start_tx()
 {
+	qDebug() << "start_tx() m_txrptr1 = " << m_txrptr1;
 	format_callsign(m_txmycall);
 	format_callsign(m_txurcall);
 	format_callsign(m_txrptr1);
@@ -437,10 +515,8 @@ void REFCodec::send_frame(uint8_t *ambe)
 			memcpy(txdata.data() + 28, m_txrptr1.toLocal8Bit().data(), 8);
 			memcpy(txdata.data() + 36, m_txurcall.toLocal8Bit().data(), 8);
 			memcpy(txdata.data() + 44, m_txmycall.toLocal8Bit().data(), 8);
-			memcpy(txdata.data() + 52, "dude", 4);
-			txdata[56] = 0;
-			txdata[57] = 0;
-			calcPFCS(txdata.data());
+			memcpy(txdata.data() + 52, "DUDE", 4);
+			CCRC::addCCITT161((uint8_t *)txdata.data() + 17, 41);
 
 			m_modeinfo.src = m_txmycall;
 			m_modeinfo.dst = m_txurcall;
@@ -540,7 +616,7 @@ void REFCodec::send_frame(uint8_t *ambe)
 	#endif
 	}
 	else{
-		//qDebug() << "TX stopped";
+		qDebug() << "TX stopped";
 		txdata.resize(32);
 		txdata[0] = 0x20;
 		txdata[6] = 0x20;
@@ -555,13 +631,16 @@ void REFCodec::send_frame(uint8_t *ambe)
 		m_udp->writeDatagram(txdata, m_address, m_modeinfo.port);
 		m_txcnt = 0;
 		txstreamid = 0;
+		m_modeinfo.streamid = 0;
 		sendheader = 1;
 		m_txtimer->stop();
 		m_udp->writeDatagram(txdata, m_address, m_modeinfo.port);
-		if(m_ttsid == 0){
+
+		if((m_ttsid == 0) && (m_modeinfo.stream_state == TRANSMITTING) ){
 			m_audio->stop_capture();
 		}
 		m_ttscnt = 0;
+		m_modeinfo.stream_state = STREAM_IDLE;
 	}
 	emit update_output_level(m_audio->level());
 	update(m_modeinfo);
@@ -592,6 +671,17 @@ void REFCodec::process_rx_data()
 		m_modeinfo.ts = QDateTime::currentMSecsSinceEpoch();
 		emit update(m_modeinfo);
 		m_modeinfo.streamid = 0;
+	}
+
+	if(m_rxmodemq.size() > 2){
+		QByteArray out;
+		int s = m_rxmodemq[1];
+		if((m_rxmodemq[0] == 0xe0) && (m_rxmodemq.size() >= s)){
+			for(int i = 0; i < s; ++i){
+				out.append(m_rxmodemq.dequeue());
+			}
+			m_modem->write(out);
+		}
 	}
 
 	if((!m_tx) && (m_rxcodecq.size() > 8) ){
@@ -625,29 +715,4 @@ void REFCodec::process_rx_data()
 		qDebug() << "REF playback stopped";
 		return;
 	}
-}
-
-void REFCodec::calcPFCS(char *d)
-{
-   int crc = 65535;
-   int poly = 32840;
-   int i,j;
-   char b;
-   bool bit;
-   bool c15;
-
-   for (j = 17; j < 41; ++j){
-	  b = d[j];
-	  for (i = 0; i < 8; ++i) {
-		 bit = (((b >> 7) - i) & 0x1) == 1;
-		 c15 = (crc >> 15 & 0x1) == 1;
-		 crc <<= 1;
-		 if (c15 & bit)
-			crc ^= poly;
-	  }
-   }
-
-   crc ^= 65535;
-   d[56] = (char)(crc & 0xFF);
-   d[57] = (char)(crc >> 8 & 0xFF);
 }

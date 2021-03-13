@@ -24,7 +24,7 @@ class REFCodec : public Codec
 {
 	Q_OBJECT
 public:
-	REFCodec(QString callsign, QString hostname, char module, QString host, int port, bool ipv6, QString vocoder, QString audioin, QString audioout);
+	REFCodec(QString callsign, QString hostname, char module, QString host, int port, bool ipv6, QString vocoder, QString modem, QString audioin, QString audioout);
 	~REFCodec();
 	unsigned char * get_frame(unsigned char *ambe);
 private:
@@ -37,6 +37,7 @@ private:
 private slots:
 	void start_tx();
 	void process_udp();
+	void process_modem_data(QByteArray);
 	void process_rx_data();
 #ifdef AMBEHW_SUPPORTED
 	void get_ambe();
@@ -56,7 +57,6 @@ private slots:
 	void swtx_state_changed(int s) {m_hwtx = !s; }
 	void send_frame(uint8_t *);
 	void decoder_gain_changed(qreal);
-	void calcPFCS(char *d);
 };
 
 #endif // REFCODEC_H

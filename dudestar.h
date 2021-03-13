@@ -149,6 +149,7 @@ private slots:
 	void tts_text_changed(QString);
 	void tgid_text_changed(QString);
 	void discover_vocoders();
+	void discover_modems();
 	void update_ref_data(Codec::MODEINFO);
 	void update_dcs_data(Codec::MODEINFO);
 	void update_xrf_data(Codec::MODEINFO);

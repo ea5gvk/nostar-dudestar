@@ -80,6 +80,7 @@ SOURCES += \
         p25codec.cpp \
         refcodec.cpp \
         serialambe.cpp \
+	serialmodem.cpp \
         xrfcodec.cpp \
         ysfcodec.cpp
 macx:OBJECTIVE_SOURCES += micpermission.mm
@@ -153,6 +154,7 @@ HEADERS += \
         p25codec.h \
         refcodec.h \
         serialambe.h \
+	serialmodem.h \
         vocoder_tables.h \
         xrfcodec.h \
         ysfcodec.h

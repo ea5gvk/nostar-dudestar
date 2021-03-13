@@ -24,7 +24,7 @@ class P25Codec : public Codec
 {
 	Q_OBJECT
 public:
-	P25Codec(QString callsign, int dmrid, int hostname, QString host, int port, bool ipv6, QString audioin, QString audioout);
+	P25Codec(QString callsign, int dmrid, int hostname, QString host, int port, bool ipv6, QString modem, QString audioin, QString audioout);
 	~P25Codec();
 	unsigned char * get_frame(unsigned char *ambe);
 private:
@@ -35,6 +35,7 @@ private:
 	uint32_t m_txdstid;
 private slots:
 	void process_udp();
+	void process_modem_data();
 	void process_rx_data();
 	void send_ping();
 	void send_disconnect();

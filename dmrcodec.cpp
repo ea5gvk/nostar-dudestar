@@ -37,8 +37,8 @@ const uint32_t ENCODING_TABLE_1676[] =
 	 0xD97AU, 0xDB09U, 0xDD9FU, 0xDFECU, 0xE0E6U, 0xE295U, 0xE403U, 0xE670U, 0xE92FU, 0xEB5CU, 0xEDCAU, 0xEFB9U,
 	 0xF104U, 0xF377U, 0xF5E1U, 0xF792U, 0xF8CDU, 0xFABEU, 0xFC28U, 0xFE5BU};
 
-DMRCodec::DMRCodec(QString callsign, uint32_t dmrid, uint8_t essid, QString password, QString lat, QString lon, QString location, QString desc, QString freq, QString url, QString swid, QString pkid, QString options, uint32_t dstid, QString host, uint32_t port, bool ipv6, QString vocoder, QString audioin, QString audioout) :
-	Codec(callsign, 0, NULL, host, port, ipv6, vocoder, audioin, audioout),
+DMRCodec::DMRCodec(QString callsign, uint32_t dmrid, uint8_t essid, QString password, QString lat, QString lon, QString location, QString desc, QString freq, QString url, QString swid, QString pkid, QString options, uint32_t dstid, QString host, uint32_t port, bool ipv6, QString vocoder, QString modem, QString audioin, QString audioout) :
+	Codec(callsign, 0, NULL, host, port, ipv6, vocoder, modem, audioin, audioout),
 	m_dmrid(dmrid),
 	m_password(password),
 	m_lat(lat),
@@ -305,6 +305,13 @@ void DMRCodec::setup_connection()
 		m_hwrx = false;
 		m_hwtx = false;
 	}
+	if(m_modemport != ""){
+		m_modem = new SerialModem("DMR");
+		m_modem->set_modem_flags(m_rxInvert, m_txInvert, m_pttInvert, m_useCOSAsLockout, m_duplex);
+		m_modem->set_modem_params(m_rxfreq, m_txfreq, m_txDelay, m_rxLevel, m_rfLevel, m_ysfTXHang, m_cwIdTXLevel, m_dstarTXLevel, m_dmrTXLevel, m_ysfTXLevel, m_p25TXLevel, m_nxdnTXLevel, m_pocsagTXLevel);
+		m_modem->connect_to_serial(m_modemport);
+		connect(m_modem, SIGNAL(modem_data_ready(QByteArray)), this, SLOT(process_modem_data(QByteArray)));
+	}
 	m_audio = new AudioEngine(m_audioin, m_audioout);
 	m_audio->init();
 }
@@ -377,6 +384,11 @@ void DMRCodec::send_disconnect()
 	fprintf(stderr, "\n");
 	fflush(stderr);
 #endif
+}
+
+void DMRCodec::process_modem_data(QByteArray d)
+{
+
 }
 
 void DMRCodec::transmit()
@@ -518,7 +530,8 @@ void DMRCodec::build_frame()
 
 	m_dmrFrame[4U] = m_dmrcnt;
 
-	unsigned int streamId = 0x3cfa;
+	//unsigned int streamId = 0x3cfa;
+	unsigned int streamId = 0x9f57;
 	::memcpy(m_dmrFrame + 16U, &streamId, 4U);
 
 	m_dmrFrame[53U] = 0; //data.getBER();

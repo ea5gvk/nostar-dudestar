@@ -27,7 +27,7 @@ class DMRCodec : public Codec
 {
 	Q_OBJECT
 public:
-	DMRCodec(QString callsign, uint32_t dmrid, uint8_t essid, QString password, QString lat, QString lon, QString location, QString desc, QString freq, QString url, QString swid, QString pkid, QString options, uint32_t dstid, QString host, uint32_t port, bool ipv6, QString vocoder, QString audioin, QString audioout);
+	DMRCodec(QString callsign, uint32_t dmrid, uint8_t essid, QString password, QString lat, QString lon, QString location, QString desc, QString freq, QString url, QString swid, QString pkid, QString options, uint32_t dstid, QString host, uint32_t port, bool ipv6, QString vocoder, QString modem, QString audioin, QString audioout);
 	~DMRCodec();
 	unsigned char * get_eot();
 	void set_cc(uint32_t cc){m_colorcode = cc;}
@@ -36,6 +36,7 @@ public:
 private slots:
 	void process_udp();
 	void process_rx_data();
+	void process_modem_data(QByteArray);
 #ifdef AMBEHW_SUPPORTED
 	void get_ambe();
 #endif

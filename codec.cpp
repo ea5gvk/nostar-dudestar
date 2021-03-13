@@ -24,7 +24,7 @@ extern cst_voice * register_cmu_us_awb(const char *);
 }
 #endif
 
-Codec::Codec(QString callsign, char module, QString hostname, QString host, int port, bool ipv6, QString vocoder, QString audioin, QString audioout) :
+Codec::Codec(QString callsign, char module, QString hostname, QString host, int port, bool ipv6, QString vocoder, QString modem, QString audioin, QString audioout) :
 	m_module(module),
 	m_hostname(hostname),
 	m_tx(false),
@@ -39,6 +39,8 @@ Codec::Codec(QString callsign, char module, QString hostname, QString host, int 
 #endif
 	m_txtimerint(19),
 	m_vocoder(vocoder),
+	m_modemport(modem),
+	m_modem(nullptr),
 	m_ambedev(nullptr),
 	m_hwrx(false),
 	m_hwtx(false),
@@ -67,11 +69,13 @@ Codec::~Codec()
 {
 }
 
-void Codec::in_audio_vol_changed(qreal v){
+void Codec::in_audio_vol_changed(qreal v)
+{
 	m_audio->set_input_volume(v);
 }
 
-void Codec::out_audio_vol_changed(qreal v){
+void Codec::out_audio_vol_changed(qreal v)
+{
 	m_audio->set_output_volume(v);
 }
 
@@ -104,6 +108,7 @@ void Codec::start_tx()
 	m_ttscnt = 0;
 	m_rxtimer->stop();
 	m_modeinfo.streamid = 0;
+	m_modeinfo.stream_state = TRANSMITTING;
 #ifdef USE_FLITE
 
 	if(m_ttsid == 1){
@@ -140,6 +145,9 @@ void Codec::deleteLater()
 		delete m_audio;
 		if(m_hwtx){
 			delete m_ambedev;
+		}
+		if(m_modem){
+			delete m_modem;
 		}
 	}
 	m_modeinfo.count = 0;

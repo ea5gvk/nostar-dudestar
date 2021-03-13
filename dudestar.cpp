@@ -18,6 +18,7 @@
 #include "dudestar.h"
 #include "audioengine.h"
 #include "serialambe.h"
+#include "serialmodem.h"
 #include "ui_dudestar.h"
 #include "SHA256.h"
 #include "crs129.h"
@@ -228,6 +229,7 @@ void DudeStar::init_gui()
 	ui->editTG->setEnabled(false);
 
 	discover_vocoders();
+	discover_modems();
 	ui->comboPlayback->addItem("OS Default");
 	ui->comboPlayback->addItems(AudioEngine::discover_audio_devices(AUDIO_OUT));
 	ui->comboCapture->addItem("OS Default");
@@ -327,13 +329,33 @@ void DudeStar::save_settings()
 	m_settings->setValue("URCALL", ui->editURCALL->text().simplified());
 	m_settings->setValue("RPTR1", ui->editRPTR1->text().simplified());
 	m_settings->setValue("RPTR2", ui->editRPTR2->text().simplified());
-	m_settings->setValue("XRF2REF", ui->checkIPv6->isChecked() ? "true" : "false");
+	m_settings->setValue("XRF2REF", ui->checkXrf2Ref->isChecked() ? "true" : "false");
 	m_settings->setValue("USRTXT", ui->editUserTxt->text());
 	m_settings->setValue("IAXUSER", ui->editIAXUsername->text());
 	m_settings->setValue("IAXPASS", ui->editIAXPassword->text());
 	m_settings->setValue("IAXNODE", ui->editIAXNode->text());
 	m_settings->setValue("IAXHOST", ui->editIAXHost->text());
 	m_settings->setValue("IAXPORT", ui->editIAXPort->text());
+
+	m_settings->setValue("ModemRxFreq", ui->editModemRxFreq->text());
+	m_settings->setValue("ModemTxFreq", ui->editModemTxFreq->text());
+	m_settings->setValue("ModemRxOffset", ui->editModemRxOffset->text());
+	m_settings->setValue("ModemTxOffset", ui->editModemTxOffset->text());
+	m_settings->setValue("ModemRxDCOffset", ui->editModemRxDCOffset->text());
+	m_settings->setValue("ModemTxDCOffset", ui->editModemTxDCOffset->text());
+	m_settings->setValue("ModemRxLevel", ui->editModemRxLevel->text());
+	m_settings->setValue("ModemTxLevel", ui->editModemTxLevel->text());
+	m_settings->setValue("ModemRFLevel", ui->editModemRFLevel->text());
+	m_settings->setValue("ModemTxDelay", ui->editModemTxDelay->text());
+	m_settings->setValue("ModemCWIdTxLevel", ui->editModemCWIdTxLevel->text());
+	m_settings->setValue("ModemDstarTxLevel", ui->editModemDstarTxLevel->text());
+	m_settings->setValue("ModemDMRTxLevel", ui->editModemDMRTxLevel->text());
+	m_settings->setValue("ModemYSFTxLevel", ui->editModemYSFTxLevel->text());
+	m_settings->setValue("ModemP25TxLevel", ui->editModemP25TxLevel->text());
+	m_settings->setValue("ModemNXDNTxLevel", ui->editModemNXDNTxLevel->text());
+	m_settings->setValue("ModemTxInvert", ui->checkModemTxInvert->isChecked() ? "true" : "false");
+	m_settings->setValue("ModemRxInvert", ui->checkModemRxInvert->isChecked() ? "true" : "false");
+	m_settings->setValue("ModemPTTInvert", ui->checkModemPTTInvert->isChecked() ? "true" : "false");
 }
 
 void DudeStar::download_file(QString f)
@@ -1108,7 +1130,7 @@ void DudeStar::check_host_files()
 
 	check_file.setFile(config_path + "/dcs.txt");
 	if( (!check_file.exists() && !check_file.isFile()) || m_update_host_files ){
-		download_file( "dcs.txt");
+		download_file("dcs.txt");
 	}
 
 	check_file.setFile(config_path + "/YSFHosts.txt");
@@ -1342,8 +1364,8 @@ void DudeStar::process_settings()
 	ui->editDesc->setText(m_settings->value("DMRDESC", "DudeStar").toString().simplified());
 	ui->editFreq->setText(m_settings->value("DMRFREQ", "438800000").toString().simplified());
 	ui->editURL->setText(m_settings->value("DMRURL", "www.qrz.com").toString().simplified());
-	ui->editSWID->setText(m_settings->value("DMRSWID", "20210131_Pi-Star_v4").toString().simplified());
-	ui->editPKID->setText(m_settings->value("DMRPKID", "MMDVM_DMO").toString().simplified());
+	ui->editSWID->setText(m_settings->value("DMRSWID", "20200922").toString().simplified());
+	ui->editPKID->setText(m_settings->value("DMRPKID", "MMDVM_MMDVM_HS_Hat").toString().simplified());
 	ui->editDMROptions->setText(m_settings->value("DMROPTS").toString().simplified());
 	ui->editMYCALL->setText(m_settings->value("MYCALL").toString().simplified());
 	ui->editURCALL->setText(m_settings->value("URCALL").toString().simplified());
@@ -1356,6 +1378,26 @@ void DudeStar::process_settings()
 	ui->editIAXNode->setText(m_settings->value("IAXNODE").toString().simplified());
 	ui->editIAXHost->setText(m_settings->value("IAXHOST").toString().simplified());
 	ui->editIAXPort->setText(m_settings->value("IAXPORT", "4569").toString().simplified());
+
+	ui->editModemRxFreq->setText(m_settings->value("ModemRxFreq", "438800000").toString().simplified());
+	ui->editModemTxFreq->setText(m_settings->value("ModemTxFreq", "438800000").toString().simplified());
+	ui->editModemRxOffset->setText(m_settings->value("ModemRxOffset", "0").toString().simplified());
+	ui->editModemTxOffset->setText(m_settings->value("ModemTxOffset", "0").toString().simplified());
+	ui->editModemRxDCOffset->setText(m_settings->value("ModemRxDCOffset", "0").toString().simplified());
+	ui->editModemTxDCOffset->setText(m_settings->value("ModemTxDCOffset", "0").toString().simplified());
+	ui->editModemRxLevel->setText(m_settings->value("ModemRxLevel", "50").toString().simplified());
+	ui->editModemTxLevel->setText(m_settings->value("ModemTxLevel", "50").toString().simplified());
+	ui->editModemRFLevel->setText(m_settings->value("ModemRFLevel", "100").toString().simplified());
+	ui->editModemTxDelay->setText(m_settings->value("ModemTxDelay", "100").toString().simplified());
+	ui->editModemCWIdTxLevel->setText(m_settings->value("ModemCWIdTxLevel", "50").toString().simplified());
+	ui->editModemDstarTxLevel->setText(m_settings->value("ModemDstarTxLevel", "50").toString().simplified());
+	ui->editModemDMRTxLevel->setText(m_settings->value("ModemDMRTxLevel", "50").toString().simplified());
+	ui->editModemYSFTxLevel->setText(m_settings->value("ModemYSFTxLevel", "50").toString().simplified());
+	ui->editModemP25TxLevel->setText(m_settings->value("ModemP25TxLevel", "50").toString().simplified());
+	ui->editModemNXDNTxLevel->setText(m_settings->value("ModemNXDNTxLevel", "50").toString().simplified());
+	(m_settings->value("ModemTxInvert", "true").toString().simplified() == "true") ? ui->checkModemTxInvert->setChecked(true) : ui->checkModemTxInvert->setChecked(false);
+	(m_settings->value("ModemRxInvert", "false").toString().simplified() == "true") ? ui->checkModemRxInvert->setChecked(true) : ui->checkModemRxInvert->setChecked(false);
+	(m_settings->value("ModemPTTInvert", "false").toString().simplified() == "true") ? ui->checkModemPTTInvert->setChecked(true) : ui->checkModemPTTInvert->setChecked(false);
 	ui->comboHost->blockSignals(false);
 }
 
@@ -1366,6 +1408,17 @@ void DudeStar::discover_vocoders()
 	ui->comboVocoder->addItem("Software vocoder", "");
 	while (i != l.constEnd()) {
 		ui->comboVocoder->addItem(i.value(), i.key());
+		++i;
+	}
+}
+
+void DudeStar::discover_modems()
+{
+	QMap<QString, QString> l = SerialModem::discover_devices();
+	QMap<QString, QString>::const_iterator i = l.constBegin();
+	ui->comboModem->addItem("None", "");
+	while (i != l.constEnd()) {
+		ui->comboModem->addItem(i.value(), i.key());
 		++i;
 	}
 }
@@ -1423,6 +1476,31 @@ void DudeStar::process_connect()
         fprintf(stderr, "check_permission() returned %d\n", r);
         ui->textLog->append("check_permission() returned " + QString::number(r));
 #endif
+		const QString vocoder = ui->comboVocoder->currentData().toString().simplified();
+		const QString modem = ui->comboModem->currentData().toString().simplified();
+		const QString capture = ui->comboCapture->currentText();
+		const QString playback = ui->comboPlayback->currentText();
+
+		const uint32_t rxfreq = ui->editModemRxFreq->text().toUInt() + ui->editModemRxOffset->text().toInt();
+		const uint32_t txfreq = ui->editModemTxFreq->text().toUInt() + ui->editModemTxOffset->text().toInt();
+		const bool rxInvert = ui->checkModemRxInvert->isChecked();
+		const bool txInvert = ui->checkModemTxInvert->isChecked();
+		const bool pttInvert = ui->checkModemPTTInvert->isChecked();
+		const bool useCOSAsLockout = 0;
+		const bool duplex = (ui->editModemRxFreq->text().toUInt() != ui->editModemTxFreq->text().toUInt());
+
+		const uint32_t txDelay = ui->editModemTxDelay->text().toUInt();
+		const float rxLevel = ui->editModemRxLevel->text().toFloat();
+		const float rfLevel = ui->editModemRFLevel->text().toFloat();
+		const uint32_t ysfTXHang = 4;
+		const float cwIdTXLevel = ui->editModemCWIdTxLevel->text().toFloat();
+		const float dstarTXLevel = ui->editModemDstarTxLevel->text().toFloat();
+		const float dmrTXLevel = ui->editModemDMRTxLevel->text().toFloat();
+		const float ysfTXLevel = ui->editModemYSFTxLevel->text().toFloat();
+		const float p25TXLevel = ui->editModemP25TxLevel->text().toFloat();
+		const float nxdnTXLevel = ui->editModemNXDNTxLevel->text().toFloat();
+		const float pocsagTXLevel = 50;
+
 		callsign = ui->editCallsign->text().toUpper();
 		dmrid = ui->editDMRID->text().toUInt();
 
@@ -1463,7 +1541,9 @@ void DudeStar::process_connect()
 		ui->textLog->append("Connecting to " + host + ":" + QString::number(port) + "...");
 		if( (m_protocol == "REF") || ((m_protocol == "XRF") && (ui->checkXrf2Ref->isChecked())) ){
 			const char m = ui->comboModule->currentIndex() + 0x41;
-			m_ref = new REFCodec(callsign, hostname, m, host, 20001, false, ui->comboVocoder->currentData().toString().simplified(), ui->comboCapture->currentText(), ui->comboPlayback->currentText());
+			m_ref = new REFCodec(callsign, hostname, m, host, 20001, false, vocoder, modem, capture, playback);
+			m_ref->set_modem_flags(rxInvert, txInvert, pttInvert, useCOSAsLockout, duplex);
+			m_ref->set_modem_params(rxfreq, txfreq, txDelay, rxLevel, rfLevel, ysfTXHang, cwIdTXLevel, dstarTXLevel, dmrTXLevel, ysfTXLevel, p25TXLevel, nxdnTXLevel, pocsagTXLevel);
 			m_modethread = new QThread;
 			m_ref->moveToThread(m_modethread);
 			connect(m_ref, SIGNAL(update(Codec::MODEINFO)), this, SLOT(update_ref_data(Codec::MODEINFO)));
@@ -1493,7 +1573,9 @@ void DudeStar::process_connect()
 		}
 		if(m_protocol == "DCS"){
 			const char m = ui->comboModule->currentIndex() + 0x41;
-			m_dcs = new DCSCodec(callsign, hostname, m, host, port, false, ui->comboVocoder->currentData().toString().simplified(), ui->comboCapture->currentText(), ui->comboPlayback->currentText());
+			m_dcs = new DCSCodec(callsign, hostname, m, host, port, false, vocoder, modem, capture, playback);
+			m_dcs->set_modem_flags(rxInvert, txInvert, pttInvert, useCOSAsLockout, duplex);
+			m_dcs->set_modem_params(rxfreq, txfreq, txDelay, rxLevel, rfLevel, ysfTXHang, cwIdTXLevel, dstarTXLevel, dmrTXLevel, ysfTXLevel, p25TXLevel, nxdnTXLevel, pocsagTXLevel);
 			m_modethread = new QThread;
 			m_dcs->moveToThread(m_modethread);
 			connect(m_dcs, SIGNAL(update(Codec::MODEINFO)), this, SLOT(update_dcs_data(Codec::MODEINFO)));
@@ -1523,7 +1605,9 @@ void DudeStar::process_connect()
 		}
 		if( (m_protocol == "XRF") && (ui->checkXrf2Ref->isChecked() == false) ){
 			const char m = ui->comboModule->currentIndex() + 0x41;
-			m_xrf = new XRFCodec(callsign, hostname, m, host, port, false, ui->comboVocoder->currentData().toString().simplified(), ui->comboCapture->currentText(), ui->comboPlayback->currentText());
+			m_xrf = new XRFCodec(callsign, hostname, m, host, port, false, vocoder, modem, capture, playback);
+			m_xrf->set_modem_flags(rxInvert, txInvert, pttInvert, useCOSAsLockout, duplex);
+			m_xrf->set_modem_params(rxfreq, txfreq, txDelay, rxLevel, rfLevel, ysfTXHang, cwIdTXLevel, dstarTXLevel, dmrTXLevel, ysfTXLevel, p25TXLevel, nxdnTXLevel, pocsagTXLevel);
 			m_modethread = new QThread;
 			m_xrf->moveToThread(m_modethread);
 			connect(m_xrf, SIGNAL(update(Codec::MODEINFO)), this, SLOT(update_xrf_data(Codec::MODEINFO)));
@@ -1551,7 +1635,9 @@ void DudeStar::process_connect()
 			m_modethread->start();
 		}
 		if( (m_protocol == "YSF") || (m_protocol == "FCS") ){
-			m_ysf = new YSFCodec(callsign, hostname, host, port, false, ui->comboVocoder->currentData().toString().simplified(), ui->comboCapture->currentText(), ui->comboPlayback->currentText());
+			m_ysf = new YSFCodec(callsign, hostname, host, port, false, vocoder, modem, capture, playback);
+			m_ysf->set_modem_flags(rxInvert, txInvert, pttInvert, useCOSAsLockout, duplex);
+			m_ysf->set_modem_params(rxfreq, txfreq, txDelay, rxLevel, rfLevel, ysfTXHang, cwIdTXLevel, dstarTXLevel, dmrTXLevel, ysfTXLevel, p25TXLevel, nxdnTXLevel, pocsagTXLevel);
 			m_modethread = new QThread;
 			m_ysf->moveToThread(m_modethread);
 			connect(m_ysf, SIGNAL(update(Codec::MODEINFO)), this, SLOT(update_ysf_data(Codec::MODEINFO)));
@@ -1577,7 +1663,9 @@ void DudeStar::process_connect()
 			dmr_destid = ui->editTG->text().toUInt();
 			uint8_t essid = ui->comboESSID->currentIndex();
 			QString opts = (ui->checkDMROptions->isChecked()) ? ui->editDMROptions->text() : "";
-			m_dmr = new DMRCodec(callsign, dmrid, essid, dmr_password, ui->editLat->text(), ui->editLong->text(), ui->editLocation->text(), ui->editDesc->text(), ui->editFreq->text(), ui->editURL->text(), ui->editSWID->text(), ui->editPKID->text(), opts, dmr_destid, host, port, false, ui->comboVocoder->currentData().toString().simplified(), ui->comboCapture->currentText(), ui->comboPlayback->currentText());
+			m_dmr = new DMRCodec(callsign, dmrid, essid, dmr_password, ui->editLat->text(), ui->editLong->text(), ui->editLocation->text(), ui->editDesc->text(), ui->editFreq->text(), ui->editURL->text(), ui->editSWID->text(), ui->editPKID->text(), opts, dmr_destid, host, port, false, vocoder, modem, capture, playback);
+			m_dmr->set_modem_flags(rxInvert, txInvert, pttInvert, useCOSAsLockout, duplex);
+			m_dmr->set_modem_params(rxfreq, txfreq, txDelay, rxLevel, rfLevel, ysfTXHang, cwIdTXLevel, dstarTXLevel, dmrTXLevel, ysfTXLevel, p25TXLevel, nxdnTXLevel, pocsagTXLevel);
 			m_modethread = new QThread;
 			m_dmr->moveToThread(m_modethread);
 			connect(m_dmr, SIGNAL(update(Codec::MODEINFO)), this, SLOT(update_dmr_data(Codec::MODEINFO)));
@@ -1601,7 +1689,9 @@ void DudeStar::process_connect()
 		if(m_protocol == "P25"){
 			dmrid = ui->editDMRID->text().toUInt();
 			dmr_destid = ui->editTG->text().toUInt();
-			m_p25 = new P25Codec(callsign, dmrid, dmr_destid, host, port, false, ui->comboCapture->currentText(), ui->comboPlayback->currentText());
+			m_p25 = new P25Codec(callsign, dmrid, dmr_destid, host, port, false, modem, capture, playback);
+			m_p25->set_modem_flags(rxInvert, txInvert, pttInvert, useCOSAsLockout, duplex);
+			m_p25->set_modem_params(rxfreq, txfreq, txDelay, rxLevel, rfLevel, ysfTXHang, cwIdTXLevel, dstarTXLevel, dmrTXLevel, ysfTXLevel, p25TXLevel, nxdnTXLevel, pocsagTXLevel);
 			m_modethread = new QThread;
 			m_p25->moveToThread(m_modethread);
 			connect(m_p25, SIGNAL(update(Codec::MODEINFO)), this, SLOT(update_p25_data(Codec::MODEINFO)));
@@ -1620,7 +1710,9 @@ void DudeStar::process_connect()
 		}
 		if(m_protocol == "NXDN"){
 			dmr_destid = ui->comboHost->currentText().toUInt();
-			m_nxdn = new NXDNCodec(callsign, nxdnids.key(callsign), dmr_destid, host, port, false, ui->comboVocoder->currentData().toString().simplified(), ui->comboCapture->currentText(), ui->comboPlayback->currentText());
+			m_nxdn = new NXDNCodec(callsign, nxdnids.key(callsign), dmr_destid, host, port, false, vocoder, modem, capture, playback);
+			m_nxdn->set_modem_flags(rxInvert, txInvert, pttInvert, useCOSAsLockout, duplex);
+			m_nxdn->set_modem_params(rxfreq, txfreq, txDelay, rxLevel, rfLevel, ysfTXHang, cwIdTXLevel, dstarTXLevel, dmrTXLevel, ysfTXLevel, p25TXLevel, nxdnTXLevel, pocsagTXLevel);
 			m_modethread = new QThread;
 			m_nxdn->moveToThread(m_modethread);
 			connect(m_nxdn, SIGNAL(update(Codec::MODEINFO)), this, SLOT(update_nxdn_data(Codec::MODEINFO)));
@@ -1639,7 +1731,7 @@ void DudeStar::process_connect()
 			m_modethread->start();
 		}
 		if(m_protocol == "M17"){
-			m_m17 = new M17Codec(callsign, module, hostname, host, port, false, ui->comboCapture->currentText(), ui->comboPlayback->currentText());
+			m_m17 = new M17Codec(callsign, module, hostname, host, port, false, modem, capture, playback);
 			m_modethread = new QThread;
 			m_m17->moveToThread(m_modethread);
 			connect(m_m17, SIGNAL(update(Codec::MODEINFO)), this, SLOT(update_m17_data(Codec::MODEINFO)));

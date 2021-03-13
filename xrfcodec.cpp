@@ -18,11 +18,17 @@
 #include <iostream>
 #include <cstring>
 #include "xrfcodec.h"
+#include "CRCenc.h"
 
 #define DEBUG
 
-XRFCodec::XRFCodec(QString callsign, QString hostname, char module, QString host, int port, bool ipv6, QString vocoder, QString audioin, QString audioout) :
-	Codec(callsign, module, hostname, host, port, ipv6, vocoder, audioin, audioout)
+const unsigned char MMDVM_DSTAR_HEADER = 0x10U;
+const unsigned char MMDVM_DSTAR_DATA   = 0x11U;
+const unsigned char MMDVM_DSTAR_LOST   = 0x12U;
+const unsigned char MMDVM_DSTAR_EOT    = 0x13U;
+
+XRFCodec::XRFCodec(QString callsign, QString hostname, char module, QString host, int port, bool ipv6, QString vocoder, QString modem, QString audioin, QString audioout) :
+	Codec(callsign, module, hostname, host, port, ipv6, vocoder, modem, audioin, audioout)
 {
 }
 
@@ -82,6 +88,13 @@ void XRFCodec::process_udp()
 			connect(m_ambedev, SIGNAL(data_ready()), this, SLOT(get_ambe()));
 #endif
 		}
+		if(m_modemport != ""){
+			m_modem = new SerialModem("XRF");
+			m_modem->set_modem_flags(m_rxInvert, m_txInvert, m_pttInvert, m_useCOSAsLockout, m_duplex);
+			m_modem->set_modem_params(m_rxfreq, m_txfreq, m_txDelay, m_rxLevel, m_rfLevel, m_ysfTXHang, m_cwIdTXLevel, m_dstarTXLevel, m_dmrTXLevel, m_ysfTXLevel, m_p25TXLevel, m_nxdnTXLevel, m_pocsagTXLevel);
+			m_modem->connect_to_serial(m_modemport);
+			connect(m_modem, SIGNAL(modem_data_ready(QByteArray)), this, SLOT(process_modem_data(QByteArray)));
+		}
 		m_rxtimer = new QTimer();
 		connect(m_rxtimer, SIGNAL(timeout()), this, SLOT(process_rx_data()));
 		m_txtimer = new QTimer();
@@ -114,10 +127,32 @@ void XRFCodec::process_udp()
 			m_modeinfo.streamid = streamid;
 			m_modeinfo.stream_state = STREAM_NEW;
 			m_modeinfo.ts = QDateTime::currentMSecsSinceEpoch();
+
 			if(!m_rxtimer->isActive()){
 				m_audio->start_playback();
 				m_rxtimer->start(m_rxtimerint);
 			}
+
+			if(m_modem){
+				uint8_t out[44];
+				out[0] = 0xe0;
+				out[1] = 44;
+				out[2] = MMDVM_DSTAR_HEADER;
+				out[3] = 0x40;
+				out[4] = 0;
+				out[5] = 0;
+				memcpy(out + 6, m_modeinfo.gw2.toLocal8Bit().data(), 8);
+				memcpy(out + 14, m_modeinfo.gw.toLocal8Bit().data(), 8);
+				memcpy(out + 22, m_modeinfo.dst.toLocal8Bit().data(), 8);
+				memcpy(out + 30, m_modeinfo.src.toLocal8Bit().data(), 8);
+				memcpy(out + 38, buf.data() + 50, 4);
+				CCRC::addCCITT161((uint8_t *)out + 3, 41);
+				for(int i = 0; i < 44; ++i){
+					m_rxmodemq.append(out[i]);
+				}
+				//m_modem->write(out);
+			}
+
 			qDebug() << "New stream from " << m_modeinfo.src << " to " << m_modeinfo.dst << " id == " << QString::number(m_modeinfo.streamid, 16);
 			emit update(m_modeinfo);
 		}
@@ -147,6 +182,7 @@ void XRFCodec::process_udp()
 		}
 		m_modeinfo.streamid = streamid;
 		m_modeinfo.frame_number = buf.data()[14];
+
 		if(m_modeinfo.frame_number & 0x40){
 			qDebug() << "XRF RX stream ended ";
 			m_rxwatchdog = 0;
@@ -154,7 +190,21 @@ void XRFCodec::process_udp()
 			m_modeinfo.ts = QDateTime::currentMSecsSinceEpoch();
 			emit update(m_modeinfo);
 			m_modeinfo.streamid = 0;
+			if(m_modem){
+				m_rxmodemq.append(0xe0);
+				m_rxmodemq.append(3);
+				m_rxmodemq.append(MMDVM_DSTAR_EOT);
+			}
 		}
+		else if(m_modem){
+			m_rxmodemq.append(0xe0);
+			m_rxmodemq.append(15);
+			m_rxmodemq.append(MMDVM_DSTAR_DATA);
+			for(int i = 0; i < 12; ++i){
+				m_rxmodemq.append(buf.data()[15+i]);
+			}
+		}
+
 		if((buf.data()[14] == 0) && (buf.data()[24] == 0x55) && (buf.data()[25] == 0x2d) && (buf.data()[26] == 0x16)){
 			sd_sync = 1;
 			sd_seq = 1;
@@ -291,6 +341,33 @@ void XRFCodec::format_callsign(QString &s)
 	}
 }
 
+void XRFCodec::process_modem_data(QByteArray d)
+{
+	QByteArray txdata;
+	char cs[9];
+	uint8_t ambe[9];
+
+	uint8_t *p_frame = (uint8_t *)(d.data());
+	if(p_frame[2] == MMDVM_DSTAR_HEADER){
+		format_callsign(m_txrptr1);
+		format_callsign(m_txrptr2);
+		cs[8] = 0;
+		memcpy(cs, p_frame + 22, 8);
+		m_txurcall = QString(cs);
+		memcpy(cs, p_frame + 30, 8);
+		m_txmycall = QString(cs);
+		m_modeinfo.stream_state = TRANSMITTING_MODEM;
+		m_tx = true;
+	}
+	else if( (p_frame[2] == MMDVM_DSTAR_EOT) || (p_frame[2] == MMDVM_DSTAR_LOST) ){
+		m_tx = false;
+	}
+	else if(p_frame[2] == MMDVM_DSTAR_DATA){
+		memcpy(ambe, p_frame + 3, 9);
+	}
+	send_frame(ambe);
+}
+
 void XRFCodec::start_tx()
 {
 	format_callsign(m_txmycall);
@@ -358,7 +435,6 @@ void XRFCodec::send_frame(uint8_t *ambe)
 	static uint16_t txstreamid = 0;
 	static bool sendheader = 1;
 	if(m_tx){
-		m_modeinfo.stream_state = TRANSMITTING;
 		if(txstreamid == 0){
 		   txstreamid = static_cast<uint16_t>((::rand() & 0xFFFF));
 		}
@@ -390,9 +466,7 @@ void XRFCodec::send_frame(uint8_t *ambe)
 			memcpy(txdata.data() + 34, m_txurcall.toLocal8Bit().data(), 8);
 			memcpy(txdata.data() + 42, m_txmycall.toLocal8Bit().data(), 8);
 			memcpy(txdata.data() + 50, "dude", 4);
-			txdata[54] = 0;
-			txdata[55] = 0;
-			calcPFCS(txdata.data());
+			CCRC::addCCITT161((uint8_t *)txdata.data() + 15, 41);
 
 			m_modeinfo.src = m_txmycall;
 			m_modeinfo.dst = m_txurcall;
@@ -472,12 +546,15 @@ void XRFCodec::send_frame(uint8_t *ambe)
 		m_udp->writeDatagram(txdata, m_address, m_modeinfo.port);
 		m_txcnt = 0;
 		txstreamid = 0;
+		m_modeinfo.streamid = 0;
 		sendheader = 1;
 		m_txtimer->stop();
 		m_udp->writeDatagram(txdata, m_address, m_modeinfo.port);
-		if(m_ttsid == 0){
+
+		if((m_ttsid == 0) && (m_modeinfo.stream_state == TRANSMITTING) ){
 			m_audio->stop_capture();
 		}
+
 		m_ttscnt = 0;
 		m_modeinfo.stream_state = STREAM_IDLE;
 	}
@@ -518,6 +595,17 @@ void XRFCodec::process_rx_data()
 		m_modeinfo.streamid = 0;
 	}
 
+	if(m_rxmodemq.size() > 2){
+		QByteArray out;
+		int s = m_rxmodemq[1];
+		if((m_rxmodemq[0] == 0xe0) && (m_rxmodemq.size() >= s)){
+			for(int i = 0; i < s; ++i){
+				out.append(m_rxmodemq.dequeue());
+			}
+			m_modem->write(out);
+		}
+	}
+
 	if((!m_tx) && (m_rxcodecq.size() > 8) ){
 		for(int i = 0; i < 9; ++i){
 			ambe[i] = m_rxcodecq.dequeue();
@@ -549,29 +637,4 @@ void XRFCodec::process_rx_data()
 		qDebug() << "XRF playback stopped";
 		return;
 	}
-}
-
-void XRFCodec::calcPFCS(char *d)
-{
-   int crc = 65535;
-   int poly = 32840;
-   int i,j;
-   char b;
-   bool bit;
-   bool c15;
-
-   for (j = 17; j < 41; ++j){
-      b = d[j];
-      for (i = 0; i < 8; ++i) {
-		 bit = (((b >> 7) - i) & 0x1) == 1;
-         c15 = (crc >> 15 & 0x1) == 1;
-         crc <<= 1;
-         if (c15 & bit)
-            crc ^= poly;
-      }
-   }
-
-   crc ^= 65535;
-   d[54] = (char)(crc & 0xFF);
-   d[55] = (char)(crc >> 8 & 0xFF);
 }

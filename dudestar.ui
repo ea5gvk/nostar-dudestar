@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>318</width>
+    <width>313</width>
     <height>471</height>
    </rect>
   </property>
@@ -195,13 +195,6 @@
           </property>
          </widget>
         </item>
-        <item row="4" column="3">
-         <widget class="QCheckBox" name="checkPrivate">
-          <property name="text">
-           <string>Private</string>
-          </property>
-         </widget>
-        </item>
         <item row="10" column="1">
          <widget class="QLabel" name="label1">
           <property name="sizePolicy">
@@ -313,16 +306,6 @@
           </property>
          </widget>
         </item>
-        <item row="4" column="2">
-         <widget class="QLineEdit" name="editTG">
-          <property name="maximumSize">
-           <size>
-            <width>50</width>
-            <height>16777215</height>
-           </size>
-          </property>
-         </widget>
-        </item>
         <item row="11" column="2" colspan="3">
          <widget class="QLabel" name="data2">
           <property name="sizePolicy">
@@ -428,6 +411,23 @@
           </property>
          </widget>
         </item>
+        <item row="4" column="4">
+         <widget class="QCheckBox" name="checkPrivate">
+          <property name="text">
+           <string>Private</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="2" colspan="2">
+         <widget class="QLineEdit" name="editTG">
+          <property name="maximumSize">
+           <size>
+            <width>100</width>
+            <height>16777215</height>
+           </size>
+          </property>
+         </widget>
+        </item>
        </layout>
       </widget>
       <widget class="QWidget" name="settingsTab">
@@ -435,7 +435,7 @@
         <string>Settings</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_3">
-        <item row="1" column="0">
+        <item row="0" column="0">
          <widget class="QScrollArea" name="scrollArea">
           <property name="horizontalScrollBarPolicy">
            <enum>Qt::ScrollBarAlwaysOff</enum>
@@ -447,40 +447,73 @@
            <property name="geometry">
             <rect>
              <x>0</x>
-             <y>0</y>
+             <y>-941</y>
              <width>344</width>
-             <height>836</height>
+             <height>1329</height>
             </rect>
            </property>
            <layout class="QGridLayout" name="gridLayout_4">
-            <item row="14" column="1" colspan="2">
-             <widget class="QLineEdit" name="editURL"/>
+            <item row="49" column="1">
+             <widget class="QLineEdit" name="editModemNXDNTxLevel"/>
             </item>
-            <item row="24" column="1" colspan="3">
-             <widget class="Line" name="line_2">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
+            <item row="10" column="0">
+             <widget class="QLabel" name="labelLat">
+              <property name="text">
+               <string>Latitude</string>
               </property>
              </widget>
             </item>
-            <item row="21" column="1">
-             <widget class="QLineEdit" name="editRPTR1">
+            <item row="33" column="0">
+             <widget class="QLabel" name="label_2">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Modem Settings</string>
+              </property>
+             </widget>
+            </item>
+            <item row="17" column="0">
+             <widget class="QLabel" name="labelPKID">
+              <property name="text">
+               <string>Package ID</string>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="3">
+             <widget class="QComboBox" name="comboESSID">
               <property name="maximumSize">
                <size>
-                <width>16777215</width>
+                <width>60</width>
                 <height>16777215</height>
                </size>
               </property>
              </widget>
             </item>
-            <item row="26" column="1" colspan="3">
-             <widget class="Line" name="line_5">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
+            <item row="51" column="1">
+             <widget class="QPushButton" name="pushUpdateDMRIDs">
+              <property name="text">
+               <string>Update ID files</string>
               </property>
              </widget>
             </item>
-            <item row="5" column="0">
+            <item row="20" column="0">
+             <widget class="QLabel" name="labelDSTARSettings">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>DSTAR Settings</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="0">
              <widget class="QLabel" name="labelDMRSettings">
               <property name="font">
                <font>
@@ -493,54 +526,110 @@
               </property>
              </widget>
             </item>
-            <item row="20" column="0">
-             <widget class="QLabel" name="labelMCTX">
-              <property name="text">
-               <string>MYCALL</string>
-              </property>
-             </widget>
-            </item>
-            <item row="21" column="0">
-             <widget class="QLabel" name="labelR1TX">
-              <property name="text">
-               <string>RPTR1</string>
-              </property>
-             </widget>
-            </item>
-            <item row="31" column="1" colspan="2">
-             <widget class="QLineEdit" name="editIAXPort"/>
-            </item>
-            <item row="15" column="0">
-             <widget class="QLabel" name="labelSWID">
-              <property name="text">
-               <string>Software ID</string>
-              </property>
-             </widget>
-            </item>
-            <item row="20" column="3">
-             <widget class="QLineEdit" name="editURCALL">
+            <item row="22" column="3">
+             <widget class="QLineEdit" name="editRPTR2">
               <property name="maximumSize">
                <size>
                 <width>16777215</width>
                 <height>16777215</height>
                </size>
               </property>
-             </widget>
-            </item>
-            <item row="4" column="0">
-             <widget class="QLabel" name="labelCallsign">
               <property name="text">
-               <string>Callsign</string>
+               <string/>
               </property>
              </widget>
             </item>
-            <item row="27" column="1" colspan="2">
-             <widget class="QLineEdit" name="editIAXUsername"/>
+            <item row="15" column="0">
+             <widget class="QLabel" name="labelURL">
+              <property name="text">
+               <string>URL</string>
+              </property>
+             </widget>
             </item>
-            <item row="0" column="1" colspan="3">
-             <widget class="QComboBox" name="comboVocoder"/>
+            <item row="21" column="1">
+             <widget class="QLineEdit" name="editMYCALL">
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
             </item>
-            <item row="26" column="0">
+            <item row="47" column="0">
+             <widget class="QLabel" name="label_14">
+              <property name="text">
+               <string>YSFTXLevel</string>
+              </property>
+             </widget>
+            </item>
+            <item row="44" column="0">
+             <widget class="QLabel" name="label_11">
+              <property name="text">
+               <string>CWIdTXLevel</string>
+              </property>
+             </widget>
+            </item>
+            <item row="14" column="1" colspan="2">
+             <widget class="QLineEdit" name="editFreq"/>
+            </item>
+            <item row="31" column="0">
+             <widget class="QLabel" name="labelIAXHost">
+              <property name="text">
+               <string>Host</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1" colspan="3">
+             <widget class="QComboBox" name="comboPlayback"/>
+            </item>
+            <item row="21" column="2">
+             <widget class="QLabel" name="labelURTX">
+              <property name="maximumSize">
+               <size>
+                <width>60</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>URCALL</string>
+              </property>
+             </widget>
+            </item>
+            <item row="48" column="1">
+             <widget class="QLineEdit" name="editModemP25TxLevel"/>
+            </item>
+            <item row="36" column="0">
+             <widget class="QLabel" name="label_4">
+              <property name="text">
+               <string>RX Offset (Hz)</string>
+              </property>
+             </widget>
+            </item>
+            <item row="32" column="0">
+             <widget class="QLabel" name="labelIAXPort">
+              <property name="text">
+               <string>Port</string>
+              </property>
+             </widget>
+            </item>
+            <item row="9" column="3">
+             <widget class="QComboBox" name="comboSlot">
+              <property name="maximumSize">
+               <size>
+                <width>60</width>
+                <height>16777215</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item row="45" column="1">
+             <widget class="QLineEdit" name="editModemDstarTxLevel"/>
+            </item>
+            <item row="27" column="0">
              <widget class="QLabel" name="labelIAXSettings">
               <property name="font">
                <font>
@@ -554,86 +643,44 @@
              </widget>
             </item>
             <item row="28" column="1" colspan="2">
-             <widget class="QLineEdit" name="editIAXPassword">
-              <property name="echoMode">
-               <enum>QLineEdit::Password</enum>
-              </property>
-             </widget>
+             <widget class="QLineEdit" name="editIAXUsername"/>
             </item>
-            <item row="12" column="0">
-             <widget class="QLabel" name="labelDesc">
+            <item row="46" column="0">
+             <widget class="QLabel" name="label_13">
               <property name="text">
-               <string>Description</string>
+               <string>DMRTXLevel</string>
               </property>
              </widget>
             </item>
-            <item row="22" column="0">
-             <widget class="QLabel" name="labelUTTX">
-              <property name="text">
-               <string>User txt</string>
-              </property>
-             </widget>
+            <item row="18" column="1" colspan="3">
+             <widget class="QLineEdit" name="editDMROptions"/>
             </item>
-            <item row="2" column="0">
-             <widget class="QLabel" name="labelCapture">
-              <property name="text">
-               <string>Capture device</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="0">
-             <widget class="QLabel" name="labelVocoder">
-              <property name="text">
-               <string>Vocoder</string>
-              </property>
-             </widget>
-            </item>
-            <item row="19" column="0">
-             <widget class="QLabel" name="labelDSTARSettings">
-              <property name="font">
-               <font>
-                <weight>75</weight>
-                <bold>true</bold>
-               </font>
-              </property>
-              <property name="text">
-               <string>DSTAR Settings</string>
-              </property>
-             </widget>
-            </item>
-            <item row="25" column="0">
+            <item row="26" column="0">
              <widget class="QRadioButton" name="radioButtonM173200">
               <property name="text">
                <string>Full rate (VW)</string>
               </property>
              </widget>
             </item>
-            <item row="9" column="0">
-             <widget class="QLabel" name="labelLat">
+            <item row="29" column="0">
+             <widget class="QLabel" name="labelIAXPasseord">
               <property name="text">
-               <string>Latitude</string>
+               <string>Password</string>
               </property>
              </widget>
             </item>
-            <item row="30" column="1" colspan="2">
-             <widget class="QLineEdit" name="editIAXHost">
-              <property name="toolTip">
-               <string>default port = 4569</string>
+            <item row="15" column="1" colspan="2">
+             <widget class="QLineEdit" name="editURL"/>
+            </item>
+            <item row="41" column="0">
+             <widget class="QLabel" name="label_9">
+              <property name="text">
+               <string>TX DC Offset</string>
               </property>
              </widget>
             </item>
-            <item row="19" column="1" colspan="3">
-             <widget class="Line" name="line_3">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-             </widget>
-            </item>
-            <item row="9" column="1" colspan="2">
-             <widget class="QLineEdit" name="editLat"/>
-            </item>
-            <item row="4" column="1">
-             <widget class="QLineEdit" name="editCallsign">
+            <item row="7" column="1">
+             <widget class="QLineEdit" name="editDMRID">
               <property name="maximumSize">
                <size>
                 <width>16777215</width>
@@ -642,34 +689,21 @@
               </property>
              </widget>
             </item>
-            <item row="27" column="0">
-             <widget class="QLabel" name="labelIAXUser">
+            <item row="5" column="2" colspan="2">
+             <widget class="QCheckBox" name="checkIPv6">
               <property name="text">
-               <string>Username</string>
+               <string>Use IPv6 when available</string>
               </property>
              </widget>
             </item>
-            <item row="17" column="1" colspan="3">
-             <widget class="QLineEdit" name="editDMROptions"/>
-            </item>
-            <item row="1" column="1" colspan="3">
-             <widget class="QComboBox" name="comboPlayback"/>
-            </item>
-            <item row="32" column="0" colspan="4">
-             <widget class="Line" name="line_4">
+            <item row="27" column="1" colspan="3">
+             <widget class="Line" name="line_5">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>
              </widget>
             </item>
-            <item row="23" column="0" colspan="4">
-             <widget class="QCheckBox" name="checkXrf2Ref">
-              <property name="text">
-               <string>Connect to XRF using REF (Dplus) protocol</string>
-              </property>
-             </widget>
-            </item>
-            <item row="8" column="2">
+            <item row="9" column="2">
              <widget class="QLabel" name="labelSlot">
               <property name="maximumSize">
                <size>
@@ -682,200 +716,72 @@
               </property>
              </widget>
             </item>
-            <item row="2" column="1" colspan="3">
-             <widget class="QComboBox" name="comboCapture"/>
-            </item>
-            <item row="28" column="0">
-             <widget class="QLabel" name="labelIAXPasseord">
+            <item row="35" column="0">
+             <widget class="QLabel" name="label_3">
               <property name="text">
-               <string>Password</string>
+               <string>TX Freq (Hz)</string>
               </property>
              </widget>
             </item>
-            <item row="5" column="1" colspan="3">
-             <widget class="Line" name="line">
+            <item row="21" column="0">
+             <widget class="QLabel" name="labelMCTX">
+              <property name="text">
+               <string>MYCALL</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="labelCapture">
+              <property name="text">
+               <string>Capture device</string>
+              </property>
+             </widget>
+            </item>
+            <item row="50" column="2">
+             <widget class="QCheckBox" name="checkModemPTTInvert">
+              <property name="text">
+               <string>PTTInvert</string>
+              </property>
+             </widget>
+            </item>
+            <item row="20" column="1" colspan="3">
+             <widget class="Line" name="line_3">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>
              </widget>
             </item>
-            <item row="8" column="0">
-             <widget class="QLabel" name="labelCC">
+            <item row="35" column="1" colspan="2">
+             <widget class="QLineEdit" name="editModemTxFreq"/>
+            </item>
+            <item row="12" column="1" colspan="2">
+             <widget class="QLineEdit" name="editLocation"/>
+            </item>
+            <item row="38" column="0">
+             <widget class="QLabel" name="label_6">
               <property name="text">
-               <string>ColorCode</string>
+               <string>RX Level</string>
               </property>
              </widget>
             </item>
-            <item row="13" column="1" colspan="2">
-             <widget class="QLineEdit" name="editFreq"/>
+            <item row="9" column="1">
+             <widget class="QComboBox" name="comboCC">
+              <property name="maximumSize">
+               <size>
+                <width>60</width>
+                <height>16777215</height>
+               </size>
+              </property>
+             </widget>
             </item>
-            <item row="18" column="0" colspan="3">
+            <item row="19" column="0" colspan="3">
              <widget class="QCheckBox" name="checkDMROptions">
               <property name="text">
                <string>Send DMR+ options on connect</string>
               </property>
              </widget>
             </item>
-            <item row="7" column="0" colspan="2">
-             <widget class="QLabel" name="labelPassword">
-              <property name="text">
-               <string>DMR Hotspot security password</string>
-              </property>
-             </widget>
-            </item>
-            <item row="29" column="0">
-             <widget class="QLabel" name="labelIAXNode">
-              <property name="text">
-               <string>Node[@context]</string>
-              </property>
-             </widget>
-            </item>
-            <item row="11" column="1" colspan="2">
-             <widget class="QLineEdit" name="editLocation"/>
-            </item>
-            <item row="8" column="3">
-             <widget class="QComboBox" name="comboSlot">
-              <property name="maximumSize">
-               <size>
-                <width>60</width>
-                <height>16777215</height>
-               </size>
-              </property>
-             </widget>
-            </item>
-            <item row="6" column="1">
-             <widget class="QLineEdit" name="editDMRID">
-              <property name="maximumSize">
-               <size>
-                <width>16777215</width>
-                <height>16777215</height>
-               </size>
-              </property>
-             </widget>
-            </item>
-            <item row="21" column="2">
-             <widget class="QLabel" name="labelR2TX">
-              <property name="maximumSize">
-               <size>
-                <width>60</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>RPTR2</string>
-              </property>
-             </widget>
-            </item>
-            <item row="7" column="2" colspan="2">
-             <widget class="QLineEdit" name="editPassword">
-              <property name="echoMode">
-               <enum>QLineEdit::Password</enum>
-              </property>
-             </widget>
-            </item>
-            <item row="20" column="1">
-             <widget class="QLineEdit" name="editMYCALL">
-              <property name="maximumSize">
-               <size>
-                <width>16777215</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="text">
-               <string/>
-              </property>
-             </widget>
-            </item>
-            <item row="21" column="3">
-             <widget class="QLineEdit" name="editRPTR2">
-              <property name="maximumSize">
-               <size>
-                <width>16777215</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="text">
-               <string/>
-              </property>
-             </widget>
-            </item>
-            <item row="13" column="0">
-             <widget class="QLabel" name="labelFreq">
-              <property name="text">
-               <string>Freq (Hz)</string>
-              </property>
-             </widget>
-            </item>
-            <item row="33" column="1">
-             <widget class="QPushButton" name="pushUpdateDMRIDs">
-              <property name="text">
-               <string>Update ID files</string>
-              </property>
-             </widget>
-            </item>
-            <item row="12" column="1" colspan="2">
-             <widget class="QLineEdit" name="editDesc"/>
-            </item>
-            <item row="4" column="2" colspan="2">
-             <widget class="QCheckBox" name="checkIPv6">
-              <property name="text">
-               <string>Use IPv6 when available</string>
-              </property>
-             </widget>
-            </item>
-            <item row="14" column="0">
-             <widget class="QLabel" name="labelURL">
-              <property name="text">
-               <string>URL</string>
-              </property>
-             </widget>
-            </item>
-            <item row="17" column="0">
-             <widget class="QLabel" name="labelDMROptions">
-              <property name="text">
-               <string>DMR+ options</string>
-              </property>
-             </widget>
-            </item>
-            <item row="30" column="0">
-             <widget class="QLabel" name="labelIAXHost">
-              <property name="text">
-               <string>Host</string>
-              </property>
-             </widget>
-            </item>
-            <item row="6" column="0">
-             <widget class="QLabel" name="labelDMRID">
-              <property name="text">
-               <string>DMR ID</string>
-              </property>
-             </widget>
-            </item>
-            <item row="11" column="0">
-             <widget class="QLabel" name="labelLocation">
-              <property name="text">
-               <string>Location</string>
-              </property>
-             </widget>
-            </item>
-            <item row="10" column="1" colspan="2">
-             <widget class="QLineEdit" name="editLong"/>
-            </item>
-            <item row="31" column="0">
-             <widget class="QLabel" name="labelIAXPort">
-              <property name="text">
-               <string>Port</string>
-              </property>
-             </widget>
-            </item>
-            <item row="33" column="0">
-             <widget class="QPushButton" name="pushUpdateHostFiles">
-              <property name="text">
-               <string>Update host files</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0">
+            <item row="2" column="0">
              <widget class="QLabel" name="labelPlayback">
               <property name="maximumSize">
                <size>
@@ -888,7 +794,74 @@
               </property>
              </widget>
             </item>
-            <item row="24" column="0">
+            <item row="34" column="1" colspan="2">
+             <widget class="QLineEdit" name="editModemRxFreq"/>
+            </item>
+            <item row="36" column="1">
+             <widget class="QLineEdit" name="editModemRxOffset"/>
+            </item>
+            <item row="13" column="0">
+             <widget class="QLabel" name="labelDesc">
+              <property name="text">
+               <string>Description</string>
+              </property>
+             </widget>
+            </item>
+            <item row="44" column="1">
+             <widget class="QLineEdit" name="editModemCWIdTxLevel"/>
+            </item>
+            <item row="40" column="0">
+             <widget class="QLabel" name="label_8">
+              <property name="text">
+               <string>RX DC Offset</string>
+              </property>
+             </widget>
+            </item>
+            <item row="33" column="1" colspan="3">
+             <widget class="Line" name="line_4">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="8" column="0" colspan="2">
+             <widget class="QLabel" name="labelPassword">
+              <property name="text">
+               <string>DMR Hotspot security password</string>
+              </property>
+             </widget>
+            </item>
+            <item row="17" column="1" colspan="2">
+             <widget class="QLineEdit" name="editPKID"/>
+            </item>
+            <item row="41" column="1">
+             <widget class="QLineEdit" name="editModemTxDCOffset"/>
+            </item>
+            <item row="49" column="0">
+             <widget class="QLabel" name="label_16">
+              <property name="text">
+               <string>NXDNTXLevel</string>
+              </property>
+             </widget>
+            </item>
+            <item row="50" column="0">
+             <widget class="QCheckBox" name="checkModemTxInvert">
+              <property name="text">
+               <string>TXInvert</string>
+              </property>
+             </widget>
+            </item>
+            <item row="22" column="1">
+             <widget class="QLineEdit" name="editRPTR1">
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>16777215</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item row="25" column="0">
              <widget class="QLabel" name="labelM17Settings">
               <property name="font">
                <font>
@@ -901,8 +874,200 @@
               </property>
              </widget>
             </item>
-            <item row="20" column="2">
-             <widget class="QLabel" name="labelURTX">
+            <item row="34" column="0">
+             <widget class="QLabel" name="labelModemRxFreq">
+              <property name="text">
+               <string>RX Freq (Hz)</string>
+              </property>
+             </widget>
+            </item>
+            <item row="18" column="0">
+             <widget class="QLabel" name="labelDMROptions">
+              <property name="text">
+               <string>DMR+ options</string>
+              </property>
+             </widget>
+            </item>
+            <item row="30" column="0">
+             <widget class="QLabel" name="labelIAXNode">
+              <property name="text">
+               <string>Node[@context]</string>
+              </property>
+             </widget>
+            </item>
+            <item row="48" column="0">
+             <widget class="QLabel" name="label_15">
+              <property name="text">
+               <string>P25TXLevel</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1" colspan="3">
+             <widget class="QComboBox" name="comboModem"/>
+            </item>
+            <item row="16" column="1" colspan="2">
+             <widget class="QLineEdit" name="editSWID"/>
+            </item>
+            <item row="9" column="0">
+             <widget class="QLabel" name="labelCC">
+              <property name="text">
+               <string>ColorCode</string>
+              </property>
+             </widget>
+            </item>
+            <item row="42" column="0">
+             <widget class="QLabel" name="label_10">
+              <property name="text">
+               <string>RF Level</string>
+              </property>
+             </widget>
+            </item>
+            <item row="32" column="1" colspan="2">
+             <widget class="QLineEdit" name="editIAXPort"/>
+            </item>
+            <item row="22" column="0">
+             <widget class="QLabel" name="labelR1TX">
+              <property name="text">
+               <string>RPTR1</string>
+              </property>
+             </widget>
+            </item>
+            <item row="39" column="0">
+             <widget class="QLabel" name="label_7">
+              <property name="text">
+               <string>TX Level</string>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="0">
+             <widget class="QLabel" name="labelDMRID">
+              <property name="text">
+               <string>DMR ID</string>
+              </property>
+             </widget>
+            </item>
+            <item row="37" column="0">
+             <widget class="QLabel" name="label_5">
+              <property name="text">
+               <string>Tx Offset (Hz)</string>
+              </property>
+             </widget>
+            </item>
+            <item row="37" column="1">
+             <widget class="QLineEdit" name="editModemTxOffset"/>
+            </item>
+            <item row="11" column="1" colspan="2">
+             <widget class="QLineEdit" name="editLong"/>
+            </item>
+            <item row="40" column="1">
+             <widget class="QLineEdit" name="editModemRxDCOffset"/>
+            </item>
+            <item row="0" column="1" colspan="3">
+             <widget class="QComboBox" name="comboVocoder"/>
+            </item>
+            <item row="28" column="0">
+             <widget class="QLabel" name="labelIAXUser">
+              <property name="text">
+               <string>Username</string>
+              </property>
+             </widget>
+            </item>
+            <item row="16" column="0">
+             <widget class="QLabel" name="labelSWID">
+              <property name="text">
+               <string>Software ID</string>
+              </property>
+             </widget>
+            </item>
+            <item row="51" column="0">
+             <widget class="QPushButton" name="pushUpdateHostFiles">
+              <property name="text">
+               <string>Update host files</string>
+              </property>
+             </widget>
+            </item>
+            <item row="13" column="1" colspan="2">
+             <widget class="QLineEdit" name="editDesc"/>
+            </item>
+            <item row="5" column="1">
+             <widget class="QLineEdit" name="editCallsign">
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>16777215</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item row="5" column="0">
+             <widget class="QLabel" name="labelCallsign">
+              <property name="text">
+               <string>Callsign</string>
+              </property>
+             </widget>
+            </item>
+            <item row="46" column="1">
+             <widget class="QLineEdit" name="editModemDMRTxLevel"/>
+            </item>
+            <item row="31" column="1" colspan="2">
+             <widget class="QLineEdit" name="editIAXHost">
+              <property name="toolTip">
+               <string>default port = 4569</string>
+              </property>
+             </widget>
+            </item>
+            <item row="30" column="1" colspan="2">
+             <widget class="QLineEdit" name="editIAXNode">
+              <property name="toolTip">
+               <string extracomment="default context = iax-client">default context = iax-client</string>
+              </property>
+             </widget>
+            </item>
+            <item row="23" column="1" colspan="3">
+             <widget class="QLineEdit" name="editUserTxt"/>
+            </item>
+            <item row="3" column="1" colspan="3">
+             <widget class="QComboBox" name="comboCapture"/>
+            </item>
+            <item row="21" column="3">
+             <widget class="QLineEdit" name="editURCALL">
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>16777215</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+            <item row="38" column="1">
+             <widget class="QLineEdit" name="editModemRxLevel"/>
+            </item>
+            <item row="42" column="1">
+             <widget class="QLineEdit" name="editModemRFLevel"/>
+            </item>
+            <item row="8" column="2" colspan="2">
+             <widget class="QLineEdit" name="editPassword">
+              <property name="echoMode">
+               <enum>QLineEdit::Password</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="23" column="0">
+             <widget class="QLabel" name="labelUTTX">
+              <property name="text">
+               <string>User txt</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="labelVocoder">
+              <property name="text">
+               <string>Vocoder</string>
+              </property>
+             </widget>
+            </item>
+            <item row="22" column="2">
+             <widget class="QLabel" name="labelR2TX">
               <property name="maximumSize">
                <size>
                 <width>60</width>
@@ -910,41 +1075,90 @@
                </size>
               </property>
               <property name="text">
-               <string>URCALL</string>
+               <string>RPTR2</string>
               </property>
              </widget>
             </item>
-            <item row="8" column="1">
-             <widget class="QComboBox" name="comboCC">
-              <property name="maximumSize">
-               <size>
-                <width>60</width>
-                <height>16777215</height>
-               </size>
+            <item row="24" column="0" colspan="4">
+             <widget class="QCheckBox" name="checkXrf2Ref">
+              <property name="text">
+               <string>Connect to XRF using REF (Dplus) protocol</string>
               </property>
              </widget>
             </item>
-            <item row="22" column="1" colspan="3">
-             <widget class="QLineEdit" name="editUserTxt"/>
+            <item row="29" column="1" colspan="2">
+             <widget class="QLineEdit" name="editIAXPassword">
+              <property name="echoMode">
+               <enum>QLineEdit::Password</enum>
+              </property>
+             </widget>
             </item>
-            <item row="25" column="1" colspan="2">
+            <item row="14" column="0">
+             <widget class="QLabel" name="labelFreq">
+              <property name="text">
+               <string>Freq (Hz)</string>
+              </property>
+             </widget>
+            </item>
+            <item row="45" column="0">
+             <widget class="QLabel" name="label_12">
+              <property name="text">
+               <string>D-StarTXLevel</string>
+              </property>
+             </widget>
+            </item>
+            <item row="50" column="1">
+             <widget class="QCheckBox" name="checkModemRxInvert">
+              <property name="text">
+               <string>RXInvert</string>
+              </property>
+             </widget>
+            </item>
+            <item row="39" column="1">
+             <widget class="QLineEdit" name="editModemTxLevel"/>
+            </item>
+            <item row="6" column="1" colspan="3">
+             <widget class="Line" name="line">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="12" column="0">
+             <widget class="QLabel" name="labelLocation">
+              <property name="text">
+               <string>Location</string>
+              </property>
+             </widget>
+            </item>
+            <item row="11" column="0">
+             <widget class="QLabel" name="labelLong">
+              <property name="text">
+               <string>Longitude</string>
+              </property>
+             </widget>
+            </item>
+            <item row="10" column="1" colspan="2">
+             <widget class="QLineEdit" name="editLat"/>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="labelModem">
+              <property name="text">
+               <string>Modem</string>
+              </property>
+             </widget>
+            </item>
+            <item row="47" column="1">
+             <widget class="QLineEdit" name="editModemYSFTxLevel"/>
+            </item>
+            <item row="26" column="1" colspan="2">
              <widget class="QRadioButton" name="radioButtonM171600">
               <property name="text">
                <string>Voice / Data (DN)</string>
               </property>
              </widget>
             </item>
-            <item row="6" column="3">
-             <widget class="QComboBox" name="comboESSID">
-              <property name="maximumSize">
-               <size>
-                <width>60</width>
-                <height>16777215</height>
-               </size>
-              </property>
-             </widget>
-            </item>
-            <item row="6" column="2">
+            <item row="7" column="2">
              <widget class="QLabel" name="labelESSID">
               <property name="maximumSize">
                <size>
@@ -957,32 +1171,22 @@
               </property>
              </widget>
             </item>
-            <item row="10" column="0">
-             <widget class="QLabel" name="labelLong">
+            <item row="25" column="1" colspan="3">
+             <widget class="Line" name="line_2">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="43" column="0">
+             <widget class="QLabel" name="label_17">
               <property name="text">
-               <string>Longitude</string>
+               <string>TX Delay</string>
               </property>
              </widget>
             </item>
-            <item row="29" column="1" colspan="2">
-             <widget class="QLineEdit" name="editIAXNode">
-              <property name="toolTip">
-               <string extracomment="default context = iax-client">default context = iax-client</string>
-              </property>
-             </widget>
-            </item>
-            <item row="16" column="0">
-             <widget class="QLabel" name="labelPKID">
-              <property name="text">
-               <string>Package ID</string>
-              </property>
-             </widget>
-            </item>
-            <item row="15" column="1" colspan="2">
-             <widget class="QLineEdit" name="editSWID"/>
-            </item>
-            <item row="16" column="1" colspan="2">
-             <widget class="QLineEdit" name="editPKID"/>
+            <item row="43" column="1">
+             <widget class="QLineEdit" name="editModemTxDelay"/>
             </item>
            </layout>
           </widget>

@@ -24,7 +24,7 @@
 #include <iostream>
 #include <cstring>
 
-//#define DEBUG
+#define DEBUG
 
 const unsigned int IMBE_INTERLEAVE[] = {
 	0,  7, 12, 19, 24, 31, 36, 43, 48, 55, 60, 67, 72, 79, 84, 91,  96, 103, 108, 115, 120, 127, 132, 139,
@@ -40,8 +40,8 @@ const int dvsi_interleave[49] = {
 	2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35, 38
 };
 
-YSFCodec::YSFCodec(QString callsign, QString hostname, QString host, int port, bool ipv6, QString vocoder, QString audioin, QString audioout) :
-	Codec(callsign, 0, hostname, host, port, ipv6, vocoder, audioin, audioout),
+YSFCodec::YSFCodec(QString callsign, QString hostname, QString host, int port, bool ipv6, QString vocoder, QString modem, QString audioin, QString audioout) :
+	Codec(callsign, 0, hostname, host, port, ipv6, vocoder, modem, audioin, audioout),
 
 	m_fcs(false),
 	m_txfullrate(false)
@@ -109,6 +109,15 @@ void YSFCodec::process_udp()
 				m_hwrx = false;
 				m_hwtx = false;
 			}
+
+			if(m_modemport != ""){
+				m_modem = new SerialModem("YSF");
+				m_modem->set_modem_flags(m_rxInvert, m_txInvert, m_pttInvert, m_useCOSAsLockout, m_duplex);
+				m_modem->set_modem_params(m_rxfreq, m_txfreq, m_txDelay, m_rxLevel, m_rfLevel, m_ysfTXHang, m_cwIdTXLevel, m_dstarTXLevel, m_dmrTXLevel, m_ysfTXLevel, m_p25TXLevel, m_nxdnTXLevel, m_pocsagTXLevel);
+				m_modem->connect_to_serial(m_modemport);
+				connect(m_modem, SIGNAL(modem_data_ready(QByteArray)), this, SLOT(process_modem_data(QByteArray)));
+			}
+
 			m_audio = new AudioEngine(m_audioin, m_audioout);
 			m_audio->init();
 
@@ -139,6 +148,15 @@ void YSFCodec::process_udp()
 		memcpy(ysftag, buf.data() + 4, 10);ysftag[10] = '\0';
 		m_modeinfo.gw = QString(ysftag);
 		p_data = (uint8_t *)buf.data() + 35;
+		if(m_modem){
+			QByteArray out;
+			out.append(0xe0);
+			out.append(124);
+			out.append(0x20);
+			out.append('\x00');
+			out.append(buf.mid(35));
+			m_modem->write(out);
+		}
 	}
 	else if(buf.size() == 130){
 		memcpy(ysftag, buf.data() + 0x79, 8);ysftag[8] = '\0';
@@ -541,6 +559,35 @@ void YSFCodec::interleave(uint8_t *ambe)
 	memcpy(ambe, dvsi_data, 7);
 }
 
+void YSFCodec::process_modem_data(QByteArray d)
+{
+	QByteArray txdata;
+	uint8_t *p_frame = (uint8_t *)(d.data());
+	if(m_fcs){
+		::memset(p_frame + 120U, 0, 10U);
+		::memcpy(p_frame + 121U, m_fcsname.c_str(), 8);
+	}
+	else{
+		::memcpy(m_ysfFrame + 0U, "YSFD", 4U);
+		::memcpy(m_ysfFrame + 4U, m_modeinfo.callsign.toStdString().c_str(), YSF_CALLSIGN_LENGTH);
+		::memcpy(m_ysfFrame + 14U, m_modeinfo.callsign.toStdString().c_str(), YSF_CALLSIGN_LENGTH);
+		::memcpy(m_ysfFrame + 24U, "ALL       ", YSF_CALLSIGN_LENGTH);
+		m_ysfFrame[34U] = (m_txcnt & 0x7f) << 1;
+		::memcpy(m_ysfFrame + 35U, p_frame + 4U, 120);
+	}
+	++m_txcnt;
+	txdata.append((char *)m_ysfFrame, 155);
+	m_udp->writeDatagram(txdata, m_address, m_modeinfo.port);
+#ifdef DEBUG
+		fprintf(stderr, "SEND:%d: ", txdata.size());
+		for(int i = 0; i < txdata.size(); ++i){
+			fprintf(stderr, "%02x ", (uint8_t)txdata.data()[i]);
+		}
+		fprintf(stderr, "\n");
+		fflush(stderr);
+#endif
+}
+
 void YSFCodec::transmit()
 {
 	uint8_t ambe_frame[88];
@@ -766,9 +813,6 @@ void YSFCodec::encode_vw()
 
 void YSFCodec::encode_imbe(unsigned char* data, const unsigned char* imbe)
 {
-	assert(data != NULL);
-	assert(imbe != NULL);
-
 	bool bTemp[144U];
 	bool* bit = bTemp;
 

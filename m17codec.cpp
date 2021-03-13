@@ -22,8 +22,8 @@
 
 #define DEBUG
 
-M17Codec::M17Codec(QString callsign, char module, QString hostname, QString host, int port, bool ipv6, QString audioin, QString audioout) :
-	Codec(callsign, module, hostname, host, port, ipv6, NULL, audioin, audioout),
+M17Codec::M17Codec(QString callsign, char module, QString hostname, QString host, int port, bool ipv6, QString modem, QString audioin, QString audioout) :
+	Codec(callsign, module, hostname, host, port, ipv6, NULL, modem, audioin, audioout),
 	m_txrate(1)
 {
 	m_modeinfo.callsign = callsign;

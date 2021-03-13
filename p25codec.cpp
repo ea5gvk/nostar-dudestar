@@ -45,8 +45,8 @@ const unsigned char REC80[] = {0x80U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 
 #define WRITE_BIT(p,i,b) p[(i)>>3] = (b) ? (p[(i)>>3] | BIT_MASK_TABLE[(i)&7]) : (p[(i)>>3] & ~BIT_MASK_TABLE[(i)&7])
 #define READ_BIT(p,i)    (p[(i)>>3] & BIT_MASK_TABLE[(i)&7])
 
-P25Codec::P25Codec(QString callsign, int dmrid, int hostname, QString host, int port, bool ipv6, QString audioin, QString audioout) :
-	Codec(callsign, 0, NULL, host, port, ipv6, NULL, audioin, audioout),
+P25Codec::P25Codec(QString callsign, int dmrid, int hostname, QString host, int port, bool ipv6, QString modem, QString audioin, QString audioout) :
+	Codec(callsign, 0, NULL, host, port, ipv6, NULL, modem, audioin, audioout),
 	m_hostname(hostname),
 	m_dmrid(dmrid)
 {
@@ -94,6 +94,11 @@ void P25Codec::process_udp()
 			m_ping_timer = new QTimer();
 			connect(m_ping_timer, SIGNAL(timeout()), this, SLOT(send_ping()));
 			m_ping_timer->start(5000);
+			if(m_modemport != ""){
+				m_modem = new SerialModem("P25");
+				m_modem->connect_to_serial(m_modemport);
+				connect(m_modem, SIGNAL(modem_data_ready()), this, SLOT(process_modem_data()));
+			}
 			m_audio = new AudioEngine(m_audioin, m_audioout);
 			m_audio->init();
 		}
@@ -238,6 +243,11 @@ void P25Codec::send_disconnect()
 	fprintf(stderr, "\n");
 	fflush(stderr);
 #endif
+}
+
+void P25Codec::process_modem_data()
+{
+
 }
 
 void P25Codec::transmit()

@@ -24,7 +24,7 @@ class DCSCodec : public Codec
 {
 	Q_OBJECT
 public:
-	DCSCodec(QString callsign, QString hostname, char module, QString host, int port, bool ipv6, QString vocoder, QString audioin, QString audioout);
+	DCSCodec(QString callsign, QString hostname, char module, QString host, int port, bool ipv6, QString vocoder, QString modem, QString audioin, QString audioout);
 	~DCSCodec();
 	unsigned char * get_frame(unsigned char *ambe);
 private:
@@ -37,14 +37,15 @@ private:
 private slots:
 	void start_tx();
 	void process_udp();
+	void process_modem_data(QByteArray);
 	void process_rx_data();
 #ifdef AMBEHW_SUPPORTED
 	void get_ambe();
 #endif
 	void send_ping();
 	void send_disconnect();
-	void format_callsign(QString &);
 	void transmit();
+	void format_callsign(QString &s);
 	void hostname_lookup(QHostInfo i);
 	void input_src_changed(int id, QString t) { m_ttsid = id; m_ttstext = t; }
 	void module_changed(int m) { m_module = 0x41 + m; m_modeinfo.streamid = 0; }

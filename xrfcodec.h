@@ -24,7 +24,7 @@ class XRFCodec : public Codec
 {
 	Q_OBJECT
 public:
-	XRFCodec(QString callsign, QString hostname, char module, QString host, int port, bool ipv6, QString vocoder, QString audioin, QString audioout);
+	XRFCodec(QString callsign, QString hostname, char module, QString host, int port, bool ipv6, QString vocoder, QString modem, QString audioin, QString audioout);
 	~XRFCodec();
 	unsigned char * get_frame(unsigned char *ambe);
 private:
@@ -39,6 +39,7 @@ private slots:
 	void format_callsign(QString &);
 	void process_udp();
 	void process_rx_data();
+	void process_modem_data(QByteArray d);
 #ifdef AMBEHW_SUPPORTED
 	void get_ambe();
 #endif
@@ -55,7 +56,6 @@ private slots:
 	void swtx_state_changed(int s) {m_hwtx = !s; }
 	void send_frame(uint8_t *);
 	void decoder_gain_changed(qreal);
-	void calcPFCS(char *d);
 };
 
 #endif // XRFCODEC_H
