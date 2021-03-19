@@ -131,6 +131,8 @@ const unsigned int BUFFER_LENGTH = 2000U;
 SerialModem::SerialModem(QString protocol)
 {
 	set_mode(protocol);
+	m_dmrDelay = 0;
+	m_debug = true;
 }
 
 SerialModem::~SerialModem()
@@ -283,7 +285,7 @@ void SerialModem::process_modem()
 	if(m_serialdata.size() < 3){
 		return;
 	}
-	qDebug() << "process_modem() " << (uint8_t)m_serialdata[0] << ":" << (uint8_t)m_serialdata[1] << ":" << m_serialdata.size();
+	//qDebug() << "process_modem() " << (uint8_t)m_serialdata[0] << ":" << (uint8_t)m_serialdata[1] << ":" << m_serialdata.size();
 	if(((uint8_t)m_serialdata[0] == MMDVM_FRAME_START) && (m_serialdata.size() >= m_serialdata[1])){
 		const uint8_t r = (uint8_t)m_serialdata[2];
 		const uint8_t s = (uint8_t)m_serialdata[1];
@@ -394,7 +396,18 @@ void SerialModem::set_config()
 	out.append((unsigned char)(m_fmTXLevel * 2.55F + 0.5F));
 	out.append((unsigned char)m_p25TXHang);
 	out.append((unsigned char)m_nxdnTXHang);
-	m_serial->write(out, 24U);
+	m_serial->write(out);
+#ifdef DEBUGHW
+			fprintf(stderr, "MODEMTX %d:%d:", out.size(), m_serialdata.size());
+			for(int i = 0; i < out.size(); ++i){
+				//if((d.data()[i] == 0x61) && (data.data()[i+1] == 0x01) && (data.data()[i+2] == 0x42) && (data.data()[i+3] == 0x02)){
+				//	i+= 6;
+				//}
+				fprintf(stderr, "%02x ", (unsigned char)out.data()[i]);
+			}
+			fprintf(stderr, "\n");
+			fflush(stderr);
+#endif
 }
 
 void SerialModem::write(QByteArray b)

@@ -447,7 +447,7 @@
            <property name="geometry">
             <rect>
              <x>0</x>
-             <y>-941</y>
+             <y>-282</y>
              <width>344</width>
              <height>1329</height>
             </rect>
@@ -832,7 +832,11 @@
              </widget>
             </item>
             <item row="17" column="1" colspan="2">
-             <widget class="QLineEdit" name="editPKID"/>
+             <widget class="QLineEdit" name="editPKID">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
+             </widget>
             </item>
             <item row="41" column="1">
              <widget class="QLineEdit" name="editModemTxDCOffset"/>
@@ -906,7 +910,11 @@
              <widget class="QComboBox" name="comboModem"/>
             </item>
             <item row="16" column="1" colspan="2">
-             <widget class="QLineEdit" name="editSWID"/>
+             <widget class="QLineEdit" name="editSWID">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
+             </widget>
             </item>
             <item row="9" column="0">
              <widget class="QLabel" name="labelCC">
@@ -974,6 +982,9 @@
             </item>
             <item row="16" column="0">
              <widget class="QLabel" name="labelSWID">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
               <property name="text">
                <string>Software ID</string>
               </property>

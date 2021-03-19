@@ -25,6 +25,7 @@
 #define ENDLINE "\n"
 
 //#define DEBUGHW
+//#define DEBUG
 
 const uint8_t AMBEP251_4400_2800[17] = {0x61, 0x00, 0x0d, 0x00, 0x0a, 0x05U, 0x58U, 0x08U, 0x6BU, 0x10U, 0x30U, 0x00U, 0x00U, 0x00U, 0x00U, 0x01U, 0x90U};//DVSI P25 USB Dongle FEC
 //const uint8_t AMBEP251_4400_0000[17] = {0x61, 0x00, 0x0d, 0x00, 0x0a, 0x05U, 0x58U, 0x08U, 0x6BU, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x01U, 0x58U};//DVSI P25 USB Dongle No-FEC
@@ -36,6 +37,8 @@ const uint8_t AMBE3000_2450_1150[17] = {0x61, 0x00, 0x0d, 0x00, 0x0a, 0x04U, 0x3
 const uint8_t AMBE3000_2450_0000[17] = {0x61, 0x00, 0x0d, 0x00, 0x0a, 0x04U, 0x31U, 0x07U, 0x54U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x00U, 0x70U, 0x31U};
 const uint8_t AMBE3000_PARITY_DISABLE[8] = {0x61, 0x00, 0x04, 0x00, 0x3f, 0x00, 0x2f, 0x14};
 
+//const uint8_t AMBE2020[48] = {0x13, 0xec, 0x00, 0x00, 0x10, 0x30, 0x00, 0x01, 0x00, 0x00, 0x42, 0x30, 0x00, 0x48, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+const uint8_t AMBE2020[4] = {0x04, 0x20, 0x01, 0x00};
 SerialAMBE::SerialAMBE(QString protocol) :
 	m_protocol(protocol),
 	m_decode_gain(1.0)
@@ -75,24 +78,35 @@ QMap<QString, QString> SerialAMBE::discover_devices()
 
 void SerialAMBE::connect_to_serial(QString p)
 {
+	int br = 460800;
+
 	if((m_protocol != "P25") && (m_protocol != "M17") && (p != "")){
+		if(m_description == "DV Dongle"){
+			br = 230400;
+		}
+
 		m_serial = new QSerialPort;
 		m_serial->setPortName(p);
-		m_serial->setBaudRate(460800);
+		m_serial->setBaudRate(br);
 		m_serial->setDataBits(QSerialPort::Data8);
 		m_serial->setStopBits(QSerialPort::OneStop);
 		m_serial->setParity(QSerialPort::NoParity);
 		//out << "Baud rate == " << serial->baudRate() << endl;
+
 		if (m_serial->open(QIODevice::ReadWrite)) {
 			connect(m_serial, &QSerialPort::readyRead, this, &SerialAMBE::process_serial);
-			m_serial->setFlowControl(QSerialPort::HardwareControl);
-			m_serial->setRequestToSend(true);
 			QByteArray a;
 			a.clear();
-			a.append(reinterpret_cast<const char*>(AMBE3000_PARITY_DISABLE), sizeof(AMBE3000_PARITY_DISABLE));
-			m_serial->write(a);
-			QThread::msleep(100);
-			a.clear();
+
+			if(m_description != "DV Dongle"){
+				m_serial->setFlowControl(QSerialPort::HardwareControl);
+				m_serial->setRequestToSend(true);
+				a.append(reinterpret_cast<const char*>(AMBE3000_PARITY_DISABLE), sizeof(AMBE3000_PARITY_DISABLE));
+				m_serial->write(a);
+				QThread::msleep(100);
+				a.clear();
+			}
+
 			if(m_protocol == "DMR"){
 				a.append(reinterpret_cast<const char*>(AMBE3000_2450_1150), sizeof(AMBE3000_2450_1150));
 				packet_size = 9;
@@ -104,8 +118,12 @@ void SerialAMBE::connect_to_serial(QString p)
 			else if(m_protocol == "P25"){
 				a.append(reinterpret_cast<const char*>(AMBEP251_4400_2800), sizeof(AMBEP251_4400_2800));
 			}
-			else{ //D-Star
+			else if(m_description != "DV Dongle"){ //D-Star with AMBE3000
 				a.append(reinterpret_cast<const char*>(AMBE2000_2400_1200), sizeof(AMBE2000_2400_1200));
+				packet_size = 9;
+			}
+			else{
+				a.append(reinterpret_cast<const char*>(AMBE2020), sizeof(AMBE2020));
 				packet_size = 9;
 			}
 			m_serial->write(a);
@@ -163,6 +181,11 @@ void SerialAMBE::encode(int16_t *audio)
 
 void SerialAMBE::process_serial()
 {
+	QByteArray data;
+	data.resize(322);
+	data[0] = 0x42;
+	data[1] = 0x81;
+
 	QByteArray d = m_serial->readAll();
 	for(int i = 0; i < d.size(); i++){
 		m_serialdata.append(d[i]);

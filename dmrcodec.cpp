@@ -453,7 +453,7 @@ void DMRCodec::send_frame()
 	if(m_tx){
 		m_modeinfo.stream_state = TRANSMITTING;
 		if(!m_dmrcnt){
-			encode_header();
+			encode_header(DT_VOICE_LC_HEADER);
 		}
 		else{
 			::memcpy(m_dmrFrame + 20U, m_ambe, 13U);
@@ -471,6 +471,7 @@ void DMRCodec::send_frame()
 	else{
 		//fprintf(stderr, "DMR TX stopped\n");
 		get_eot();
+		build_frame();
 		m_ttscnt = 0;
 		txdata.append((char *)m_dmrFrame, 55);
 		m_udp->writeDatagram(txdata, m_address, m_modeinfo.port);
@@ -494,7 +495,7 @@ void DMRCodec::send_frame()
 
 unsigned char * DMRCodec::get_eot()
 {
-	//encode_header(1);
+	encode_header(DT_TERMINATOR_WITH_LC);
 	m_dmrcnt = 0;
 	return m_dmrFrame;
 }
@@ -543,11 +544,11 @@ void DMRCodec::build_frame()
 	m_modeinfo.frame_number = m_dmrcnt;
 }
 
-void DMRCodec::encode_header()
+void DMRCodec::encode_header(uint8_t t)
 {
 	addDMRDataSync(m_dmrFrame+20, 0);
-	m_dataType = DT_VOICE_LC_HEADER;
-	full_lc_encode(m_dmrFrame+20, DT_VOICE_LC_HEADER);
+	m_dataType = t;
+	full_lc_encode(m_dmrFrame+20, t);
 }
 
 void DMRCodec::encode_data()

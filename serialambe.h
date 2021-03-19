@@ -40,6 +40,9 @@ private slots:
 	void process_serial();
 private:
 	QSerialPort *m_serial;
+	QString m_description;
+	QString m_manufacturer;
+	QString m_serialnum;
 	QString m_protocol;
 	uint8_t packet_size;
 	qreal m_decode_gain;

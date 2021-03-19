@@ -81,7 +81,7 @@ private:
 	void byteToBitsBE(uint8_t byte, bool* bits);
 	void bitsToByteBE(const bool* bits, uint8_t& byte);
 	void build_frame();
-	void encode_header();
+	void encode_header(uint8_t);
 	void encode_data();
 	void encode16114(bool* d);
 	void encode_qr1676(uint8_t* data);
