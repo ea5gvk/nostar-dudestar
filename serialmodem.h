@@ -40,6 +40,7 @@ private slots:
 	void process_modem();
 	void set_freq();
 	void set_config();
+	void set_mode(uint8_t);
 private:
 	QSerialPort *m_serial;
 	QTimer *m_modemtimer;

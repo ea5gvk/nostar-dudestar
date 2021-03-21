@@ -24,6 +24,14 @@
 
 #define DEBUG
 
+const unsigned char MMDVM_DMR_DATA1   = 0x18U;
+const unsigned char MMDVM_DMR_LOST1   = 0x19U;
+const unsigned char MMDVM_DMR_DATA2   = 0x1AU;
+const unsigned char MMDVM_DMR_LOST2   = 0x1BU;
+const unsigned char MMDVM_DMR_SHORTLC = 0x1CU;
+const unsigned char MMDVM_DMR_START   = 0x1DU;
+const unsigned char MMDVM_DMR_ABORT   = 0x1EU;
+
 const uint32_t ENCODING_TABLE_1676[] =
 	{0x0000U, 0x0273U, 0x04E5U, 0x0696U, 0x09C9U, 0x0BBAU, 0x0D2CU, 0x0F5FU, 0x11E2U, 0x1391U, 0x1507U, 0x1774U,
 	 0x182BU, 0x1A58U, 0x1CCEU, 0x1EBDU, 0x21B7U, 0x23C4U, 0x2552U, 0x2721U, 0x287EU, 0x2A0DU, 0x2C9BU, 0x2EE8U,
@@ -57,6 +65,7 @@ DMRCodec::DMRCodec(QString callsign, uint32_t dmrid, uint8_t essid, QString pass
 	m_colorcode = 1;
 	m_slot = 2;
 	m_flco = FLCO(0);
+
 	if (essid){
 		m_essid = m_dmrid * 100 + (essid-1);
 	}
@@ -91,7 +100,7 @@ void DMRCodec::process_udp()
 
 	buf.resize(m_udp->pendingDatagramSize());
 	m_udp->readDatagram(buf.data(), buf.size(), &sender, &senderPort);
-#ifdef DEBUG
+#ifdef DEBUGG
 	fprintf(stderr, "RECV: ");
 	for(int i = 0; i < buf.size(); ++i){
 		fprintf(stderr, "%02x ", (unsigned char)buf.data()[i]);
@@ -199,11 +208,13 @@ void DMRCodec::process_udp()
 		(m_modeinfo.status == CONNECTED_RW))
 	{
 		m_rxwatchdog = 0;
+		uint8_t t;
 		if((uint8_t)buf.data()[15] & 0x02){
 			qDebug() << "DMR RX EOT";
 			m_modeinfo.stream_state = STREAM_END;
 			m_modeinfo.ts = QDateTime::currentMSecsSinceEpoch();
 			m_modeinfo.streamid = 0;
+			t = 0x42;
 		}
 		else if((uint8_t)buf.data()[15] & 0x01){
 			m_audio->start_playback();
@@ -217,7 +228,20 @@ void DMRCodec::process_udp()
 			m_modeinfo.gwid = (uint32_t)((buf.data()[11] << 24) | ((buf.data()[12] << 16) & 0xff0000) | ((buf.data()[13] << 8) & 0xff00) | (buf.data()[14] & 0xff));
 			m_modeinfo.streamid = (uint32_t)((buf.data()[16] << 24) | ((buf.data()[17] << 16) & 0xff0000) | ((buf.data()[18] << 8) & 0xff00) | (buf.data()[19] & 0xff));
 			m_modeinfo.frame_number = buf.data()[4];
+			t = 0x41;
 			qDebug() << "New DMR stream from " << m_modeinfo.srcid << " to " << m_modeinfo.dstid;
+		}
+		if(m_modem){
+			m_rxmodemq.append(0xe0);
+			m_rxmodemq.append(0x25);
+			m_rxmodemq.append(MMDVM_DMR_DATA2);
+			m_rxmodemq.append(t);
+
+			for(int i = 0; i < 33; ++i){
+				m_rxmodemq.append(buf.data()[20+i]);
+			};
+			//m_rxmodemq.append('\x00');
+			//m_rxmodemq.append(0x2f);
 		}
 	}
 	if((buf.size() == 55) &&
@@ -251,11 +275,25 @@ void DMRCodec::process_udp()
 		dmrsync[0] = dmrframe[13] & 0x0F;
 		::memcpy(&dmrsync[1], &dmrframe[14], 5);
 		dmrsync[6] = dmrframe[19] & 0xF0;
-		m_modeinfo.srcid = (uint32_t)((buf.data()[5] << 16) | ((buf.data()[6] << 8) & 0xff00) | (buf.data()[7] & 0xff));
-		m_modeinfo.dstid = (uint32_t)((buf.data()[8] << 16) | ((buf.data()[9] << 8) & 0xff00) | (buf.data()[10] & 0xff));
-		m_modeinfo.gwid = (uint32_t)((buf.data()[11] << 24) | ((buf.data()[12] << 16) & 0xff0000) | ((buf.data()[13] << 8) & 0xff00) | (buf.data()[14] & 0xff));
-		m_modeinfo.streamid = (uint32_t)((buf.data()[16] << 24) | ((buf.data()[17] << 16) & 0xff0000) | ((buf.data()[18] << 8) & 0xff00) | (buf.data()[19] & 0xff));
+		m_modeinfo.srcid =		(uint32_t)((buf.data()[5] << 16) | ((buf.data()[6] << 8) & 0xff00) | (buf.data()[7] & 0xff));
+		m_modeinfo.dstid =		(uint32_t)((buf.data()[8] << 16) | ((buf.data()[9] << 8) & 0xff00) | (buf.data()[10] & 0xff));
+		m_modeinfo.gwid =		(uint32_t)((buf.data()[11] << 24) | ((buf.data()[12] << 16) & 0xff0000) | ((buf.data()[13] << 8) & 0xff00) | (buf.data()[14] & 0xff));
+		m_modeinfo.streamid =	(uint32_t)((buf.data()[16] << 24) | ((buf.data()[17] << 16) & 0xff0000) | ((buf.data()[18] << 8) & 0xff00) | (buf.data()[19] & 0xff));
 		m_modeinfo.frame_number = buf.data()[4];
+
+		if(m_modem){
+			uint8_t t = ((uint8_t)buf.data()[15] & 0x0f);
+			if(!t) t = 0x20;
+
+			m_rxmodemq.append(0xe0);
+			m_rxmodemq.append(0x25);
+			m_rxmodemq.append(MMDVM_DMR_DATA2);
+			m_rxmodemq.append(t);
+
+			for(int i = 0; i < 33; ++i){
+				m_rxmodemq.append(buf.data()[20+i]);
+			}
+		}
 
 		for(int i = 0; i < 3; ++i){
 			for(int j = 0; j < 9; ++j){
@@ -388,7 +426,47 @@ void DMRCodec::send_disconnect()
 
 void DMRCodec::process_modem_data(QByteArray d)
 {
+	QByteArray txdata;
+	uint8_t lcData[12U];
 
+	uint8_t *p_frame = (uint8_t *)(d.data());
+	m_dataType = p_frame[3U] & 0x0f;
+
+	if ((p_frame[3U] & DMR_SYNC_DATA) == DMR_SYNC_DATA){
+		if((m_dataType == DT_VOICE_LC_HEADER) && (m_modeinfo.stream_state == STREAM_IDLE)){
+			m_modeinfo.stream_state = TRANSMITTING_MODEM;
+			//qDebug() << "ids == " <<  m_txsrcid << ":" << m_txdstid;
+		}
+		else if(m_dataType == DT_TERMINATOR_WITH_LC){
+			m_modeinfo.stream_state = STREAM_IDLE;
+		}
+
+		m_dmrcnt = 0;
+		m_bptc.decode(p_frame + 4, lcData);
+		m_txdstid = lcData[3U] << 16 | lcData[4U] << 8 | lcData[5U];
+		m_txsrcid = lcData[6U] << 16 | lcData[7U] << 8 | lcData[8U];
+		m_flco = FLCO(lcData[0U] & 0x3FU);
+		build_frame();
+		::memcpy(m_dmrFrame + 20U, p_frame + 4, 33U);
+		txdata.append((char *)m_dmrFrame, 55);
+		m_udp->writeDatagram(txdata, m_address, m_modeinfo.port);
+	}
+	else {
+		m_dataType = (m_dmrcnt % 6U) ? DT_VOICE : DT_VOICE_SYNC;
+		build_frame();
+		::memcpy(m_dmrFrame + 20U, p_frame + 4, 33U);
+		txdata.append((char *)m_dmrFrame, 55);
+		m_udp->writeDatagram(txdata, m_address, m_modeinfo.port);
+		++m_dmrcnt;
+	}
+#ifdef DEBUG
+	fprintf(stderr, "SEND:%d: ", txdata.size());
+	for(int i = 0; i < txdata.size(); ++i){
+		fprintf(stderr, "%02x ", (unsigned char)txdata.data()[i]);
+	}
+	fprintf(stderr, "\n");
+	fflush(stderr);
+#endif
 }
 
 void DMRCodec::transmit()
@@ -449,7 +527,7 @@ void DMRCodec::send_frame()
 	else{
 		set_calltype(0);
 	}
-
+	m_txsrcid = m_dmrid;
 	if(m_tx){
 		m_modeinfo.stream_state = TRANSMITTING;
 		if(!m_dmrcnt){
@@ -507,9 +585,9 @@ void DMRCodec::build_frame()
 	m_dmrFrame[2U]  = 'R';
 	m_dmrFrame[3U]  = 'D';
 
-	m_dmrFrame[5U]  = m_dmrid >> 16;
-	m_dmrFrame[6U]  = m_dmrid >> 8;
-	m_dmrFrame[7U]  = m_dmrid >> 0;
+	m_dmrFrame[5U]  = m_txsrcid >> 16;
+	m_dmrFrame[6U]  = m_txsrcid >> 8;
+	m_dmrFrame[7U]  = m_txsrcid >> 0;
 	m_dmrFrame[8U]  = m_txdstid >> 16;
 	m_dmrFrame[9U]  = m_txdstid >> 8;
 	m_dmrFrame[10U] = m_txdstid >> 0;
@@ -538,7 +616,7 @@ void DMRCodec::build_frame()
 	m_dmrFrame[53U] = 0; //data.getBER();
 	m_dmrFrame[54U] = 0; //data.getRSSI();
 
-	m_modeinfo.srcid = m_dmrid;
+	m_modeinfo.srcid = m_txsrcid;
 	m_modeinfo.dstid = m_txdstid;
 	m_modeinfo.gwid = m_essid;
 	m_modeinfo.frame_number = m_dmrcnt;
@@ -853,6 +931,17 @@ void DMRCodec::process_rx_data()
 		m_modeinfo.ts = QDateTime::currentMSecsSinceEpoch();
 		emit update(m_modeinfo);
 		m_modeinfo.streamid = 0;
+	}
+
+	if(m_rxmodemq.size() > 2){
+		QByteArray out;
+		int s = m_rxmodemq[1];
+		if((m_rxmodemq[0] == 0xe0) && (m_rxmodemq.size() >= s)){
+			for(int i = 0; i < s; ++i){
+				out.append(m_rxmodemq.dequeue());
+			}
+			m_modem->write(out);
+		}
 	}
 
 	if((!m_tx) && (m_rxcodecq.size() > 8) ){

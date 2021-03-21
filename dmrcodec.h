@@ -62,6 +62,7 @@ private:
 	QString m_url;
 	QString m_swid;
 	QString m_pkid;
+	uint32_t m_txsrcid;
 	uint32_t m_txdstid;
 	uint8_t packet_size;
 	uint8_t m_ambe[27];

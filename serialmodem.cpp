@@ -132,7 +132,8 @@ SerialModem::SerialModem(QString protocol)
 {
 	set_mode(protocol);
 	m_dmrDelay = 0;
-	m_debug = true;
+	m_debug = false;
+	m_dmrColorCode = 1;
 }
 
 SerialModem::~SerialModem()
@@ -252,10 +253,6 @@ void SerialModem::connect_to_serial(QString p)
 			fprintf(stderr, "\n");
 			fflush(stderr);
 #endif
-		//QThread::msleep(100);
-		//set_freq();
-		//QThread::msleep(100);
-		//set_config();
 	}
 }
 
@@ -298,9 +295,9 @@ void SerialModem::process_modem()
 		}
 
 		if(r == MMDVM_GET_VERSION){
-			QThread::msleep(50);
+			QThread::msleep(100);
 			set_freq();
-			QThread::msleep(50);
+			QThread::msleep(100);
 			set_config();
 		}
 	}
@@ -330,6 +327,17 @@ void SerialModem::set_freq()
 	out.append((pfreq >> 16) & 0xFFU);
 	out.append((pfreq >> 24) & 0xFFU);
 	m_serial->write(out);
+#ifdef DEBUGHW
+	fprintf(stderr, "MODEMTX %d:%d:", out.size(), m_serialdata.size());
+	for(int i = 0; i < out.size(); ++i){
+		//if((d.data()[i] == 0x61) && (data.data()[i+1] == 0x01) && (data.data()[i+2] == 0x42) && (data.data()[i+3] == 0x02)){
+		//	i+= 6;
+		//}
+		fprintf(stderr, "%02x ", (unsigned char)out.data()[i]);
+	}
+	fprintf(stderr, "\n");
+	fflush(stderr);
+#endif
 }
 
 void SerialModem::set_config()
@@ -410,7 +418,26 @@ void SerialModem::set_config()
 #endif
 }
 
+void SerialModem::set_mode(uint8_t m)
+{
+	QByteArray out;
+	out.clear();
+	out.append(MMDVM_FRAME_START);
+	out.append(4);
+	out.append(MMDVM_SET_MODE);
+	out.append(m);
+	m_serial->write(out);
+}
+
 void SerialModem::write(QByteArray b)
 {
 	m_serial->write(b);
+#ifdef DEBUGHW
+	fprintf(stderr, "MODEMTX %d:%d:", b.size(), m_serialdata.size());
+	for(int i = 0; i < b.size(); ++i){
+		fprintf(stderr, "%02x ", (unsigned char)b.data()[i]);
+	}
+	fprintf(stderr, "\n");
+	fflush(stderr);
+#endif
 }
