@@ -96,8 +96,10 @@ void P25Codec::process_udp()
 			m_ping_timer->start(5000);
 			if(m_modemport != ""){
 				m_modem = new SerialModem("P25");
+				m_modem->set_modem_flags(m_rxInvert, m_txInvert, m_pttInvert, m_useCOSAsLockout, m_duplex);
+				m_modem->set_modem_params(m_rxfreq, m_txfreq, m_txDelay, m_rxLevel, m_rfLevel, m_ysfTXHang, m_cwIdTXLevel, m_dstarTXLevel, m_dmrTXLevel, m_ysfTXLevel, m_p25TXLevel, m_nxdnTXLevel, m_pocsagTXLevel);
 				m_modem->connect_to_serial(m_modemport);
-				connect(m_modem, SIGNAL(modem_data_ready()), this, SLOT(process_modem_data()));
+				connect(m_modem, SIGNAL(modem_data_ready(QByteArray)), this, SLOT(process_modem_data(QByteArray)));
 			}
 			m_audio = new AudioEngine(m_audioin, m_audioout);
 			m_audio->init();
@@ -245,7 +247,7 @@ void P25Codec::send_disconnect()
 #endif
 }
 
-void P25Codec::process_modem_data()
+void P25Codec::process_modem_data(QByteArray d)
 {
 
 }

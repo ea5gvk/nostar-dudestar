@@ -35,7 +35,7 @@ private:
 	uint32_t m_txdstid;
 private slots:
 	void process_udp();
-	void process_modem_data();
+	void process_modem_data(QByteArray);
 	void process_rx_data();
 	void send_ping();
 	void send_disconnect();

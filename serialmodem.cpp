@@ -406,15 +406,15 @@ void SerialModem::set_config()
 	out.append((unsigned char)m_nxdnTXHang);
 	m_serial->write(out);
 #ifdef DEBUGHW
-			fprintf(stderr, "MODEMTX %d:%d:", out.size(), m_serialdata.size());
-			for(int i = 0; i < out.size(); ++i){
-				//if((d.data()[i] == 0x61) && (data.data()[i+1] == 0x01) && (data.data()[i+2] == 0x42) && (data.data()[i+3] == 0x02)){
-				//	i+= 6;
-				//}
-				fprintf(stderr, "%02x ", (unsigned char)out.data()[i]);
-			}
-			fprintf(stderr, "\n");
-			fflush(stderr);
+	fprintf(stderr, "MODEMTX %d:%d:", out.size(), m_serialdata.size());
+	for(int i = 0; i < out.size(); ++i){
+		//if((d.data()[i] == 0x61) && (data.data()[i+1] == 0x01) && (data.data()[i+2] == 0x42) && (data.data()[i+3] == 0x02)){
+		//	i+= 6;
+		//}
+		fprintf(stderr, "%02x ", (unsigned char)out.data()[i]);
+	}
+	fprintf(stderr, "\n");
+	fflush(stderr);
 #endif
 }
 

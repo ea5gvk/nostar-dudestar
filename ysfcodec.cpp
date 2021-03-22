@@ -149,13 +149,15 @@ void YSFCodec::process_udp()
 		m_modeinfo.gw = QString(ysftag);
 		p_data = (uint8_t *)buf.data() + 35;
 		if(m_modem){
-			QByteArray out;
-			out.append(0xe0);
-			out.append(124);
-			out.append(0x20);
-			out.append('\x00');
-			out.append(buf.mid(35));
-			m_modem->write(out);
+			m_rxmodemq.append(0xe0);
+			m_rxmodemq.append(124);
+			m_rxmodemq.append(0x20);
+			m_rxmodemq.append('\x00');
+
+			for(int i = 0; i < 120; ++i){
+				m_rxmodemq.append(buf.data()[35+i]);
+			}
+			//m_rxmodemq.append(buf.mid(35));
 		}
 	}
 	else if(buf.size() == 130){
@@ -1242,6 +1244,18 @@ void YSFCodec::process_rx_data()
 		m_modeinfo.ts = QDateTime::currentMSecsSinceEpoch();
 		emit update(m_modeinfo);
 	}
+
+	if(m_rxmodemq.size() > 2){
+		QByteArray out;
+		int s = m_rxmodemq[1];
+		if((m_rxmodemq[0] == 0xe0) && (m_rxmodemq.size() >= s)){
+			for(int i = 0; i < s; ++i){
+				out.append(m_rxmodemq.dequeue());
+			}
+			m_modem->write(out);
+		}
+	}
+
 	if(m_modeinfo.type == 3){
 		if(m_rxcodecq.size() > 10){
 			for(int i = 0; i < 11; ++i){
