@@ -71,7 +71,7 @@ void M17Codec::encode_callsign(uint8_t *callsign)
 void M17Codec::decode_callsign(uint8_t *callsign)
 {
 	const std::string m17_alphabet(M17CHARACTERS);
-	uint8_t code[6];
+	//uint8_t code[6];
 	uint64_t coded = callsign[0];
 	for (int i=1; i<6; i++)
 		coded = (coded << 8) | callsign[i];
@@ -79,7 +79,7 @@ void M17Codec::decode_callsign(uint8_t *callsign)
 		std::cerr << "Callsign code is too large, 0x" << std::hex << coded << std::endl;
 		return;
 	}
-	memcpy(code, callsign, 6);
+	//memcpy(code, callsign, 6);
 	memset(callsign, 0, 10);
 	int i = 0;
 	while (coded) {

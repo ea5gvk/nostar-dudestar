@@ -28,6 +28,8 @@
 AudioEngine::AudioEngine(QString in, QString out) :
 	m_outputdevice(out),
     m_inputdevice(in),
+	m_out(nullptr),
+	m_in(nullptr),
     m_srm(1)
 {
 
@@ -162,14 +164,18 @@ void AudioEngine::set_input_volume(qreal v)
 void AudioEngine::start_capture()
 {
 	m_audioinq.clear();
-	m_indev = m_in->start();
-	connect(m_indev, SIGNAL(readyRead()), SLOT(input_data_received()));
+	if(m_in != nullptr){
+		m_indev = m_in->start();
+		connect(m_indev, SIGNAL(readyRead()), SLOT(input_data_received()));
+	}
 }
 
 void AudioEngine::stop_capture()
 {
-	m_indev->disconnect();
-	m_in->stop();
+	if(m_in != nullptr){
+		m_indev->disconnect();
+		m_in->stop();
+	}
 }
 
 void AudioEngine::start_playback()
@@ -237,6 +243,10 @@ uint16_t AudioEngine::read(int16_t *pcm, int s)
 				m_maxlevel = pcm[i];
 			}
 		}
+		return 1;
+	}
+	else if(m_in == nullptr){
+		memset(pcm, 0, sizeof(int16_t) * s);
 		return 1;
 	}
 	else{
