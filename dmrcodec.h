@@ -64,6 +64,7 @@ private:
 	QString m_pkid;
 	uint32_t m_txsrcid;
 	uint32_t m_txdstid;
+	uint32_t m_txstreamid;
 	uint8_t packet_size;
 	uint8_t m_ambe[27];
 	uint32_t m_defsrcid;

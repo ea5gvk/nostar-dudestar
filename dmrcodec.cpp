@@ -100,7 +100,7 @@ void DMRCodec::process_udp()
 
 	buf.resize(m_udp->pendingDatagramSize());
 	m_udp->readDatagram(buf.data(), buf.size(), &sender, &senderPort);
-#ifdef DEBUGG
+#ifdef DEBUG
 	fprintf(stderr, "RECV: ");
 	for(int i = 0; i < buf.size(); ++i){
 		fprintf(stderr, "%02x ", (unsigned char)buf.data()[i]);
@@ -530,8 +530,10 @@ void DMRCodec::send_frame()
 	m_txsrcid = m_dmrid;
 	if(m_tx){
 		m_modeinfo.stream_state = TRANSMITTING;
+
 		if(!m_dmrcnt){
 			encode_header(DT_VOICE_LC_HEADER);
+			m_txstreamid = static_cast<uint32_t>(::rand());
 		}
 		else{
 			::memcpy(m_dmrFrame + 20U, m_ambe, 13U);
@@ -540,9 +542,9 @@ void DMRCodec::send_frame()
 			::memcpy(m_dmrFrame + 40U, &m_ambe[14U], 13U);
 			encode_data();
 		}
+
 		build_frame();
 		++m_dmrcnt;
-
 		txdata.append((char *)m_dmrFrame, 55);
 		m_udp->writeDatagram(txdata, m_address, m_modeinfo.port);
 	}
@@ -554,9 +556,11 @@ void DMRCodec::send_frame()
 		txdata.append((char *)m_dmrFrame, 55);
 		m_udp->writeDatagram(txdata, m_address, m_modeinfo.port);
 		m_txtimer->stop();
+
 		if(m_ttsid == 0){
 			m_audio->stop_capture();
 		}
+
 		m_modeinfo.stream_state = STREAM_IDLE;
 	}
 	emit update_output_level(m_audio->level());
@@ -608,10 +612,7 @@ void DMRCodec::build_frame()
 	}
 
 	m_dmrFrame[4U] = m_dmrcnt;
-
-	//unsigned int streamId = 0x3cfa;
-	unsigned int streamId = 0x9f57;
-	::memcpy(m_dmrFrame + 16U, &streamId, 4U);
+	::memcpy(m_dmrFrame + 16U, &m_txstreamid, 4U);
 
 	m_dmrFrame[53U] = 0; //data.getBER();
 	m_dmrFrame[54U] = 0; //data.getRSSI();
